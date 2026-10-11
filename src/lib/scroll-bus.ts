@@ -40,3 +40,8 @@ export const subscribeLenisScroll = (listener: () => void) => {
   listeners.add(listener)
   return () => listeners.delete(listener)
 }
+
+export const updateLenisScrollSnapshot = (newSnapshot: Partial<ScrollSnapshot>) => {
+  snapshot = { ...snapshot, ...newSnapshot }
+  for (const l of listeners) l()
+}

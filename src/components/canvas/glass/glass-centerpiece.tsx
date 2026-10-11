@@ -11,8 +11,8 @@ import { createRingLightFollower } from './ring-light-follower'
 import { useGLTF } from '@react-three/drei'
 
 // Load animation: gentle scale-up from 50% to 100% (target scale 1.22)
-const LOAD_TARGET_SCALE = 1.22 // +21% total larger base size
-const LOAD_SCALE_FROM = 0.61   // 50% of target scale
+const LOAD_TARGET_SCALE = 1.37 // reduced 25% (was 1.83)
+const LOAD_SCALE_FROM = 0.685  // 50% of target scale
 const LOAD_DURATION = 2.5      // seconds
 
 // Scroll behavior: centerpiece rises UP, shrinks, and tilts to its right up to 80 degrees
@@ -70,11 +70,36 @@ void main() {
   vec2 dispG = uvOffset;
   vec2 dispB = uvOffset * 0.85;
   
-  // 1:1 Pixel-exact direct transmission of background & stickers
+  // Frosted Glass: High-frequency noise for scattering
+  float scatter = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
+  vec2 frostJitter = vec2(cos(scatter * 6.28), sin(scatter * 6.28)) * 0.004;
+  
+  // Fast 4-tap frosted blur
   vec3 color = vec3(0.0);
-  color.r = texture2D(uTexture, clamp(screenUv + dispR, 0.001, 0.999)).r;
-  color.g = texture2D(uTexture, clamp(screenUv + dispG, 0.001, 0.999)).g;
-  color.b = texture2D(uTexture, clamp(screenUv + dispB, 0.001, 0.999)).b;
+  vec2 blur = vec2(0.006); // Blur spread
+  
+  vec2 offset1 = vec2( blur.x,  blur.y) + frostJitter;
+  vec2 offset2 = vec2(-blur.x, -blur.y) + frostJitter;
+  vec2 offset3 = vec2(-blur.x,  blur.y) + frostJitter;
+  vec2 offset4 = vec2( blur.x, -blur.y) + frostJitter;
+
+  color.r += texture2D(uTexture, clamp(screenUv + dispR + offset1, 0.001, 0.999)).r;
+  color.g += texture2D(uTexture, clamp(screenUv + dispG + offset1, 0.001, 0.999)).g;
+  color.b += texture2D(uTexture, clamp(screenUv + dispB + offset1, 0.001, 0.999)).b;
+
+  color.r += texture2D(uTexture, clamp(screenUv + dispR + offset2, 0.001, 0.999)).r;
+  color.g += texture2D(uTexture, clamp(screenUv + dispG + offset2, 0.001, 0.999)).g;
+  color.b += texture2D(uTexture, clamp(screenUv + dispB + offset2, 0.001, 0.999)).b;
+
+  color.r += texture2D(uTexture, clamp(screenUv + dispR + offset3, 0.001, 0.999)).r;
+  color.g += texture2D(uTexture, clamp(screenUv + dispG + offset3, 0.001, 0.999)).g;
+  color.b += texture2D(uTexture, clamp(screenUv + dispB + offset3, 0.001, 0.999)).b;
+
+  color.r += texture2D(uTexture, clamp(screenUv + dispR + offset4, 0.001, 0.999)).r;
+  color.g += texture2D(uTexture, clamp(screenUv + dispG + offset4, 0.001, 0.999)).g;
+  color.b += texture2D(uTexture, clamp(screenUv + dispB + offset4, 0.001, 0.999)).b;
+  
+  color /= 4.0;
   
   // 1. Fresnel edge reflection (luminous perimeter glow on bevels)
   float fresnel = pow(1.0 - NdotV, 3.0) * edgeFactor;
@@ -89,8 +114,11 @@ void main() {
   // Grazing bevel rim streak
   float rimGlint = pow(1.0 - NdotV, 2.0) * pow(clamp(dot(N, L) * 0.5 + 0.5, 0.0, 1.0), 2.5) * edgeFactor * (uLightIntensity * 1.8);
   
-  // Final composite: 1:1 crystal-clear background/stickers + edge fresnel + specular rim glints
+  // Final composite: frosted background + edge fresnel + specular rim glints
   vec3 finalGlass = color + fresnel * fresnelTint * 0.25 + (specular + rimGlint) * vec3(1.0);
+  
+  // Add a subtle milky frosted tint to the entire surface
+  finalGlass = mix(finalGlass, vec3(0.95, 0.90, 0.92), 0.12);
   
   gl_FragColor = vec4(finalGlass, 1.0);
 }
@@ -135,11 +163,34 @@ export function GlassCenterpiece() {
       if (child.isMesh && child.geometry) {
         const geo = child.geometry.clone()
         geo.applyMatrix4(child.matrixWorld)
+        // Stand it up vertically
+        geo.rotateX(Math.PI / 2)
         geometries.push(geo)
       }
     })
 
     if (geometries.length === 0) return new THREE.BufferGeometry()
+
+    // Fix the "9.0" offset by aligning its bottom to the main text's bottom
+    // NOTE: Commented out because the user uploaded a new custom hacks.glb
+    /*
+    if (geometries.length >= 2) {
+      geometries[0].computeBoundingBox()
+      geometries[1].computeBoundingBox()
+      
+      let mainGeo = geometries[0]
+      let numGeo = geometries[1]
+      
+      if (geometries[0].boundingBox!.min.x > geometries[1].boundingBox!.min.x) {
+        mainGeo = geometries[1]
+        numGeo = geometries[0]
+      }
+      
+      const mainMinY = mainGeo.boundingBox!.min.y
+      const numMinY = numGeo.boundingBox!.min.y
+      numGeo.translate(0, mainMinY - numMinY, 0)
+    }
+    */
 
     const merged = BufferGeometryUtils.mergeGeometries(geometries, false)
     if (!merged) return geometries[0]

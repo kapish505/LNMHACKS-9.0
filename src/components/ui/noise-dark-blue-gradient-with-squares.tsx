@@ -200,19 +200,55 @@ hoverGlowColor   = "rgba(37,99,235,0.45)",
       trailRef.current = trailRef.current.filter((t) => t.age > 0);
 
       trailRef.current.forEach((t) => {
-        t.age -= 0.15; // Fade out speed (much faster for a very short trail)
+        t.age -= 0.08; // Slower fade for longer-lasting Jali reveal
         if (t.age <= 0) return;
 
         const cellX = absX + t.gx * squareSize;
         const cellY = absY + t.gy * squareSize;
+        const s = squareSize;
+        const cx = cellX + s / 2;
+        const cy = cellY + s / 2;
+        const r = s * 0.45;
 
         ctx.save();
         ctx.globalAlpha = t.age;
+        ctx.strokeStyle = hoverFillColor as string;
+        ctx.lineWidth = 1.2;
 
-        // Solid fill only, no glow or borders
-        ctx.fillStyle = hoverFillColor as string;
-        ctx.fillRect(cellX, cellY, squareSize, squareSize);
-        
+        // Outer octagon
+        ctx.beginPath();
+        for (let k = 0; k < 8; k++) {
+          const angle = (Math.PI / 4) * k - Math.PI / 8;
+          const px = cx + r * Math.cos(angle);
+          const py = cy + r * Math.sin(angle);
+          if (k === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.stroke();
+
+        // Inner star (rotated square overlay)
+        const ir = r * 0.6;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - ir);
+        ctx.lineTo(cx + ir, cy);
+        ctx.lineTo(cx, cy + ir);
+        ctx.lineTo(cx - ir, cy);
+        ctx.closePath();
+        ctx.stroke();
+
+        // Cross lines
+        const cr = r * 0.85;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - cr); ctx.lineTo(cx, cy + cr);
+        ctx.moveTo(cx - cr, cy); ctx.lineTo(cx + cr, cy);
+        ctx.stroke();
+
+        // Center circle
+        ctx.beginPath();
+        ctx.arc(cx, cy, r * 0.2, 0, Math.PI * 2);
+        ctx.stroke();
+
         ctx.restore();
       });
 

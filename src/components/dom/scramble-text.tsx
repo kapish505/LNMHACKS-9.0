@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState, useId } from 'react'
 import { scrambleController } from '@/lib/scramble-controller'
 
-export function ScrambleText({ text, className }: { text: string, className?: string }) {
+// NOTE: Change this import to 'framer' when copying this component into Framer.com
+import { addPropertyControls, ControlType } from '@/lib/framer-mock'
+
+export function ScrambleText({ text = 'Scramble Text', className }: { text?: string, className?: string }) {
   const [display, setDisplay] = useState(text)
   const ref = useRef<HTMLSpanElement>(null)
   const id = useId()
@@ -28,3 +31,7 @@ export function ScrambleText({ text, className }: { text: string, className?: st
     </span>
   )
 }
+
+addPropertyControls(ScrambleText, {
+  text: { type: ControlType.String, title: 'Text', defaultValue: 'Scramble Text' },
+})

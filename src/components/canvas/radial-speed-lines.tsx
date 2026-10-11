@@ -8,7 +8,9 @@ import { getArrowSectionVH } from '@/lib/arrow-section-progress'
 // ─── Speed lines: appear AS arrow fades (no gap) ────────────────────
 const FADE_IN_START = 2.5
 const FADE_IN_END = 3.5
-const HIDE_VH = 18.0
+const FADE_OUT_START = 14.5
+const FADE_OUT_END = 15.0
+const HIDE_VH = 15.5
 
 const vertexShader = `
 varying vec2 vUv;
@@ -100,55 +102,49 @@ void main() {
   // ── Layer 3: fine detail lines (70 slots) ──
   float layer3 = starburstLayer(uv, dist, angle - 0.01, 70.0, 2.0, uDensity * 0.6, uScroll * 0.9, uTime);
 
-  // ── Ambient Jaipur Sky background with fluid waves ──
-  float bgWave1 = sin(dist * 16.0 - angle * 4.0 - uScroll * 1.2 + uTime * 0.8) * 0.5 + 0.5;
-  float bgWave2 = cos(dist * 28.0 + angle * 6.0 + uScroll * 1.8 - uTime * 0.6) * 0.5 + 0.5;
-  float bgWave3 = sin((uv.x + uv.y) * 14.0 + uTime * 0.5) * 0.5 + 0.5;
-  float waveMix = (bgWave1 * 0.45 + bgWave2 * 0.38 + bgWave3 * 0.17);
-  waveMix = smoothstep(0.08, 0.92, waveMix);
+  // ── Premium dark background with subtle atmospheric breathing ──
+  float breath = sin(uTime * 0.4) * 0.5 + 0.5;
+  float radialGlow = exp(-dist * 3.5) * 0.08 * breath;
 
-  vec3 bgWaveDark   = vec3(0.015, 0.005, 0.012);
-  vec3 bgWavePink   = vec3(0.24, 0.04, 0.13) * waveMix;
-  vec3 bgWaveOrange = vec3(0.32, 0.09, 0.04) * pow(waveMix, 1.8);
-  vec3 bgColor      = bgWaveDark + (bgWavePink + bgWaveOrange) * uOpacity * 0.9;
+  vec3 bgDeep     = vec3(0.012, 0.010, 0.018);  // Near-black with a hint of deep violet
+  vec3 bgAmbient  = vec3(0.035, 0.025, 0.045);  // Very subtle warm dark purple
+  vec3 bgColor    = bgDeep + bgAmbient * radialGlow * uOpacity;
 
-  // ── Color per-pixel (Jaipur Pink Sky & Sunset Orange Accents) ──
+  // ── Color palette: lavender, rose-gold, champagne, blush ──
   float cs = fract(angle * 2.7 + dist * 3.1);
 
-  vec3 jaipurPink  = vec3(0.96, 0.42, 0.58); // Pinkish sky of Jaipur (replaces cyan)
-  vec3 deepRose    = vec3(0.88, 0.28, 0.50); // Deep rose sky (replaces blue)
-  vec3 twilight    = vec3(0.72, 0.18, 0.55); // Sunset twilight purple-magenta
-  vec3 warmMagenta = vec3(0.90, 0.22, 0.65); // Warm pink magenta
-  vec3 orangeSky   = vec3(1.00, 0.64, 0.32); // Sunset Orange Accent (replaces white)
-  vec3 peachGlint  = vec3(1.00, 0.78, 0.45); // Peach orange highlight
+  vec3 lavender    = vec3(0.72, 0.62, 0.88);  // Soft pastel lavender
+  vec3 roseGold    = vec3(0.90, 0.72, 0.65);  // Warm rose-gold
+  vec3 champagne   = vec3(0.95, 0.88, 0.78);  // Champagne highlight
+  vec3 blushPink   = vec3(0.85, 0.65, 0.72);  // Muted blush
+  vec3 silverMist  = vec3(0.82, 0.80, 0.88);  // Cool silver mist
 
-  vec3 color1 = mix(jaipurPink, deepRose, smoothstep(0.15, 0.30, cs));
-  color1 = mix(color1, twilight, smoothstep(0.35, 0.55, cs));
-  color1 = mix(color1, warmMagenta, smoothstep(0.60, 0.75, cs));
-  color1 = mix(color1, orangeSky, smoothstep(0.85, 0.95, cs));
+  vec3 color1 = mix(lavender, roseGold, smoothstep(0.15, 0.35, cs));
+  color1 = mix(color1, champagne, smoothstep(0.50, 0.70, cs));
+  color1 = mix(color1, blushPink, smoothstep(0.75, 0.90, cs));
 
-  // Layer 2 gets a slightly shifted palette with peach orange highlights
+  // Layer 2: shifted palette with silver highlights
   float cs2 = fract(cs + 0.33);
-  vec3 color2 = mix(deepRose, jaipurPink, smoothstep(0.2, 0.4, cs2));
-  color2 = mix(color2, orangeSky, smoothstep(0.5, 0.7, cs2));
-  color2 = mix(color2, peachGlint, smoothstep(0.85, 0.95, cs2));
+  vec3 color2 = mix(roseGold, lavender, smoothstep(0.2, 0.4, cs2));
+  color2 = mix(color2, silverMist, smoothstep(0.5, 0.7, cs2));
+  color2 = mix(color2, champagne, smoothstep(0.85, 0.95, cs2));
 
-  // Layer 3: rich Jaipur pink & warm orange accents
+  // Layer 3: delicate lavender and blush
   float cs3 = fract(cs + 0.66);
-  vec3 color3 = mix(jaipurPink, deepRose, smoothstep(0.3, 0.6, cs3));
-  color3 = mix(color3, orangeSky, smoothstep(0.7, 0.9, cs3));
+  vec3 color3 = mix(lavender, blushPink, smoothstep(0.3, 0.6, cs3));
+  color3 = mix(color3, roseGold, smoothstep(0.7, 0.9, cs3));
 
-  // ── Combine layers ──
-  vec3 lineContrib = color1 * layer1 * 1.0
-                   + color2 * layer2 * 0.7
-                   + color3 * layer3 * 0.45;
+  // ── Combine layers with refined intensity ──
+  vec3 lineContrib = color1 * layer1 * 0.85
+                   + color2 * layer2 * 0.55
+                   + color3 * layer3 * 0.35;
 
-  // Subtle glow halo on layer 1
+  // Subtle soft glow on primary layer
   float glowMask = starburstLayer(uv, dist, angle, 120.0, 0.0, min(uDensity + 0.15, 1.0), uScroll, uTime);
-  lineContrib += color1 * glowMask * 0.15;
+  lineContrib += color1 * glowMask * 0.10;
 
-  // ── Minimal vignette — let lines reach edges ──
-  float vignette = 1.0 - smoothstep(0.8, 2.0, dist);
+  // ── Gentle vignette — let lines breathe toward edges ──
+  float vignette = 1.0 - smoothstep(0.9, 2.2, dist);
 
   vec3 finalColor = bgColor + lineContrib * vignette;
 
@@ -177,12 +173,9 @@ export function RadialSpeedLines() {
 
     const aVH = getArrowSectionVH()
 
-    const opacity =
-      aVH < FADE_IN_START
-        ? 0
-        : aVH > HIDE_VH
-          ? 0
-          : Math.min(1, (aVH - FADE_IN_START) / (FADE_IN_END - FADE_IN_START))
+    const fadeIn = Math.max(0, Math.min(1, (aVH - FADE_IN_START) / (FADE_IN_END - FADE_IN_START)))
+    const fadeOut = 1.0 - Math.max(0, Math.min(1, (aVH - FADE_OUT_START) / (FADE_OUT_END - FADE_OUT_START)))
+    const opacity = fadeIn * fadeOut
 
     if (opacity < 0.001) {
       meshRef.current.visible = false

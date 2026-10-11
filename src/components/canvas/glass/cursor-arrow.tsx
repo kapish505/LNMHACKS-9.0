@@ -12,11 +12,22 @@ const APPEAR_VH = -0.8
 const APPEAR_END_VH = -0.3
 const ZOOM_START_VH = -0.2
 const ZOOM_END_VH = 3.0
-const ROT_END_VH = 2.0
+const ROT_END_VH = 3.0     // Rotation synced with zoom — both finish together
 const FADE_START_VH = 2.5
 const FADE_END_VH = 3.0
-const NUM_Y_ROTATIONS = 3
-const MAX_SCALE = 12
+
+// ─── Reverse Scroll Ranges ───────────────────────────────────────────
+const REV_FADE_IN_START = 14.5
+const REV_FADE_IN_END = 15.0
+const REV_ZOOM_START = 15.0
+const REV_ZOOM_END = 18.2
+const REV_ROT_START = 15.0  // Rotation synced with zoom — both start together
+const REV_ROT_END = 18.2    // Rotation synced with zoom — both finish together
+const REV_FADE_OUT_START = 18.3
+const REV_FADE_OUT_END = 18.8
+
+const NUM_Y_ROTATIONS = 2
+const MAX_SCALE = 10.2      // 85% screen coverage — doesn't fully cover
 const BASE_SCALE = 0.85
 
 const INITIAL_TILT_Z = -18 * (Math.PI / 180)
@@ -91,28 +102,30 @@ void main() {
   float edgeFactor = clamp(length(vLocalNormal.xy) * 2.2, 0.0, 1.0);
   edgeFactor = smoothstep(0.12, 0.70, edgeFactor);
 
-  vec3 baseColor = vec3(0.80, 0.36, 0.45);
-  vec3 darkColor = vec3(0.52, 0.22, 0.30);
+  // Pop pink colors
+  vec3 baseColor = vec3(1.00, 0.15, 0.55); // vibrant pop pink
+  vec3 darkColor = vec3(0.65, 0.05, 0.35); // deep magenta core
   float shade = 0.50 + 0.50 * NdotV;
   vec3 color = mix(darkColor, baseColor, shade);
 
-  float fresnel = pow(1.0 - NdotV, 5.0);
-  vec3 fresnelColor = vec3(0.95, 0.70, 0.76);
-  color += fresnel * fresnelColor * 0.12;
+  float fresnel = pow(1.0 - NdotV, 4.0);
+  vec3 fresnelColor = vec3(1.0, 0.6, 0.8);
+  color += fresnel * fresnelColor * 0.4; // Stronger fresnel for glass look
 
   vec3 L = normalize(uLightPos - vWorldPosition);
   vec3 H = normalize(L + V);
   float NdotH = clamp(dot(N, H), 0.0, 1.0);
 
-  float specRaw = pow(NdotH, 256.0) * uLightIntensity;
-  float specular = specRaw * edgeFactor * 1.8;
+  // Glossy, tight specular highlight
+  float specRaw = pow(NdotH, 512.0) * uLightIntensity;
+  float specular = specRaw * edgeFactor * 2.5;
 
   float rimGlint = pow(1.0 - NdotV, 3.0)
     * pow(clamp(dot(N, L) * 0.5 + 0.5, 0.0, 1.0), 4.0)
     * edgeFactor * edgeFactor
-    * uLightIntensity * 1.2;
+    * uLightIntensity * 1.5;
 
-  vec3 finalColor = color + (specular + rimGlint) * vec3(1.0, 0.93, 0.95);
+  vec3 finalColor = color + (specular + rimGlint) * vec3(1.0, 0.90, 0.95);
 
   gl_FragColor = vec4(finalColor, uOpacity);
 }
@@ -143,9 +156,15 @@ export function CursorArrow() {
 
     const aVH = getArrowSectionVH()
 
-    const fadeIn = smoothstep(APPEAR_VH, APPEAR_END_VH, aVH)
-    const fadeOut = 1.0 - smoothstep(FADE_START_VH, FADE_END_VH, aVH)
-    const opacity = fadeIn * fadeOut
+    const fadeIn1 = smoothstep(APPEAR_VH, APPEAR_END_VH, aVH)
+    const fadeOut1 = 1.0 - smoothstep(FADE_START_VH, FADE_END_VH, aVH)
+    const opacity1 = fadeIn1 * fadeOut1
+
+    const fadeIn2 = smoothstep(REV_FADE_IN_START, REV_FADE_IN_END, aVH)
+    const fadeOut2 = 1.0 - smoothstep(REV_FADE_OUT_START, REV_FADE_OUT_END, aVH)
+    const opacity2 = fadeIn2 * fadeOut2
+
+    const opacity = Math.max(opacity1, opacity2)
 
     if (opacity < 0.001) {
       meshRef.current.visible = false
@@ -153,20 +172,29 @@ export function CursorArrow() {
     }
     meshRef.current.visible = true
 
-    const rawZoom = smoothstep(ZOOM_START_VH, ZOOM_END_VH, aVH)
-    const zoomT = easeInOutCubic(rawZoom)
+    const rawZoom1 = smoothstep(ZOOM_START_VH, ZOOM_END_VH, aVH)
+    const zoomT1 = easeInOutCubic(rawZoom1)
+    const rawZoom2 = smoothstep(REV_ZOOM_START, REV_ZOOM_END, aVH)
+    const zoomT2 = easeInOutCubic(rawZoom2)
+    
+    const zoomT = zoomT1 - zoomT2
     const scale = BASE_SCALE + zoomT * (MAX_SCALE - BASE_SCALE)
     groupRef.current.scale.setScalar(scale)
 
-    const rawRot = smoothstep(ZOOM_START_VH, ROT_END_VH, aVH)
-    const rotT = easeInOutCubic(rawRot)
+    const rawRot1 = smoothstep(ZOOM_START_VH, ROT_END_VH, aVH)
+    const rotT1 = easeInOutCubic(rawRot1)
+    const rawRot2 = smoothstep(REV_ROT_START, REV_ROT_END, aVH)
+    const rotT2 = easeInOutCubic(rawRot2)
+
+    // Forward: 3 rotations, Reverse: 3 rotations (finishing early while arrow is still small)
+    const rotT = rotT1 - rotT2
     groupRef.current.rotation.y = rotT * Math.PI * 2 * NUM_Y_ROTATIONS
 
     groupRef.current.rotation.z = INITIAL_TILT_Z
     groupRef.current.rotation.x = INITIAL_TILT_X
 
     const t = state.clock.elapsedTime
-    const floatAmp = (1 - rawZoom) * 0.06
+    const floatAmp = (1 - zoomT) * 0.06
     groupRef.current.position.y = Math.sin(t * 1.5) * floatAmp
 
     const pointer = getPointerUV()

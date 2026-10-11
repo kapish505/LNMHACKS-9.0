@@ -141,6 +141,7 @@ void main() {
   float spotMask = exp(-pow(dist / (spotRadius * 0.78), 1.85));
   spotMask = smoothstep(0.005, 1.0, spotMask);
 
+  // Natural spotlight that illuminates clouds
   float waveIllumination = spotMask * (0.35 + bgWaves * 0.65) * uGlowIntensity;
   
   // Warm Sunset Orange Accents

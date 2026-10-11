@@ -17,7 +17,7 @@ const scheduleNotify = () => {
   })
 }
 
-const updatePointer = (next: PointerSnapshot) => {
+export const updatePointer = (next: PointerSnapshot) => {
   snapshotRef = next
   uv.set(next.x, next.y)
   insideFlag = next.inside

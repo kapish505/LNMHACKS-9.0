@@ -1,8 +1,25 @@
 @import "tailwindcss";
 
+/* Fonts */
+@font-face {
+  font-family: 'tiktok';
+  src: url('/fonts/TikTokSans.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'tronica-mono';
+  src: url('/fonts/DepartureMono-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-display: swap;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F0EDE8;
+  --foreground: #0f172a;
+  --font-tiktok: 'tiktok', sans-serif;
+  --reveal-duration: 0.5s;
 }
 
 @theme inline {
@@ -16,11 +33,50 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --reveal-duration: 0.5s;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  /* Warm cream canvas matching reference */
+  background-color: #F0EDE8;
+  color: #0f172a;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Navbar reveal character animation */
+.reveal-char {
+  opacity: 0;
+  animation: reveal var(--reveal-duration) forwards;
+}
+.invisible {
+  opacity: 0;
+}
+@keyframes reveal {
+  to { opacity: 1; }
+}
+
+/* Rotating globe in footer */
+@keyframes globe-spin {
+  from { transform: rotateY(0deg); }
+  to   { transform: rotateY(360deg); }
+}
+
+/* GPU-composited fixed elements — skip layout & paint on scroll */
+.fixed {
+  contain: layout style;
+}
+
+/* Tell browser ahead of time these will be animated */
+[data-parallax] {
+  will-change: opacity, transform;
+}
+
+/* Honour OS reduced-motion preference globally */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
