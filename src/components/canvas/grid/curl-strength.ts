@@ -9,11 +9,11 @@ export function createCurlStrengthSampler() {
     const velocity = previousScrollY == null ? 0 : Math.abs(scrollY - previousScrollY) / dt
     previousScrollY = scrollY
 
-    const target = THREE.MathUtils.clamp(velocity / 800, 0, 1)
-    const tau = target > activity ? 0.025 : 0.175   // fast attack, slow release
+    const target = THREE.MathUtils.clamp(velocity / 600, 0, 1)
+    const tau = target > activity ? 0.03 : 0.2   // snappy attack, smooth release
     const alpha = 1 - Math.exp(-dt / tau)
     activity += (target - activity) * alpha
 
-    return 0.06 * activity
+    return 0.10 * activity
   }
 }

@@ -10,17 +10,31 @@ import { vertexShader, fragmentShader } from '@/shaders/dom-sync'
 import { domRegistry } from '@/lib/dom-registry'
 import { PROJECTS } from '@/components/dom/project-grid'
 
-function ProjectMesh({ project }: { project: any }) {
+function ProjectMesh({ project, index = 0 }: { project: any, index?: number }) {
   const meshRef = useRef<THREE.Mesh>(null)
   const materialRef = useRef<THREE.ShaderMaterial>(null)
   const { size } = useThree()
   
   const [map1, map2] = useTexture([project.img1, project.img2])
   
-  // Apply sRGB correctly
+  // Apply sRGB correctly & maximum texture sharpness
   useMemo(() => {
-    if (map1) map1.colorSpace = THREE.SRGBColorSpace
-    if (map2) map2.colorSpace = THREE.SRGBColorSpace
+    if (map1) {
+      map1.colorSpace = THREE.SRGBColorSpace
+      map1.generateMipmaps = true
+      map1.minFilter = THREE.LinearMipmapLinearFilter
+      map1.magFilter = THREE.LinearFilter
+      map1.anisotropy = 16
+      map1.needsUpdate = true
+    }
+    if (map2) {
+      map2.colorSpace = THREE.SRGBColorSpace
+      map2.generateMipmaps = true
+      map2.minFilter = THREE.LinearMipmapLinearFilter
+      map2.magFilter = THREE.LinearFilter
+      map2.anisotropy = 16
+      map2.needsUpdate = true
+    }
   }, [map1, map2])
   
   const hoverSpring = useRef(0)
@@ -72,7 +86,7 @@ function ProjectMesh({ project }: { project: any }) {
   })
 
   return (
-    <mesh ref={meshRef} frustumCulled={false} renderOrder={2}>
+    <mesh ref={meshRef} frustumCulled={false} renderOrder={2 + index}>
       <planeGeometry args={[2, 2]} />
       <shaderMaterial
         ref={materialRef}
@@ -90,9 +104,8 @@ function ProjectMesh({ project }: { project: any }) {
 export function ProjectMeshes() {
   return (
     <group>
-      {/* 3D Meshes for the project showcase */}
-      {PROJECTS.map((p) => (
-        <ProjectMesh key={p.id} project={p} />
+      {PROJECTS.map((p, i) => (
+        <ProjectMesh key={p.id} project={p} index={i} />
       ))}
     </group>
   )

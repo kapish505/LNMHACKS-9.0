@@ -16,7 +16,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'ABOUT', target: 'about' },
   { label: 'SPONSORS', target: 'sponsors' },
   { label: 'TIMELINE', target: 'arrow-section' },
-  { label: 'REGISTER', target: 'sponsors' },
 ]
 
 const CHAR_WINDOW_MS = 750  // each char scrambles for 750ms
@@ -112,6 +111,7 @@ export function Navbar() {
   const lenis = useLenis()
   const [showNav, setShowNav] = useState(() => isWebsiteLoaded())
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isPastHero, setIsPastHero] = useState(false)
 
   useEffect(() => {
     const unsub = subscribeWebsiteLoaded((loaded) => {
@@ -120,9 +120,20 @@ export function Navbar() {
     return unsub
   }, [])
 
+  useEffect(() => {
+    const onScroll = () => {
+      const vh = window.innerHeight || 800
+      // Reveal register button once scrolled past ~55% of viewport
+      setIsPastHero(window.scrollY > vh * 0.55)
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   const scrollToSection = (targetId: string) => {
     setMobileMenuOpen(false)
-    if (targetId === 'top') {
+    if (targetId === 'top' || targetId === 'hero') {
       if (lenis) {
         lenis.scrollTo(0, { duration: 1.2 })
       } else {
@@ -159,9 +170,14 @@ export function Navbar() {
               text="LNMHACKS"
               trigger={showNav}
               charColors={[
-                '#fb3377', // L: Pink from logo
-                '#63c4fd', // N: Cyan from logo
-                '#1e60ff', // M: Royal Blue from logo
+                '#1e60ff', // L: Dark Blue (current M)
+                '#1e60ff', // N: Dark Blue (current M)
+                '#1e60ff', // M: Dark Blue
+                '#ff3344', // H: Red
+                '#ff3344', // A: Red
+                '#ff3344', // C: Red
+                '#ff3344', // K: Red
+                '#ff3344', // S: Red
               ]}
             />
           </span>
@@ -183,17 +199,49 @@ export function Navbar() {
               <ScrambleWord text={item.label} trigger={showNav} />
             </button>
           ))}
+
+          {/* Seamless Register button: invisible on hero, appears seamlessly when scrolled, scrolls back to hero */}
+          <div
+            className={`transition-all duration-300 ease-out flex items-center ${
+              isPastHero
+                ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto ml-2'
+                : 'opacity-0 -translate-y-2 scale-90 pointer-events-none w-0 overflow-hidden ml-0'
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => scrollToSection('hero')}
+              className="px-4 py-1.5 text-xs font-bold uppercase rounded-full bg-[#1e60ff] hover:bg-[#164ecc] text-white border border-blue-400/40 shadow-md shadow-blue-500/25 active:scale-95 transition-all duration-200 cursor-pointer tracking-wider flex items-center gap-1.5"
+              style={{
+                fontFamily: '"tiktok", sans-serif',
+                fontVariationSettings: '"wght" 700, "wdth" 110',
+              }}
+            >
+              <span>REGISTER</span>
+              <span className="text-[11px] leading-none">↑</span>
+            </button>
+          </div>
         </nav>
 
-        {/* Mobile Menu Toggle Button */}
+        {/* Mobile Menu Action Buttons */}
         <div className="md:hidden flex items-center gap-2 pointer-events-auto">
-          <button
-            type="button"
-            onClick={() => scrollToSection('sponsors')}
-            className="px-3 py-1.5 text-xs font-bold uppercase rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-sm active:scale-95 transition-transform"
+          {/* Seamless Mobile Register button */}
+          <div
+            className={`transition-all duration-300 ease-out ${
+              isPastHero
+                ? 'opacity-100 scale-100 pointer-events-auto'
+                : 'opacity-0 scale-90 pointer-events-none w-0 overflow-hidden'
+            }`}
           >
-            Register
-          </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection('hero')}
+              className="px-3 py-1.5 text-xs font-bold uppercase rounded-full bg-[#1e60ff] text-white border border-blue-400/40 shadow-sm active:scale-95 transition-transform"
+            >
+              Register ↑
+            </button>
+          </div>
+
           <button
             type="button"
             aria-label="Toggle Navigation Menu"
@@ -234,6 +282,17 @@ export function Navbar() {
                 {item.label}
               </button>
             ))}
+            {isPastHero && (
+              <button
+                type="button"
+                onClick={() => scrollToSection('hero')}
+                className="w-full text-left py-3 px-4 rounded-xl text-blue-400 font-bold hover:bg-white/10 text-sm tracking-wider transition-colors duration-150 flex items-center justify-between"
+                style={{ fontFamily: '"tiktok", sans-serif' }}
+              >
+                <span>REGISTER</span>
+                <span>↑</span>
+              </button>
+            )}
           </div>
         </div>
       )}

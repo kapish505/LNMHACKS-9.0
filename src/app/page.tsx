@@ -12,6 +12,7 @@ import { Navbar } from '@/components/dom/navbar'
 import { WebsiteLoader } from '@/components/dom/website-loader'
 import { CloudSky } from '@/components/canvas/cloud-sky'
 import { FixedFooter } from '@/components/dom/fixed-footer'
+import ScanGridButton from '@/components/ui/scan-grid-button'
 
 /**
  * Wraps CloudSky with a scroll-driven parallax + fade.
@@ -104,11 +105,49 @@ export default function Home() {
       <InnovateSection />
 
       {/* ── Hero section — CloudSky with scroll parallax fade ── */}
-      <div className="relative min-h-[100dvh] w-full flex items-center justify-center overflow-hidden py-16 sm:py-0">
+      <div id="hero" className="relative min-h-[100dvh] w-full flex items-center justify-center overflow-hidden py-16 sm:py-0">
         <ParallaxSky />
 
-        <div className="relative z-10 pointer-events-auto flex items-center justify-center w-full px-2 sm:px-6">
+        <div className="relative z-10 pointer-events-auto flex flex-col items-center justify-center w-full px-2 sm:px-6">
           <VaporCountdown />
+          <div className="mt-6 sm:mt-8">
+            <ScanGridButton
+              label="REGISTER"
+              font={{
+                fontFamily: '"tiktok", sans-serif',
+                fontWeight: 700,
+                fontSize: 16,
+                letterSpacing: '2px',
+              }}
+              padding="14px 44px"
+              rounded={14}
+              colors={{
+                fill: 'rgba(15, 23, 42, 0.85)',
+                hoverFill: '#1e60ff',
+                textColor: '#ffffff',
+                hoverTextColor: '#ffffff',
+              }}
+              border={{
+                borderWidth: 1.5,
+                borderStyle: 'solid',
+                borderColor: 'rgba(255, 255, 255, 0.35)',
+              }}
+              scan={{
+                color: '#ff3344',
+                speed: 60,
+              }}
+              glitchIntensity={2.5}
+              addIcon={true}
+              icon={{
+                side: 'right',
+                size: 16,
+                type: 'symbol',
+                symbol: '→',
+                color: '#ffffff',
+                hoverColor: '#ffffff',
+              }}
+            />
+          </div>
         </div>
       </div>
 

@@ -59,8 +59,20 @@ vec4 revealHoverImage(vec2 screenUv) {
   vec4 baseColor  = texture2D(map, clamp(localUv, 0.0, 1.0));
   vec4 hoverColor = texture2D(mapHover, clamp(localUv, 0.0, 1.0));
   vec4 color = mix(baseColor, hoverColor, squareMask);
-  vec2 edge = min(localUv, 1.0 - localUv);
-  color.a *= step(0.0, edge.x) * step(0.0, edge.y);
+
+  // Anti-aliased rounded rectangle corner clipping (24px corner radius)
+  vec2 halfSizePx = vec2(rectWidthPx, rectHeightPx) * 0.5;
+  vec2 posPx = (localUv - 0.5) * vec2(rectWidthPx, rectHeightPx);
+  float radiusPx = min(24.0, min(halfSizePx.x, halfSizePx.y));
+  vec2 q = abs(posPx) - halfSizePx + radiusPx;
+  float dist = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - radiusPx;
+  float cornerMask = 1.0 - smoothstep(-1.0, 1.0, dist);
+  color.a *= cornerMask;
+
+  // Subtle 3D sticky note shading when curled
+  float curlShade = (localUv.x - 0.5) * uCurlStrength * 3.0;
+  color.rgb += vec3(curlShade * 0.12);
+
   return color;
 }
 
