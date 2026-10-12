@@ -153,8 +153,12 @@ export function VaporCountdown({
     let last = 0;
     const dampC = 2 * ZETA * Math.sqrt(SPRING_K); // s⁻¹
 
+    let inView = true;
     const loop = (now: number) => {
-      if (!ctx) return;
+      if (!ctx || !inView || document.hidden) {
+        raf = 0;
+        return;
+      }
       const dt = Math.min(Math.max((now - last) / 1000, 0), DT_MAX);
       last = now;
       ctx.clearRect(0, 0, cw, ch);
@@ -477,13 +481,19 @@ export function VaporCountdown({
       attributeFilter: ["class", "data-theme"],
     });
     const colorScheme = window.matchMedia("(prefers-color-scheme: dark)");
-    colorScheme.addEventListener("change", onThemeChange);
+    // Pause canvas animation when scrolled offscreen
+    const io = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      if (inView) wake();
+    }, { threshold: 0.02 });
+    io.observe(root);
 
     return () => {
       disposed = true;
       if (timer) clearTimeout(timer);
       cancelAnimationFrame(raf);
       raf = 0;
+      io.disconnect();
       ro?.disconnect();
       mo.disconnect();
       colorScheme.removeEventListener("change", onThemeChange);
@@ -493,12 +503,12 @@ export function VaporCountdown({
   return (
     <div
       ref={rootRef}
-      className={`relative inline-grid select-none ${className}`}
+      className={`relative inline-grid select-none max-w-[96vw] mx-auto ${className}`}
       style={{
         gridTemplateColumns: "repeat(4, auto)",
-        columnGap: "0.55em",
-        rowGap: "0.75rem",
-        fontSize: "clamp(5.5rem, 14.5vw, 12.5rem)",
+        columnGap: "clamp(0.2rem, 2.2vw, 0.55em)",
+        rowGap: "clamp(0.4rem, 1.5vw, 0.75rem)",
+        fontSize: "clamp(1.85rem, 8.2vw, 12.5rem)",
       }}
     >
       {/* real element: screen‑reader truth; visible static under reduced motion */}
@@ -527,7 +537,7 @@ export function VaporCountdown({
         labels.map((label) => (
           <span
             key={label}
-            className="text-center font-mono text-xs sm:text-sm tracking-[0.25em] text-white/95 font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]"
+            className="text-center font-mono text-[9px] xs:text-[10px] sm:text-xs md:text-sm tracking-[0.12em] sm:tracking-[0.25em] text-white/95 font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]"
           >
             {label}
           </span>

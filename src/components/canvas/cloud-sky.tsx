@@ -348,12 +348,17 @@ function __OriginkitBase_CloudSky(props: Props) {
     let last = performance.now()
     let paused = false
 
-    // Low-end: cap to 30 fps; high-end: uncapped
+    // Low-end / mobile: cap to 30 fps and 1.0 DPR; high-end desktop: uncapped fps, 1.5 DPR
     const nav = navigator as Navigator & { deviceMemory?: number }
+    const isMobile =
+      typeof window !== "undefined" &&
+      (window.innerWidth < 768 || "ontouchstart" in window || /Mobi|Android|iPhone/i.test(navigator.userAgent))
     const isLowEnd =
+      isMobile ||
       (navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency < 4) ||
       (nav.deviceMemory !== undefined && nav.deviceMemory < 4)
     const minFrameMs = isLowEnd ? 1000 / 30 : 0
+    const effectiveMaxDPR = isMobile ? 1.0 : MAX_DPR
 
     let nearX = 0
     let farX = 0
@@ -380,7 +385,7 @@ function __OriginkitBase_CloudSky(props: Props) {
       farX = (farX - FAR_DRIFT * rate * dt) % 1000
       cirrusX = (cirrusX - CIRRUS_DRIFT * rate * dt) % 1000
 
-      const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR)
+      const dpr = Math.min(window.devicePixelRatio || 1, effectiveMaxDPR)
       const cw = sizeRef.current.w || canvas.clientWidth || (typeof window !== "undefined" ? window.innerWidth : 1200)
       const ch = sizeRef.current.h || canvas.clientHeight || (typeof window !== "undefined" ? window.innerHeight : 800)
       const bw = Math.max(1, Math.round(cw * dpr))
@@ -431,14 +436,22 @@ function __OriginkitBase_CloudSky(props: Props) {
     canvas.addEventListener("pointerenter", track)
     canvas.addEventListener("pointerleave", onLeave)
 
-    // Pause when tab is hidden — saves GPU on background tabs
-    const onVisibility = () => { paused = document.hidden }
+    // Pause when tab is hidden or canvas is scrolled out of view
+    let inView = true
+    const io = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting
+      paused = !inView || document.hidden
+    }, { threshold: 0.02 })
+    io.observe(canvas)
+
+    const onVisibility = () => { paused = !inView || document.hidden }
     document.addEventListener('visibilitychange', onVisibility)
 
     raf = requestAnimationFrame(render)
 
     return () => {
       cancelAnimationFrame(raf)
+      io.disconnect()
       document.removeEventListener('visibilitychange', onVisibility)
       window.removeEventListener("pointermove", track)
       canvas.removeEventListener("pointerenter", track)

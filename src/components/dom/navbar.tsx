@@ -102,6 +102,7 @@ function ScrambleWord({
 export function Navbar() {
   const lenis = useLenis()
   const [showNav, setShowNav] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     const unsub = subscribeWebsiteLoaded((loaded) => {
@@ -111,6 +112,7 @@ export function Navbar() {
   }, [])
 
   const scrollToSection = (targetId: string) => {
+    setMobileMenuOpen(false)
     if (targetId === 'top') {
       if (lenis) {
         lenis.scrollTo(0, { duration: 1.2 })
@@ -132,7 +134,7 @@ export function Navbar() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 pointer-events-none transition-colors duration-300">
-      <div className="flex justify-between items-center px-4 sm:px-8 lg:px-14 py-4 lg:py-6">
+      <div className="flex justify-between items-center px-4 sm:px-8 lg:px-14 py-3 sm:py-4 lg:py-6">
         {/* Left Brand: Logo + LNMHACKS */}
         <a
           href="#"
@@ -140,27 +142,27 @@ export function Navbar() {
             e.preventDefault()
             scrollToSection('top')
           }}
-          className="relative flex items-center gap-2.5 sm:gap-3 p-1.5 sm:p-2 pointer-events-auto cursor-pointer before:content-[''] before:absolute before:inset-0 before:border-2 before:border-dotted before:border-transparent before:pointer-events-none before:transition-colors before:duration-200 lg:hover:before:border-white/70"
+          className="relative flex items-center gap-2 sm:gap-3 p-1 pointer-events-auto cursor-pointer select-none"
           style={{ fontFamily: '"tiktok", sans-serif', fontVariationSettings: '"wght" 700, "wdth" 120' }}
         >
           <img
             src="/logo.png"
             alt="LNMHACKS Logo"
-            className="h-12 sm:h-16 md:h-20 w-auto object-contain shrink-0 drop-shadow-md"
+            className="h-10 sm:h-14 md:h-18 w-auto object-contain shrink-0 drop-shadow-md"
           />
-          <span className="font-bold uppercase text-lg sm:text-2xl md:text-3xl text-white tracking-tight">
+          <span className="font-bold uppercase text-base sm:text-2xl md:text-3xl text-white tracking-tight drop-shadow-sm">
             <ScrambleWord text="LNMHACKS" trigger={showNav} />
           </span>
         </a>
 
-        {/* Right Navigation Items */}
-        <nav className="flex items-center gap-1 sm:gap-2 md:gap-4 pointer-events-auto">
-          {NAV_ITEMS.map((item, idx) => (
+        {/* Desktop Navigation Items */}
+        <nav className="hidden md:flex items-center gap-2 lg:gap-4 pointer-events-auto">
+          {NAV_ITEMS.map((item) => (
             <button
               key={item.label}
               type="button"
               onClick={() => scrollToSection(item.target)}
-              className="relative p-1.5 sm:p-2 uppercase cursor-pointer text-white/80 hover:text-white transition-colors duration-200 select-none text-xs sm:text-sm font-semibold tracking-wide before:content-[''] before:absolute before:inset-0 before:border-2 before:border-dotted before:border-transparent before:pointer-events-none before:transition-colors before:duration-200 lg:hover:before:border-white"
+              className="relative p-2 uppercase cursor-pointer text-white/85 hover:text-white transition-colors duration-200 select-none text-xs sm:text-sm font-semibold tracking-wide before:content-[''] before:absolute before:inset-0 before:border-2 before:border-dotted before:border-transparent before:pointer-events-none before:transition-colors before:duration-200 lg:hover:before:border-white"
               style={{
                 fontFamily: '"tiktok", sans-serif',
                 fontVariationSettings: '"wght" 600, "wdth" 110',
@@ -170,7 +172,59 @@ export function Navbar() {
             </button>
           ))}
         </nav>
+
+        {/* Mobile Menu Toggle Button */}
+        <div className="md:hidden flex items-center gap-2 pointer-events-auto">
+          <button
+            type="button"
+            onClick={() => scrollToSection('sponsors')}
+            className="px-3 py-1.5 text-xs font-bold uppercase rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-sm active:scale-95 transition-transform"
+          >
+            Register
+          </button>
+          <button
+            type="button"
+            aria-label="Toggle Navigation Menu"
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            className="p-2 rounded-xl bg-black/25 backdrop-blur-md border border-white/20 text-white flex flex-col justify-center items-center w-10 h-10 gap-1.5 active:scale-90 transition-transform"
+          >
+            <span
+              className={`block w-5 h-0.5 bg-white transition-transform duration-300 ${
+                mobileMenuOpen ? 'rotate-45 translate-y-2' : ''
+              }`}
+            />
+            <span
+              className={`block w-5 h-0.5 bg-white transition-opacity duration-200 ${
+                mobileMenuOpen ? 'opacity-0' : 'opacity-100'
+              }`}
+            />
+            <span
+              className={`block w-5 h-0.5 bg-white transition-transform duration-300 ${
+                mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''
+              }`}
+            />
+          </button>
+        </div>
       </div>
+
+      {/* Mobile Drawer Dropdown */}
+      {mobileMenuOpen && (
+        <div className="md:hidden pointer-events-auto px-4 pb-4 animate-in fade-in slide-in-from-top-4 duration-200">
+          <div className="bg-slate-900/90 backdrop-blur-xl border border-white/15 rounded-2xl p-4 shadow-2xl flex flex-col gap-2">
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => scrollToSection(item.target)}
+                className="w-full text-left py-3 px-4 rounded-xl text-white/90 hover:text-white hover:bg-white/10 text-sm font-semibold tracking-wider transition-colors duration-150"
+                style={{ fontFamily: '"tiktok", sans-serif' }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </header>
   )
 }

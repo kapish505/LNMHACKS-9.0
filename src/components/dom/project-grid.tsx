@@ -26,11 +26,11 @@ export function ProjectGrid() {
   return (
     <div className="relative w-full">
       {/* ── Intro / About Section ── */}
-      <div id="about" className="relative z-10 w-full max-w-7xl mx-auto px-6 py-32 md:py-48 pointer-events-none">
+      <div id="about" className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 md:py-48 pointer-events-none">
         <div className="pointer-events-auto">
-          <div className="flex flex-col md:flex-row items-center gap-12 md:gap-24 mb-32 md:mb-48">
+          <div className="flex flex-col md:flex-row items-center gap-8 sm:gap-12 md:gap-24 mb-16 sm:mb-24 md:mb-48">
             {/* Image Placeholder */}
-            <div className="w-full max-w-sm md:w-1/3 relative shrink-0">
+            <div className="w-full max-w-xs sm:max-w-sm md:w-1/3 relative shrink-0 mx-auto">
               <div 
                 ref={aboutImageRef}
                 onPointerEnter={onPointerEnter}
@@ -40,17 +40,17 @@ export function ProjectGrid() {
                 <img src="/projects/p1.svg" alt="Placeholder" className="opacity-0 absolute inset-0 w-full h-full object-cover" />
                 <div className="absolute bottom-6 right-6 w-3 h-3 bg-blue-600 pointer-events-none"></div>
               </div>
-              <div className="absolute -top-6 -left-6 md:-top-10 md:-left-8 text-blue-600 text-4xl md:text-6xl rotate-[-15deg] font-serif italic font-bold opacity-80 pointer-events-none" style={{ fontFamily: 'cursive' }}>
+              <div className="absolute -top-4 left-2 sm:-left-6 md:-top-10 md:-left-8 text-blue-600 text-3xl sm:text-4xl md:text-6xl rotate-[-15deg] font-serif italic font-bold opacity-80 pointer-events-none" style={{ fontFamily: 'cursive' }}>
                 Signature
               </div>
             </div>
 
             {/* Text Placeholder */}
-            <div className="w-full md:w-2/3">
-              <p className="text-2xl md:text-4xl lg:text-[2.75rem] font-medium text-slate-900 leading-[1.15] tracking-tight">
+            <div className="w-full md:w-2/3 text-center md:text-left mt-4 md:mt-0">
+              <p className="text-xl sm:text-2xl md:text-4xl lg:text-[2.75rem] font-medium text-slate-900 leading-[1.2] md:leading-[1.15] tracking-tight">
                 [Placeholder Headline: I explore how to shape AI-era workflows with craft and taste, building the next generation of digital products.]
               </p>
-              <p className="text-xl md:text-3xl text-slate-400 mt-6 md:mt-8 leading-[1.3] font-light">
+              <p className="text-base sm:text-lg md:text-3xl text-slate-400 mt-4 sm:mt-6 md:mt-8 leading-[1.3] font-light">
                 [Placeholder Subtitle: I&apos;m building Project 1, and previously worked on Company A, Company B, and Company C.]
               </p>
             </div>
@@ -59,12 +59,12 @@ export function ProjectGrid() {
       </div>
 
       {/* ── Project Grid Section ── */}
-      <div id="sponsors" className="relative z-10 w-full max-w-7xl mx-auto px-4 py-32 md:py-64">
-        <div className="text-center pb-12">
+      <div id="sponsors" className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 md:py-48">
+        <div className="text-center pb-8 sm:pb-12">
           <span className="text-xs uppercase tracking-widest text-blue-600 font-semibold">Featured Work</span>
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white mt-2 drop-shadow-md">Selected Projects</h2>
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mt-2 drop-shadow-md">Selected Projects</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-32">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-16 md:gap-32">
           {PROJECTS.map((p, i) => (
             <ProjectCard key={p.id} project={p} index={i} />
           ))}

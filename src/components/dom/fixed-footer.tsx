@@ -83,14 +83,13 @@ export function FixedFooter() {
 
   return (
     <footer
-      className="fixed bottom-0 left-0 right-0 pointer-events-none"
+      className="fixed bottom-0 left-0 right-0 pointer-events-none pb-[max(0.5rem,env(safe-area-inset-bottom))]"
       style={{ zIndex: 60 }}
     >
       <div
-        className="flex items-center justify-between px-6 py-3"
+        className="flex items-center justify-between px-4 sm:px-6 py-2 sm:py-3 text-[11px] sm:text-[13px]"
         style={{
           fontFamily: '"tronica-mono", "Courier New", monospace',
-          fontSize: '13px',
           letterSpacing: '0.1em',
           color: 'rgba(0,0,0,0.6)',
         }}
@@ -98,8 +97,8 @@ export function FixedFooter() {
         {/* Left: IST time */}
         <span>IST IN {time}</span>
 
-        {/* Center: cursor coordinates */}
-        <span>{px} X {py} Y</span>
+        {/* Center: cursor coordinates (desktop only) */}
+        <span className="hidden sm:inline">{px} X {py} Y</span>
 
         {/* Right: rotating globe */}
         <RotatingGlobe />

@@ -34,6 +34,7 @@ function ParallaxSky() {
       const progress = Math.min(1, scrollY / (vh * 1.2))
       el.style.opacity = String(1 - progress)
       el.style.transform = `translateY(${scrollY * 0.35}px)`
+      el.style.display = progress >= 1 ? 'none' : 'block'
       ticking = false
     }
 
@@ -69,14 +70,14 @@ function ParallaxSky() {
 
 export default function Home() {
   return (
-    <main className="relative min-h-screen">
+    <main className="relative min-h-screen overflow-x-hidden">
       <WebsiteLoader />
       <Navbar />
       <FixedFooter />
 
       {/* R3F Canvas — cursor + project meshes only, transparent bg */}
       <div className="fixed inset-0 z-[-1] pointer-events-none">
-        <Canvas camera={{ position: [0, 0, 5], fov: 45 }} gl={{ alpha: true }} dpr={[1, 1.5]} style={{ background: 'transparent' }}>
+        <Canvas camera={{ position: [0, 0, 5], fov: 45 }} gl={{ alpha: true, powerPreference: 'high-performance' }} dpr={[1, 1.5]} style={{ background: 'transparent' }}>
           <Suspense fallback={null}>
             <RadialSpeedLines />
             <CursorArrow />
@@ -98,10 +99,10 @@ export default function Home() {
       <InnovateSection />
 
       {/* ── Hero section — CloudSky with scroll parallax fade ── */}
-      <div className="relative h-screen w-full flex items-center justify-center overflow-hidden">
+      <div className="relative min-h-[100dvh] w-full flex items-center justify-center overflow-hidden py-16 sm:py-0">
         <ParallaxSky />
 
-        <div className="relative z-10 pointer-events-auto flex items-center justify-center">
+        <div className="relative z-10 pointer-events-auto flex items-center justify-center w-full px-2 sm:px-6">
           <VaporCountdown />
         </div>
       </div>
