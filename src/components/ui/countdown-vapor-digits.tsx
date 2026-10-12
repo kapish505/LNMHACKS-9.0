@@ -36,8 +36,8 @@ function noise2(x: number, y: number) {
 // ---------------------------------------------------------------------------
 
 const FLOATS = 6; // grains: x, y, vx, vy, hx, hy · vapor: x, y, vx, vy, age, life
-const MAX_GRAINS = 2500; // per digit
-const SAMPLE_STRIDE = 3; // px between alpha samples on the glyph raster
+const MAX_GRAINS = 2800; // per digit — balanced particle count for distinct airy grains
+const SAMPLE_STRIDE = 3; // px between alpha samples — clean particle separation, distinct grains
 const SPRING_K = 90; // s⁻² — hero‑gravity‑well constants exactly
 const ZETA = 0.55; // damping ratio; < 1 gives a soft condensation overshoot
 const DRAG = 0.92; // per‑frame velocity drag
@@ -130,11 +130,9 @@ export function VaporCountdown({
     // ---- canvas / particle state (unused under reduced motion) -------------
     const ctx = canvas.getContext("2d");
 
-    // grain color tracks the real foreground token — read fresh on theme
-    // change so light/dark both draw legible ink, never a hardcoded hex.
-    let grainColor = "#0f172a";
+    let grainColor = "#ffffff";
     const updateGrainColor = () => {
-      grainColor = getComputedStyle(digitEls[0]).color || grainColor;
+      grainColor = "#ffffff";
     };
     updateGrainColor();
 
@@ -170,10 +168,10 @@ export function VaporCountdown({
 
         if (!slot.active) {
           // asleep: grains sit on their homes — one flat pass, no physics
-          ctx.globalAlpha = 0.5;
+          ctx.globalAlpha = 0.95; // settled — crisp bright white particles with distinct grain gaps
           for (let i = 0; i < slot.gc; i++) {
             const o = i * FLOATS;
-            ctx.fillRect(g[o] - 1, g[o + 1] - 1, 2, 2);
+            ctx.fillRect(g[o] - 0.9, g[o + 1] - 0.9, 1.8, 1.8);
           }
           continue;
         }
@@ -210,8 +208,8 @@ export function VaporCountdown({
           }
 
           const speed = Math.hypot(vx, vy);
-          ctx.globalAlpha = 0.5 + 0.5 * Math.min(1, speed / 500);
-          ctx.fillRect(x - 1, y - 1, 2, 2);
+          ctx.globalAlpha = 0.88 + 0.12 * Math.min(1, speed / 500);
+          ctx.fillRect(x - 0.9, y - 0.9, 1.8, 1.8);
         }
 
         // vapor grains: curl‑noise wind, biased upward, alpha fade over life
@@ -257,8 +255,8 @@ export function VaporCountdown({
 
           const speed = Math.hypot(vx, vy);
           ctx.globalAlpha =
-            (1 - age / life) * (0.5 + 0.5 * Math.min(1, speed / 500));
-          ctx.fillRect(x - 1, y - 1, 2, 2);
+            (1 - age / life) * (0.75 + 0.25 * Math.min(1, speed / 500));
+          ctx.fillRect(x - 0.9, y - 0.9, 1.8, 1.8);
           j++;
         }
         if (slot.vc > 0) settled = false;
@@ -508,7 +506,7 @@ export function VaporCountdown({
         {/* Days: 3 digits */}
         <span
           key="group-days"
-          className="flex justify-center font-semibold leading-none tracking-tight text-foreground opacity-0 tabular-nums motion-reduce:opacity-100"
+          className="flex justify-center font-semibold leading-none tracking-tight text-white opacity-0 tabular-nums motion-reduce:opacity-100"
         >
           <span data-vc-digit>0</span>
           <span data-vc-digit>0</span>
@@ -518,7 +516,7 @@ export function VaporCountdown({
         {[1, 2, 3].map((group) => (
           <span
             key={group}
-            className="flex justify-center font-semibold leading-none tracking-tight text-foreground opacity-0 tabular-nums motion-reduce:opacity-100"
+            className="flex justify-center font-semibold leading-none tracking-tight text-white opacity-0 tabular-nums motion-reduce:opacity-100"
           >
             <span data-vc-digit>0</span>
             <span data-vc-digit>0</span>
@@ -529,7 +527,7 @@ export function VaporCountdown({
         labels.map((label) => (
           <span
             key={label}
-            className="text-center font-mono text-xs sm:text-sm tracking-[0.25em] text-slate-700/80"
+            className="text-center font-mono text-xs sm:text-sm tracking-[0.25em] text-white/95 font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]"
           >
             {label}
           </span>
@@ -543,6 +541,7 @@ export function VaporCountdown({
           top: -PAD_TOP,
           width: `calc(100% + ${PAD_X * 2}px)`,
           height: `calc(100% + ${PAD_TOP + PAD_BOTTOM}px)`,
+          filter: "drop-shadow(0 4px 16px rgba(0, 0, 0, 0.45)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5))",
         }}
       />
     </div>

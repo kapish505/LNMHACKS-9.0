@@ -57,9 +57,9 @@ function ParallaxSky() {
     >
       <CloudSky
         background="#4A90D9"
-        baseColor="#C8E8F8"
+        baseColor="#9BCBF0"
         accentColor="#FFFFFF"
-        density={65}
+        density={68}
         speed={55}
         pointer={{ wind: 0, parallax: 0, damping: 1 }}
       />
