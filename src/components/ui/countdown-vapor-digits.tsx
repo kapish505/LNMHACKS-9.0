@@ -37,7 +37,7 @@ function noise2(x: number, y: number) {
 
 const FLOATS = 6; // grains: x, y, vx, vy, hx, hy · vapor: x, y, vx, vy, age, life
 const MAX_GRAINS = 2800; // per digit — balanced particle count for distinct airy grains
-const SAMPLE_STRIDE = 3; // px between alpha samples — clean particle separation, distinct grains
+const SAMPLE_STRIDE = 2; // px between alpha samples — clean particle separation, distinct grains
 const SPRING_K = 90; // s⁻² — hero‑gravity‑well constants exactly
 const ZETA = 0.55; // damping ratio; < 1 gives a soft condensation overshoot
 const DRAG = 0.92; // per‑frame velocity drag
@@ -172,7 +172,7 @@ export function VaporCountdown({
 
         if (!slot.active) {
           // asleep: grains sit on their homes — one flat pass, no physics
-          ctx.globalAlpha = 0.95; // settled — crisp bright white particles with distinct grain gaps
+          ctx.globalAlpha = 0.98; // settled — crisp bright white particles with bold, solid contours
           for (let i = 0; i < slot.gc; i++) {
             const o = i * FLOATS;
             ctx.fillRect(g[o] - 0.9, g[o + 1] - 0.9, 1.8, 1.8);
@@ -369,20 +369,23 @@ export function VaporCountdown({
       const octx = off.getContext("2d", { willReadFrequently: true });
       if (!octx) return;
       const cs = getComputedStyle(digitEls[0]);
-      octx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      // Use bold, clear 900 weight with system/Inter display fonts for crisp glyph contours
+      octx.font = `900 ${cs.fontSize} ${cs.fontFamily}`;
       octx.textAlign = "center";
       octx.textBaseline = "middle";
       octx.fillStyle = "#ffffff";
       glyphs = [];
+      const stride = gw > 70 ? 3 : 2;
       for (let d = 0; d < 10; d++) {
         octx.clearRect(0, 0, gw, gh);
         octx.fillText(String(d), gw / 2, gh / 2);
         const alpha = octx.getImageData(0, 0, gw, gh).data;
         const pts: number[] = [];
-        for (let y = 1; y < gh; y += SAMPLE_STRIDE) {
+        for (let y = 1; y < gh; y += stride) {
           const row = y * gw;
-          for (let x = 1; x < gw; x += SAMPLE_STRIDE) {
-            if (alpha[(row + x) * 4 + 3] > 128) pts.push(x, y);
+          for (let x = 1; x < gw; x += stride) {
+            // Alpha > 60 captures antialiased curved boundaries (0, 8, 5, 3, etc.) cleanly
+            if (alpha[(row + x) * 4 + 3] > 60) pts.push(x, y);
           }
         }
         const total = pts.length / 2;
@@ -506,9 +509,12 @@ export function VaporCountdown({
       className={`relative inline-grid select-none max-w-[96vw] mx-auto ${className}`}
       style={{
         gridTemplateColumns: "repeat(4, auto)",
-        columnGap: "clamp(0.2rem, 2.2vw, 0.55em)",
-        rowGap: "clamp(0.4rem, 1.5vw, 0.75rem)",
-        fontSize: "clamp(1.85rem, 8.2vw, 12.5rem)",
+        columnGap: "clamp(0.45rem, 2.5vw, 0.55em)",
+        rowGap: "clamp(0.35rem, 1.5vw, 0.75rem)",
+        fontSize: "clamp(2.75rem, 11.8vw, 12.5rem)",
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        fontVariantNumeric: "tabular-nums",
       }}
     >
       {/* real element: screen‑reader truth; visible static under reduced motion */}
@@ -516,7 +522,7 @@ export function VaporCountdown({
         {/* Days: 3 digits */}
         <span
           key="group-days"
-          className="flex justify-center font-semibold leading-none tracking-tight text-white opacity-0 tabular-nums motion-reduce:opacity-100"
+          className="flex justify-center font-black leading-none tracking-tight text-white opacity-0 tabular-nums motion-reduce:opacity-100"
         >
           <span data-vc-digit>0</span>
           <span data-vc-digit>0</span>
@@ -526,7 +532,7 @@ export function VaporCountdown({
         {[1, 2, 3].map((group) => (
           <span
             key={group}
-            className="flex justify-center font-semibold leading-none tracking-tight text-white opacity-0 tabular-nums motion-reduce:opacity-100"
+            className="flex justify-center font-black leading-none tracking-tight text-white opacity-0 tabular-nums motion-reduce:opacity-100"
           >
             <span data-vc-digit>0</span>
             <span data-vc-digit>0</span>
@@ -537,7 +543,7 @@ export function VaporCountdown({
         labels.map((label) => (
           <span
             key={label}
-            className="text-center font-mono text-[9px] xs:text-[10px] sm:text-xs md:text-sm tracking-[0.12em] sm:tracking-[0.25em] text-white/95 font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]"
+            className="text-center font-mono text-[10px] xs:text-[11px] sm:text-xs md:text-sm tracking-[0.14em] sm:tracking-[0.25em] text-white/95 font-semibold drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]"
           >
             {label}
           </span>

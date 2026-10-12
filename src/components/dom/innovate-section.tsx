@@ -89,11 +89,11 @@ export function InnovateSection({
           style={{
             fontSize: 'clamp(2.5rem, 10vw, 8rem)',
             color: textColor,
-            textShadow:
-              '0 0 60px rgba(100, 180, 255, 0.25), 0 0 120px rgba(80, 40, 150, 0.15)',
+            textShadow: '0 0 30px rgba(100, 180, 255, 0.3)',
             fontFamily:
               '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
             letterSpacing: '-0.04em',
+            willChange: 'transform, opacity',
             opacity: 0,
             display: 'none',
           }}

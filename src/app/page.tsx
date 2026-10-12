@@ -77,7 +77,12 @@ export default function Home() {
 
       {/* R3F Canvas — cursor + project meshes only, transparent bg */}
       <div className="fixed inset-0 z-[-1] pointer-events-none">
-        <Canvas camera={{ position: [0, 0, 5], fov: 45 }} gl={{ alpha: true, powerPreference: 'high-performance' }} dpr={[1, 1.5]} style={{ background: 'transparent' }}>
+        <Canvas
+          camera={{ position: [0, 0, 5], fov: 45 }}
+          gl={{ alpha: true, powerPreference: 'high-performance' }}
+          dpr={typeof window !== 'undefined' && window.innerWidth < 768 ? [1, 1] : [1, 1.5]}
+          style={{ background: 'transparent' }}
+        >
           <Suspense fallback={null}>
             <RadialSpeedLines />
             <CursorArrow />
