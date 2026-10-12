@@ -13,34 +13,22 @@ const PROJECTS = [
 ]
 
 export function ProjectGrid() {
-  const aboutImageRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (aboutImageRef.current) domRegistry.register('about-image', aboutImageRef.current)
-    return () => domRegistry.unregister('about-image')
-  }, [])
-
-  const onPointerEnter = () => domRegistry.setHover('about-image', true)
-  const onPointerLeave = () => domRegistry.setHover('about-image', false)
-
   return (
     <div className="relative w-full">
       {/* ── Intro / About Section ── */}
       <div id="about" className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 md:py-48 pointer-events-none">
         <div className="pointer-events-auto">
           <div className="flex flex-col md:flex-row items-center gap-8 sm:gap-12 md:gap-24 mb-16 sm:mb-24 md:mb-48">
-            {/* Image Placeholder */}
-            <div className="w-full max-w-xs sm:max-w-sm md:w-1/3 relative shrink-0 mx-auto">
-              <div 
-                ref={aboutImageRef}
-                onPointerEnter={onPointerEnter}
-                onPointerLeave={onPointerLeave}
-                className="w-full aspect-square relative group block cursor-pointer"
-              >
-                <img src="/projects/p1.svg" alt="Placeholder" className="opacity-0 absolute inset-0 w-full h-full object-cover" />
-                <div className="absolute bottom-6 right-6 w-3 h-3 bg-blue-600 pointer-events-none"></div>
+            {/* Logo (No Background) */}
+            <div className="w-full max-w-xs sm:max-w-sm md:w-1/3 relative shrink-0 mx-auto flex items-center justify-center">
+              <div className="w-full aspect-square relative flex items-center justify-center p-2 sm:p-4">
+                <img
+                  src="/logo.png"
+                  alt="LNMHACKS Logo"
+                  className="w-full h-full object-contain select-none drop-shadow-md transition-transform duration-300 hover:scale-105"
+                />
               </div>
-              <div className="absolute -top-4 left-2 sm:-left-6 md:-top-10 md:-left-8 text-blue-600 text-3xl sm:text-4xl md:text-6xl rotate-[-15deg] font-serif italic font-bold opacity-80 pointer-events-none" style={{ fontFamily: 'cursive' }}>
+              <div className="absolute -top-4 left-2 sm:-left-6 md:-top-10 md:-left-8 text-blue-600 text-3xl sm:text-4xl md:text-6xl rotate-[-15deg] font-serif italic font-bold opacity-80 pointer-events-none select-none" style={{ fontFamily: 'cursive' }}>
                 Signature
               </div>
             </div>
