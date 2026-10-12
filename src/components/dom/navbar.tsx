@@ -2,7 +2,7 @@
 
 import { useLenis } from 'lenis/react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { subscribeWebsiteLoaded } from '@/lib/loader-bus'
+import { subscribeWebsiteLoaded, isWebsiteLoaded } from '@/lib/loader-bus'
 
 // Characters to cycle through while scrambling
 const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&!'
@@ -68,40 +68,49 @@ function useScrambleReveal(text: string, trigger: boolean) {
   return display
 }
 
-/** Renders a scramble-revealed word as individual <span>s so widths stay stable */
+/** Renders a scramble-revealed word as individual <span>s with optional per-char colors */
 function ScrambleWord({
   text,
   trigger,
   className,
+  charColors,
 }: {
   text: string
   trigger: boolean
   className?: string
+  charColors?: (string | undefined)[]
 }) {
   const chars = useScrambleReveal(text, trigger)
 
   return (
     <>
-      {chars.map((c, i) => (
-        <span
-          key={i}
-          className={`inline-block ${className ?? ''}`}
-          style={{
-            color: c !== text[i] && c !== '\u00A0' ? `hsl(${Math.random() * 360}, 100%, 70%)` : undefined,
-            transition: 'color 0.05s',
-            minWidth: '0.55em',
-          }}
-        >
-          {c}
-        </span>
-      ))}
+      {chars.map((c, i) => {
+        const isLocked = c === text[i]
+        const finalColor = charColors?.[i]
+        return (
+          <span
+            key={i}
+            className={`inline-block ${className ?? ''}`}
+            style={{
+              color:
+                !isLocked && c !== '\u00A0'
+                  ? `hsl(${Math.random() * 360}, 100%, 70%)`
+                  : finalColor || undefined,
+              transition: 'color 0.05s',
+              minWidth: '0.55em',
+            }}
+          >
+            {c}
+          </span>
+        )
+      })}
     </>
   )
 }
 
 export function Navbar() {
   const lenis = useLenis()
-  const [showNav, setShowNav] = useState(false)
+  const [showNav, setShowNav] = useState(() => isWebsiteLoaded())
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -135,23 +144,26 @@ export function Navbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 pointer-events-none transition-colors duration-300">
       <div className="flex justify-between items-center px-4 sm:px-8 lg:px-14 py-3 sm:py-4 lg:py-6">
-        {/* Left Brand: Logo + LNMHACKS */}
+        {/* Left Brand: LNMHACKS with logo colors on L, N, M */}
         <a
           href="#"
           onClick={(e) => {
             e.preventDefault()
             scrollToSection('top')
           }}
-          className="relative flex items-center gap-2 sm:gap-3 p-1 pointer-events-auto cursor-pointer select-none"
-          style={{ fontFamily: '"tiktok", sans-serif', fontVariationSettings: '"wght" 700, "wdth" 120' }}
+          className="relative flex items-center p-1 pointer-events-auto cursor-pointer select-none transition-transform hover:scale-[1.02] active:scale-[0.98]"
+          style={{ fontFamily: '"tiktok", sans-serif', fontVariationSettings: '"wght" 800, "wdth" 120' }}
         >
-          <img
-            src="/logo.png"
-            alt="LNMHACKS Logo"
-            className="h-10 sm:h-14 md:h-18 w-auto object-contain shrink-0 drop-shadow-md"
-          />
-          <span className="font-bold uppercase text-base sm:text-2xl md:text-3xl text-white tracking-tight drop-shadow-sm">
-            <ScrambleWord text="LNMHACKS" trigger={showNav} />
+          <span className="font-black uppercase text-lg sm:text-2xl md:text-3xl text-white tracking-tight drop-shadow-sm flex items-center">
+            <ScrambleWord
+              text="LNMHACKS"
+              trigger={showNav}
+              charColors={[
+                '#fb3377', // L: Pink from logo
+                '#63c4fd', // N: Cyan from logo
+                '#1e60ff', // M: Royal Blue from logo
+              ]}
+            />
           </span>
         </a>
 
