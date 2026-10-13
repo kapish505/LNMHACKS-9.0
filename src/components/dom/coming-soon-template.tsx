@@ -2,7 +2,6 @@
 
 import React from 'react'
 import { triggerPageTransition } from '@/lib/page-transition-bus'
-import { PageCircleReveal } from '@/components/canvas/page-circle-reveal'
 
 interface ComingSoonTemplateProps {
   label: string
@@ -17,7 +16,6 @@ export function ComingSoonTemplate({
 }: ComingSoonTemplateProps) {
   return (
     <main className="relative min-h-screen bg-[#F0EDE8] flex flex-col items-center justify-center px-6 select-none">
-      <PageCircleReveal />
 
       {/* Centered content */}
       <div className="flex flex-col items-center gap-6 text-center max-w-lg">

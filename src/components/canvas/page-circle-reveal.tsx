@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { subscribeWebsiteLoaded } from '@/lib/loader-bus'
+import { useRouter, usePathname } from 'next/navigation'
+import { subscribeWebsiteLoaded, isWebsiteLoaded, setWebsiteLoaded } from '@/lib/loader-bus'
 import { subscribePageTransition } from '@/lib/page-transition-bus'
+import { resetLenisScroll } from '@/lib/scroll-bus'
 
 /**
  * PageCircleReveal — Signature radial dot-matrix screen transition.
@@ -12,13 +14,25 @@ import { subscribePageTransition } from '@/lib/page-transition-bus'
  *    towards the screen boundaries, expanding until they merge and completely dissolve
  *    the overlay, revealing the entire website beneath along with all components.
  *
- * 2. On navigation (clicking Register or any other page link):
- *    Plays the matching transition — small circles emerge from the center, rippling
- *    and expanding outwards until the screen is fully masked, then executes navigation.
+ * 2. On navigation (clicking Register, Hack Guide, or Back to Home):
+ *    Executes a seamless SPA transition without any browser reload or black freeze:
+ *    - Expanding black circles ripple outward, merging into 100% black mask (600ms).
+ *    - Next.js client-side router (router.push) swaps the route silently underneath.
+ *    - Lenis & window scroll immediately reset to top.
+ *    - Expanding transparent circular apertures blossom outward, smoothly dissolving
+ *      the black overlay and unveiling the new page (750ms).
  */
 export function PageCircleReveal() {
+  const router = useRouter()
+  const pathname = usePathname()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isActive, setIsActive] = useState(true)
+
+  // Keep fresh refs for the animation loop
+  const routerRef = useRef(router)
+  routerRef.current = router
+  const pathnameRef = useRef(pathname)
+  pathnameRef.current = pathname
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -27,7 +41,7 @@ export function PageCircleReveal() {
     if (!ctx) return
 
     const SPACING = 20 // Distance between circle centers for dense, detailed dot matrix
-    const MAX_RADIUS = SPACING * 0.78 // Overlaps adjacent circles for seamless 100% mask
+    const MAX_RADIUS = SPACING * 0.85 // Generous overlap for seamless 100% mask
 
     let width = window.innerWidth
     let height = window.innerHeight
@@ -49,15 +63,59 @@ export function PageCircleReveal() {
 
     let mode: 'idle' | 'reveal' | 'exit' = 'idle'
     let animStart = 0
-    const REVEAL_DURATION = 1000 // 1.0s majestic reveal
-    const EXIT_DURATION = 750    // 0.75s swift page exit
+    const REVEAL_DURATION = 750 // 0.75s graceful dot-matrix reveal
+    const EXIT_DURATION = 600   // 0.60s swift dot-matrix mask
     let targetUrl = ''
     let rafId: number | null = null
 
-    // Draw solid black overlay initially
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    ctx.fillStyle = '#000000'
-    ctx.fillRect(0, 0, width, height)
+    // ── Helper: trigger reveal animation ──
+    const triggerReveal = () => {
+      if (mode === 'reveal') return
+      setIsActive(true)
+      mode = 'reveal'
+      animStart = performance.now()
+      if (rafId) cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(drawFrame)
+    }
+
+    // ── Helper: trigger exit transition to targetUrl ──
+    const startExitTransition = (url: string) => {
+      if (mode !== 'idle') return
+      // Normalize target and current paths
+      const current = pathnameRef.current || '/'
+      if (url === current || (url === '/' && current === '/')) return
+
+      targetUrl = url
+
+      // Prefetch target route bundle during exit animation for instant render
+      try {
+        routerRef.current.prefetch(url)
+      } catch {}
+
+      setIsActive(true)
+      mode = 'exit'
+      animStart = performance.now()
+      if (rafId) cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(drawFrame)
+    }
+
+    // ── Initial State on mount ──
+    if (!isWebsiteLoaded() && pathnameRef.current === '/') {
+      // First visit to home: solid black overlay behind WebsiteLoader
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      ctx.fillStyle = '#000000'
+      ctx.fillRect(0, 0, width, height)
+    } else {
+      if (pathnameRef.current !== '/' && !isWebsiteLoaded()) {
+        // Direct land on a subpage without loader: reveal immediately
+        setWebsiteLoaded()
+        setTimeout(triggerReveal, 50)
+      } else {
+        // Already loaded: idle and clear
+        setIsActive(false)
+        ctx.clearRect(0, 0, width, height)
+      }
+    }
 
     const drawFrame = (now: number) => {
       if (mode === 'idle') return
@@ -76,9 +134,10 @@ export function PageCircleReveal() {
       const cols = Math.ceil(width / SPACING) + 2
       const rows = Math.ceil(height / SPACING) + 2
 
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+
       if (mode === 'reveal') {
         // Redraw black background then punch transparent circle apertures
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
         ctx.globalCompositeOperation = 'source-over'
         ctx.fillStyle = '#000000'
         ctx.fillRect(0, 0, width, height)
@@ -111,7 +170,7 @@ export function PageCircleReveal() {
         }
       } else if (mode === 'exit') {
         // Clear canvas then draw growing black circles from center outwards
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+        ctx.clearRect(0, 0, width, height)
         ctx.globalCompositeOperation = 'source-over'
         ctx.fillStyle = '#000000'
 
@@ -149,51 +208,50 @@ export function PageCircleReveal() {
           setIsActive(false)
         } else if (mode === 'exit') {
           // Fill completely solid black before navigating
+          ctx.globalCompositeOperation = 'source-over'
+          ctx.fillStyle = '#000000'
           ctx.fillRect(0, 0, width, height)
-          if (targetUrl) {
-            window.location.href = targetUrl
+
+          // Perform client-side SPA navigation
+          const dest = targetUrl
+          if (dest) {
+            routerRef.current.push(dest)
           }
+          resetLenisScroll()
+
+          // Seamless transition into reveal: wait 60ms for React DOM swap, then reveal
+          setTimeout(() => {
+            mode = 'reveal'
+            animStart = performance.now()
+            rafId = requestAnimationFrame(drawFrame)
+          }, 60)
         }
       }
     }
 
+    // ── 1. Listen for website loader completion (initial load) ──
     let revealTriggered = false
-    const triggerReveal = () => {
-      if (revealTriggered) return
-      revealTriggered = true
-      setIsActive(true)
-      mode = 'reveal'
-      animStart = performance.now()
-      if (rafId) cancelAnimationFrame(rafId)
-      rafId = requestAnimationFrame(drawFrame)
-    }
-
-    // ── 1. Listen for website loader completion ──
     const unsubLoader = subscribeWebsiteLoaded((loaded) => {
       if (loaded && mode !== 'exit') {
-        // Small delay so loader fade connects seamlessly
+        revealTriggered = true
         setTimeout(triggerReveal, 100)
       }
     })
 
     // Fallback: If loader is already done or absent
     const fallbackTimer = setTimeout(() => {
-      if (!revealTriggered && mode !== 'exit') {
+      if (!revealTriggered && mode === 'idle' && !isWebsiteLoaded() && pathnameRef.current === '/') {
+        setWebsiteLoaded()
         triggerReveal()
       }
-    }, 1600)
+    }, 1800)
 
     // ── 2. Listen for page transitions (e.g. Register click) ──
     const unsubTransition = subscribePageTransition((url: string) => {
-      targetUrl = url
-      setIsActive(true)
-      mode = 'exit'
-      animStart = performance.now()
-      if (rafId) cancelAnimationFrame(rafId)
-      rafId = requestAnimationFrame(drawFrame)
+      startExitTransition(url)
     })
 
-    // ── 3. Global link interceptor for external/route links ──
+    // ── 3. Global link interceptor for route links ──
     const onGlobalClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement)?.closest('a')
       if (!target) return
@@ -204,14 +262,10 @@ export function PageCircleReveal() {
       if (href.startsWith('#')) return
       if (href.startsWith('javascript:')) return
       if (target.getAttribute('target') === '_blank') return
+      if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:')) return
 
       e.preventDefault()
-      targetUrl = href
-      setIsActive(true)
-      mode = 'exit'
-      animStart = performance.now()
-      if (rafId) cancelAnimationFrame(rafId)
-      rafId = requestAnimationFrame(drawFrame)
+      startExitTransition(href)
     }
 
     document.addEventListener('click', onGlobalClick, { capture: true })
@@ -231,7 +285,7 @@ export function PageCircleReveal() {
       ref={canvasRef}
       id="page-circle-reveal"
       className={`fixed inset-0 z-[98] ${
-        isActive ? 'pointer-events-auto block' : 'pointer-events-none hidden'
+        isActive ? 'pointer-events-auto' : 'pointer-events-none'
       }`}
       aria-hidden="true"
     />

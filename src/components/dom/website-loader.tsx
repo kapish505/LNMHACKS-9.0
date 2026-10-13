@@ -1,14 +1,17 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { setWebsiteLoaded } from '@/lib/loader-bus'
+import { setWebsiteLoaded, isWebsiteLoaded } from '@/lib/loader-bus'
 
 export function WebsiteLoader() {
+  const [alreadyLoaded] = useState(() => isWebsiteLoaded())
   const [progress, setProgress] = useState(0)
   const [isDone, setIsDone] = useState(false)
   const [isHidden, setIsHidden] = useState(false)
 
   useEffect(() => {
+    if (alreadyLoaded) return
+
     const startTime = performance.now()
     const duration = 1400 // 1.4s smooth load
 
@@ -37,7 +40,7 @@ export function WebsiteLoader() {
     return () => cancelAnimationFrame(rafId)
   }, [])
 
-  if (isHidden) return null
+  if (alreadyLoaded || isHidden) return null
 
   return (
     <div

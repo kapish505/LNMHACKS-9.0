@@ -18,7 +18,6 @@ import { ScrollCircleTransition } from '@/components/canvas/scroll-circle-transi
 import { HeroHeadline } from '@/components/ui/hero-headline'
 import { FallingStickers } from '@/components/canvas/glass/stickers'
 import { HawaMahalFooter } from '@/components/dom/hawa-mahal-footer'
-import { PageCircleReveal } from '@/components/canvas/page-circle-reveal'
 import { triggerPageTransition } from '@/lib/page-transition-bus'
 
 /**
@@ -75,7 +74,6 @@ export default function Home() {
   return (
     <main className="relative min-h-screen overflow-x-hidden">
       <WebsiteLoader />
-      <PageCircleReveal />
       <Navbar />
       <FixedFooter />
 

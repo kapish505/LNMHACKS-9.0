@@ -12,10 +12,12 @@ type ScrollSnapshot = {
 let snapshot: ScrollSnapshot = { scrollTop: 0, limit: 0, progress: 0, velocity: 0, direction: 0, viewportHeight: 0 }
 const listeners = new Set<() => void>()
 let unbind: (() => void) | null = null
+let currentLenis: Lenis | null = null
 
 export const bindLenisScrollBus = (lenis: Lenis | null) => {
   unbind?.()
   unbind = null
+  currentLenis = lenis
   if (!lenis) return
 
   const onScroll = (e: { scroll: number; limit: number; progress: number; velocity: number; direction: 1 | -1 | 0 }) => {
@@ -31,8 +33,22 @@ export const bindLenisScrollBus = (lenis: Lenis | null) => {
   }
 
   lenis.on('scroll', onScroll)
-  unbind = () => lenis.off('scroll', onScroll)
+  unbind = () => {
+    lenis.off('scroll', onScroll)
+    if (currentLenis === lenis) currentLenis = null
+  }
   snapshot = { ...snapshot, scrollTop: lenis.scroll }
+}
+
+export const resetLenisScroll = () => {
+  if (currentLenis) {
+    try {
+      currentLenis.scrollTo(0, { immediate: true })
+    } catch {}
+  }
+  if (typeof window !== 'undefined') {
+    window.scrollTo(0, 0)
+  }
 }
 
 export const getLenisScrollSnapshot = () => snapshot
