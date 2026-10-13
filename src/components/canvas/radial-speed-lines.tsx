@@ -6,11 +6,11 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { getArrowSectionVH } from '@/lib/arrow-section-progress'
 
 // ─── Speed lines: appear AS arrow fades (no gap) ────────────────────
-const FADE_IN_START = 2.5
-const FADE_IN_END = 3.5
-const FADE_OUT_START = 14.5
-const FADE_OUT_END = 15.0
-const HIDE_VH = 15.5
+const FADE_IN_START = 2.4
+const FADE_IN_END = 3.0
+const FADE_OUT_START = 7.0
+const FADE_OUT_END = 7.6
+const HIDE_VH = 7.65
 
 const vertexShader = `
 varying vec2 vUv;
@@ -178,6 +178,11 @@ export function RadialSpeedLines() {
     if (!materialRef.current || !meshRef.current) return
 
     const aVH = getArrowSectionVH()
+
+    if (aVH < FADE_IN_START || aVH > FADE_OUT_END) {
+      meshRef.current.visible = false
+      return
+    }
 
     const fadeIn = Math.max(0, Math.min(1, (aVH - FADE_IN_START) / (FADE_IN_END - FADE_IN_START)))
     const fadeOut = 1.0 - Math.max(0, Math.min(1, (aVH - FADE_OUT_START) / (FADE_OUT_END - FADE_OUT_START)))

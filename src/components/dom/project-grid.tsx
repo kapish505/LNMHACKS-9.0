@@ -28,12 +28,12 @@ const DEFAULT_ITEMS = [
 ]
 
 const PROJECTS = [
-  { id: 'proj-1', title: 'NodeOps', img1: '/projects/project1.png', img2: '/projects/project1.png' },
-  { id: 'proj-2', title: 'Monad Foundation', img1: '/projects/project2.png', img2: '/projects/project2.png' },
-  { id: 'proj-3', title: 'Cyrene AI', img1: '/projects/project3.png', img2: '/projects/project3.png' },
-  { id: 'proj-4', title: 'Sponsor 4', img1: '/projects/project1.png', img2: '/projects/project1.png' },
-  { id: 'proj-5', title: 'Sponsor 5', img1: '/projects/project2.png', img2: '/projects/project2.png' },
-  { id: 'proj-6', title: 'Sponsor 6', img1: '/projects/project3.png', img2: '/projects/project3.png' },
+  { id: 'proj-1', title: 'NodeOps', meta: '2025 TITLE SPONSOR ↗', img1: '/projects/project1.png', img2: '/projects/project1.png' },
+  { id: 'proj-2', title: 'Monad Foundation', meta: '2025 POWERED BY ↗', img1: '/projects/project2.png', img2: '/projects/project2.png' },
+  { id: 'proj-3', title: 'Cyrene AI', meta: '2024 GOLD SPONSOR ↗', img1: '/projects/project3.png', img2: '/projects/project3.png' },
+  { id: 'proj-4', title: 'Devfolio', meta: '2024 PLATINUM SPONSOR ↗', img1: '/projects/project1.png', img2: '/projects/project1.png' },
+  { id: 'proj-5', title: 'Polygon', meta: '2024 ECOSYSTEM ↗', img1: '/projects/project2.png', img2: '/projects/project2.png' },
+  { id: 'proj-6', title: 'Solana', meta: '2024 TRACK SPONSOR ↗', img1: '/projects/project3.png', img2: '/projects/project3.png' },
 ]
 
 export function ProjectGrid() {
@@ -85,14 +85,14 @@ export function ProjectGrid() {
         style={{ pointerEvents: 'auto' }}
       >
         <div className="w-full max-w-7xl mx-auto">
-          {/* Tight 12-col grid, items top-aligned, minimal gap — matching haoqi reference */}
-          <div className="grid grid-cols-12 gap-x-6 md:gap-x-10 lg:gap-x-12 gap-y-8 md:gap-y-0 w-full items-start">
+          {/* 12-col grid with generous breathing space between logo and text */}
+          <div className="grid grid-cols-12 gap-x-8 md:gap-x-14 lg:gap-x-20 xl:gap-x-24 gap-y-10 md:gap-y-0 w-full items-start">
             {/* Left Column: Logo — compact, ~4/12 on desktop */}
             <div
               ref={logoRef}
               className="relative col-span-12 md:col-span-4 flex items-start justify-center md:justify-start pt-1"
             >
-              <div className="w-full max-w-[280px] sm:max-w-[320px] md:max-w-full">
+              <div className="w-full max-w-[260px] sm:max-w-[300px] md:max-w-[340px]">
                 <AboutRingLogo
                   mouseAngle={mouseAngle}
                   isTracking={isTracking}
@@ -100,8 +100,8 @@ export function ProjectGrid() {
               </div>
             </div>
 
-            {/* Right Column: Editorial About Typography — 8/12 on desktop */}
-            <div className="flex flex-col justify-start items-start gap-5 lg:gap-7 col-span-12 md:col-span-8 text-base lg:text-xl leading-none">
+            {/* Right Column: Editorial About Typography with increased vertical gap */}
+            <div className="flex flex-col justify-start items-start gap-8 sm:gap-10 md:gap-12 lg:gap-16 col-span-12 md:col-span-8 text-base lg:text-xl leading-none">
               <p
                 className="w-full text-black md:text-[3.8vw] 2xl:text-[3.25rem] text-xl leading-[1.3] md:leading-[1.15] select-text tracking-tight"
                 style={{ fontFamily: '"tiktok", sans-serif' }}
@@ -136,11 +136,30 @@ export function ProjectGrid() {
 
       {/* ── Liquid Glass Carousel Section ── */}
       <div id="glimpses" className="relative z-10 w-full min-h-[100dvh] flex flex-col justify-center py-12 sm:py-20">
-        <div className="text-center pb-6 sm:pb-10">
-          <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-black drop-shadow-md">
-            Glimpses
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-14 pb-8 sm:pb-12 text-left">
+          <span
+            className="text-xs font-mono tracking-widest uppercase text-neutral-500 mb-2 block"
+            style={{ fontFamily: '"tronica-mono", monospace' }}
+          >
+            [ 01 / GLIMPSES ]
+          </span>
+          <h2
+            className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-black uppercase"
+            style={{
+              fontFamily: '"tiktok", sans-serif',
+              fontVariationSettings: '"wght" 850, "wdth" 110',
+              letterSpacing: '-0.03em',
+            }}
+          >
+            GLIMPSES
           </h2>
-          <p className="text-sm sm:text-base md:text-lg text-slate-400 mt-2 sm:mt-3 font-light">
+          <p
+            className="mt-2 text-base sm:text-lg md:text-xl tracking-tight max-w-xl"
+            style={{
+              color: 'rgba(54, 54, 48, 0.6)',
+              fontFamily: '"tiktok", sans-serif',
+            }}
+          >
             Highlights from our past editions
           </p>
         </div>
@@ -149,16 +168,16 @@ export function ProjectGrid() {
             items={carouselItems}
             background="#F0EDE8"
             sizeMode="image"
-            cardWidth={520}
-            cardHeight={400}
-            gap={24}
+            cardWidth={620}
+            cardHeight={440}
+            gap={60}
             lens={{
               shape: 'rectangle',
-              width: 0.68,
-              height: 0.42,
-              round: 0.08,
+              width: 0.82,
+              height: 0.55,
+              round: 0.06,
               rotation: 0,
-              dispersion: 10,
+              dispersion: 6,
               ringColor: '#1e60ff',
             }}
             motion={{
@@ -181,19 +200,38 @@ export function ProjectGrid() {
         </div>
       </div>
 
-      {/* ── Project Grid / Sponsors Section ── */}
-      <div id="sponsors" className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-32">
-        <div className="text-center pb-12 sm:pb-20">
-          <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-black drop-shadow-md">
-            Our Past Sponsors
+      {/* ── Project Grid / Sponsors Section (2-Column Editorial Grid matching Haoqi) ── */}
+      <div id="sponsors" className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-14 py-20 sm:py-32">
+        <div className="w-full pb-10 sm:pb-16 text-left">
+          <span
+            className="text-xs font-mono tracking-widest uppercase text-neutral-500 mb-2 block"
+            style={{ fontFamily: '"tronica-mono", monospace' }}
+          >
+            [ 02 / PAST SPONSORS ]
+          </span>
+          <h2
+            className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-black uppercase"
+            style={{
+              fontFamily: '"tiktok", sans-serif',
+              fontVariationSettings: '"wght" 850, "wdth" 110',
+              letterSpacing: '-0.03em',
+            }}
+          >
+            OUR PAST SPONSORS
           </h2>
-          <p className="text-sm sm:text-base md:text-lg text-slate-400 mt-2 sm:mt-3 font-light">
+          <p
+            className="mt-2 text-base sm:text-lg md:text-xl tracking-tight max-w-xl"
+            style={{
+              color: 'rgba(54, 54, 48, 0.6)',
+              fontFamily: '"tiktok", sans-serif',
+            }}
+          >
             Backed by visionary organizations powering the developer community
           </p>
         </div>
 
-        {/* 6 Sponsor Cards — 3×2 grid on desktop, 2-col on tablet, 1-col on mobile */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12 items-start max-w-6xl mx-auto">
+        {/* 2-Column Editorial Grid matching Haoqi reference */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 lg:gap-14 items-start max-w-6xl mx-auto">
           {PROJECTS.map((p, i) => (
             <ProjectCard key={p.id} project={p} index={i} />
           ))}
@@ -216,29 +254,35 @@ function ProjectCard({ project, index }: { project: any, index: number }) {
 
   return (
     <div
-      className="group flex flex-col items-center w-full"
+      className="group flex flex-col w-full"
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}
     >
       <a
         ref={ref}
         href={`#${project.id}`}
-        className="block relative w-full aspect-square max-w-[340px] sm:max-w-[360px] rounded-3xl outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-4 transition-transform duration-300 hover:scale-[1.03]"
+        className="block relative w-full aspect-[16/10] rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-4 transition-transform duration-300 hover:scale-[1.015]"
       >
         {/* Invisible DOM placeholders for accessibility & layout sizing */}
         <span className="sr-only">View project: {project.title}</span>
         <img
           src={project.img1}
           alt={project.title}
-          className="opacity-0 absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
+          className="opacity-0 absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
         />
       </a>
 
-      {/* DOM-based text/titles centered below the card */}
-      <div className="mt-5 text-center pointer-events-auto">
-        <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors drop-shadow-sm">
+      {/* Editorial metadata row below card — left title, right category/year tag */}
+      <div className="flex justify-between items-center w-full mt-3 px-1">
+        <span
+          className="text-xs sm:text-sm font-bold tracking-wider uppercase text-neutral-900 group-hover:text-blue-600 transition-colors"
+          style={{ fontFamily: '"tronica-mono", monospace' }}
+        >
           {project.title}
-        </h3>
+        </span>
+        <span className="text-xs sm:text-sm tracking-wider uppercase text-neutral-500 font-mono">
+          {project.meta}
+        </span>
       </div>
     </div>
   )

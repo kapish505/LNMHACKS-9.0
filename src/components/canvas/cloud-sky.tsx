@@ -367,7 +367,10 @@ function __OriginkitBase_CloudSky(props: Props) {
     let leanY = 0
 
     const render = (now: number) => {
-      if (paused) { raf = requestAnimationFrame(render); return }
+      if (paused) {
+        raf = 0
+        return // Sleep! No requestAnimationFrame when paused
+      }
       const elapsed = now - last
       if (minFrameMs > 0 && elapsed < minFrameMs) { raf = requestAnimationFrame(render); return }
       const dt = Math.min(0.05, elapsed / 1000)
@@ -436,15 +439,26 @@ function __OriginkitBase_CloudSky(props: Props) {
     canvas.addEventListener("pointerenter", track)
     canvas.addEventListener("pointerleave", onLeave)
 
+    const wakeUp = () => {
+      if (!paused && !raf) {
+        last = performance.now()
+        raf = requestAnimationFrame(render)
+      }
+    }
+
     // Pause when tab is hidden or canvas is scrolled out of view
     let inView = true
     const io = new IntersectionObserver(([entry]) => {
       inView = entry.isIntersecting
       paused = !inView || document.hidden
+      if (!paused) wakeUp()
     }, { threshold: 0.02 })
     io.observe(canvas)
 
-    const onVisibility = () => { paused = !inView || document.hidden }
+    const onVisibility = () => {
+      paused = !inView || document.hidden
+      if (!paused) wakeUp()
+    }
     document.addEventListener('visibilitychange', onVisibility)
 
     raf = requestAnimationFrame(render)

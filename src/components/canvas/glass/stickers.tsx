@@ -114,27 +114,19 @@ export function FallingStickers() {
     const scroll = getLenisScrollSnapshot()
     const scrollT = scroll.scrollTop / size.height
     
-    // Smoothly fade out stickers as user scrolls down: 100% at hero -> 0% by project section
-    const opacity = 1.0 - smoothstep(0.15, 0.80, scrollT)
+    // Smoothly fade out stickers as user scrolls down: 100% at hero -> 0% by scrollT ~ 0.45
+    const opacity = Math.max(0, Math.min(1, 1.0 - scrollT * 2.2))
     
     if (opacity <= 0.001) {
       groupRef.current.visible = false
-      return // Completely hidden and skip processing in project section
+      return // Completely hidden when scrolled past hero
     }
 
     groupRef.current.visible = true
     
-    // Upward rise matching centerpiece
-    groupRef.current.position.y = Math.min(scrollT, 1.5) * 3.8
-
-    // Mouse-responsive + scroll right tilt matching the centerpiece
-    const pointer = getPointerUV()
-    const scrollFactor = Math.min(scrollT, 1.0)
-    const targetRotX = -(pointer.y - 0.5) * 0.20 - scrollFactor * 0.15
-    const targetRotY = (pointer.x - 0.5) * 0.25 + scrollFactor * ((80 * Math.PI) / 180)
-    groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX, 0.08)
-    groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotY, 0.08)
-    groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, 0, 0.08)
+    // Zero tilt, zero upward rise — stays naturally upright
+    groupRef.current.position.set(0, 0, 0)
+    groupRef.current.rotation.set(0, 0, 0)
 
     stickers.forEach((p, idx) => {
       const mesh = meshRefs.current[idx]

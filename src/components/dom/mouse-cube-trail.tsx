@@ -10,16 +10,15 @@ interface CubeTrailItem {
   color: string
 }
 
-// Solid LNMHACKS brand colors (100% solid, zero opacity)
+// Solid LNMHACKS logo colors matching public/logo.png: Pink (L), Cyan (N), Royal Blue (M)
 const SOLID_LOGO_COLORS = [
-  '#1e60ff', // LNMHACKS Electric Blue
-  '#ff3344', // LNMHACKS Neon Red
-  '#0066ff', // Vibrant Royal Blue
-  '#ff1a53', // Vivid Crimson
+  '#fb3377', // Logo Pink (L)
+  '#63c4fd', // Logo Cyan (N)
+  '#1e60ff', // Logo Royal Blue (M)
 ]
 
-const SQUARE_SIZE = 20 // 50% reduced cube size (was 40px)
-const CELL_LIFETIME = 18 // Frames to stay visible as a solid square (~300ms)
+const SQUARE_SIZE = 15 // Reduced cube size by 25% (was 20px)
+const CELL_LIFETIME = 8 // Decreased trail length by half
 
 export function MouseCubeTrail() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -128,6 +127,12 @@ export function MouseCubeTrail() {
           })
         }
       }
+
+      // Wake up render loop if asleep
+      if (!isLooping) {
+        isLooping = true
+        rafRef.current = requestAnimationFrame(draw)
+      }
     }
 
     const onMouseLeave = () => {
@@ -137,7 +142,8 @@ export function MouseCubeTrail() {
     window.addEventListener('mousemove', onMouseMove, { passive: true })
     document.addEventListener('mouseleave', onMouseLeave)
 
-    // Render loop
+    // Render loop — sleeps when trail is empty
+    let isLooping = false
     const draw = () => {
       const w = window.innerWidth
       const h = window.innerHeight
@@ -148,6 +154,11 @@ export function MouseCubeTrail() {
 
       // Filter expired trail cells
       trailRef.current = trailRef.current.filter((t) => t.life > 0)
+
+      if (trailRef.current.length === 0) {
+        isLooping = false
+        return // Sleep! No requestAnimationFrame when idle
+      }
 
       for (let i = 0; i < trailRef.current.length; i++) {
         const t = trailRef.current[i]
@@ -165,8 +176,6 @@ export function MouseCubeTrail() {
 
       rafRef.current = requestAnimationFrame(draw)
     }
-
-    rafRef.current = requestAnimationFrame(draw)
 
     return () => {
       window.removeEventListener('resize', resize)

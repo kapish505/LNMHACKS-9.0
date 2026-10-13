@@ -52,18 +52,43 @@ function ProjectMesh({ project, index = 0 }: { project: any, index?: number }) {
     uCurlStrength: { value: 0 }
   }), [map1, map2, size])
 
+  const isIntersectingRef = useRef(false)
+  useEffect(() => {
+    const unsub = domRegistry.subscribe(() => {
+      const entry = domRegistry.getEntry(project.id)
+      if (entry && entry.el && !ioRef.current) {
+        const io = new IntersectionObserver(([e]) => {
+          isIntersectingRef.current = e.isIntersecting
+        }, { rootMargin: '200px' })
+        io.observe(entry.el)
+        ioRef.current = io
+      }
+    })
+    const ioRef = { current: null as IntersectionObserver | null }
+    const initialEntry = domRegistry.getEntry(project.id)
+    if (initialEntry && initialEntry.el) {
+      const io = new IntersectionObserver(([e]) => {
+        isIntersectingRef.current = e.isIntersecting
+      }, { rootMargin: '200px' })
+      io.observe(initialEntry.el)
+      ioRef.current = io
+    }
+    return () => {
+      unsub()
+      ioRef.current?.disconnect()
+    }
+  }, [project.id])
+
   useFrame((state, delta) => {
     if (!materialRef.current || !meshRef.current) return
     const entry = domRegistry.getEntry(project.id)
-    if (!entry || !entry.el) {
+    if (!entry || !entry.el || !isIntersectingRef.current) {
       meshRef.current.visible = false
       return
     }
 
     const rect = entry.el.getBoundingClientRect()
-    const isVisible = rect.bottom > -300 && rect.top < window.innerHeight + 300
-    meshRef.current.visible = isVisible
-    if (!isVisible) return
+    meshRef.current.visible = true
 
     const clampedDelta = Math.min(delta, 0.1)
     const scroll = getLenisScrollSnapshot()

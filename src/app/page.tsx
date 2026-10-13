@@ -7,108 +7,22 @@ import { ProjectGrid } from '@/components/dom/project-grid'
 import { CursorArrow } from '@/components/canvas/glass/cursor-arrow'
 import { VaporCountdown } from '@/components/ui/countdown-vapor-digits'
 import { RadialSpeedLines } from '@/components/canvas/radial-speed-lines'
-import { InnovateSection } from '@/components/dom/innovate-section'
+import { EventTimeline } from '@/components/dom/event-timeline'
 import { Navbar } from '@/components/dom/navbar'
 import { WebsiteLoader } from '@/components/dom/website-loader'
 import { CloudSky } from '@/components/canvas/cloud-sky'
 import { FixedFooter } from '@/components/dom/fixed-footer'
 import ScanGridButton from '@/components/ui/scan-grid-button'
 import { MouseCubeTrail } from '@/components/dom/mouse-cube-trail'
+import { ScrollCircleTransition } from '@/components/canvas/scroll-circle-transition'
+import { HeroHeadline } from '@/components/ui/hero-headline'
 import { FallingStickers } from '@/components/canvas/glass/stickers'
+import { HawaMahalFooter } from '@/components/dom/hawa-mahal-footer'
+import { PageCircleReveal } from '@/components/canvas/page-circle-reveal'
+import { triggerPageTransition } from '@/lib/page-transition-bus'
 
 /**
- * Circle-dissolve transition overlay at the bottom of the hero section.
- * Uses a canvas to draw small circles that progressively reveal the
- * cream (#F0EDE8) About section background as the user scrolls.
- */
-function CircleDissolveTransition() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    const CIRCLE_SIZE = 12     // diameter of each dissolve circle
-    const SPACING = 14         // grid spacing
-    const BAND_HEIGHT = 280    // px height of the transition band
-
-    const resize = () => {
-      const dpr = Math.min(2, window.devicePixelRatio || 1)
-      canvas.width = Math.floor(window.innerWidth * dpr)
-      canvas.height = Math.floor(BAND_HEIGHT * dpr)
-      canvas.style.width = `${window.innerWidth}px`
-      canvas.style.height = `${BAND_HEIGHT}px`
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    }
-
-    resize()
-    window.addEventListener('resize', resize)
-
-    let ticking = false
-    const draw = () => {
-      const w = window.innerWidth
-      const h = BAND_HEIGHT
-      ctx.clearRect(0, 0, w, h)
-
-      // Each circle's radius depends on its vertical position in the band
-      // Top of band = small/invisible circles, bottom = fully filled
-      const cols = Math.ceil(w / SPACING) + 1
-      const rows = Math.ceil(h / SPACING) + 1
-
-      ctx.fillStyle = '#F0EDE8'
-
-      for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
-          const cx = col * SPACING + (row % 2 === 0 ? 0 : SPACING * 0.5)
-          const cy = row * SPACING
-
-          // Progress: 0 at top, 1 at bottom of band
-          const t = cy / h
-          // Stagger: add a slight noise offset based on position
-          const noise = Math.sin(cx * 0.07 + cy * 0.11) * 0.08
-          const prog = Math.max(0, Math.min(1, t + noise))
-
-          // Radius grows from 0 to full coverage
-          const r = prog * (CIRCLE_SIZE * 0.55)
-          if (r < 0.5) continue
-
-          ctx.beginPath()
-          ctx.arc(cx, cy, r, 0, Math.PI * 2)
-          ctx.fill()
-        }
-      }
-
-      ticking = false
-    }
-
-    // Draw once, redraw on resize
-    draw()
-    const onResize = () => {
-      resize()
-      draw()
-    }
-    window.addEventListener('resize', onResize)
-
-    return () => {
-      window.removeEventListener('resize', resize)
-      window.removeEventListener('resize', onResize)
-    }
-  }, [])
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="absolute bottom-0 left-0 w-full pointer-events-none"
-      style={{ zIndex: 5 }}
-    />
-  )
-}
-
-/**
- * ParallaxSky — wraps CloudSky with gentle scroll parallax and
- * dot-matrix dissolve transition at the bottom edge.
+ * ParallaxSky — wraps CloudSky with gentle scroll parallax.
  */
 function ParallaxSky() {
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -161,10 +75,11 @@ export default function Home() {
   return (
     <main className="relative min-h-screen overflow-x-hidden">
       <WebsiteLoader />
+      <PageCircleReveal />
       <Navbar />
       <FixedFooter />
 
-      {/* R3F Canvas — cursor + project meshes + falling stickers */}
+      {/* R3F Canvas — cursor + project meshes */}
       <div className="fixed inset-0 z-[-1] pointer-events-none">
         <Canvas
           camera={{ position: [0, 0, 5], fov: 45 }}
@@ -176,7 +91,6 @@ export default function Home() {
             <RadialSpeedLines />
             <CursorArrow />
             <ProjectMeshes />
-            <FallingStickers />
           </Suspense>
         </Canvas>
       </div>
@@ -194,30 +108,32 @@ export default function Home() {
       {/* Mouse pointer cube trail in sections after hero */}
       <MouseCubeTrail />
 
-      <InnovateSection />
+      {/* Animated scroll-driven vector art event timeline in the radial speed lines section */}
+      <EventTimeline />
 
-      {/* ── Hero section — CloudSky + headline + countdown ── */}
+      {/* ── Hero section — CloudSky + headline + countdown + scroll circle dissolve ── */}
       <div id="hero" className="relative min-h-[100dvh] w-full flex items-center justify-center overflow-hidden py-16 sm:py-0">
         <ParallaxSky />
 
-        {/* Bold hero headline — bottom-left, doesn't interfere with centered countdown */}
-        <div
-          className="absolute bottom-8 sm:bottom-12 md:bottom-16 left-4 sm:left-8 md:left-14 z-10 pointer-events-none select-none"
-        >
-          <h1
-            className="font-black tracking-tight leading-[0.92] text-white drop-shadow-lg"
-            style={{
-              fontSize: 'clamp(1.8rem, 5.5vw, 5rem)',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-              letterSpacing: '-0.03em',
-              textShadow: '0 2px 24px rgba(0,0,0,0.25), 0 0 80px rgba(30,96,255,0.15)',
-            }}
+        {/* Falling stickers — on top of CloudSky, fades out cleanly as user scrolls */}
+        <div className="absolute inset-0 z-[1] pointer-events-none">
+          <Canvas
+            camera={{ position: [0, 0, 5], fov: 45 }}
+            gl={{ alpha: true, powerPreference: 'high-performance' }}
+            dpr={typeof window !== 'undefined' && window.innerWidth < 768 ? [1, 1] : [1, 1.5]}
+            style={{ background: 'transparent' }}
           >
-            72 HOURS OF<br />
-            PURE<br />
-            INNOVATION
-          </h1>
+            <Suspense fallback={null}>
+              <FallingStickers />
+            </Suspense>
+          </Canvas>
         </div>
+
+        {/* Scroll-based circle dissolve transition to About section */}
+        <ScrollCircleTransition />
+
+        {/* Hero headline with TikTok font, left alignment, and scramble animation */}
+        <HeroHeadline />
 
         {/* Centered countdown + register button */}
         <div className="relative z-10 pointer-events-auto flex flex-col items-center justify-center w-full px-2 sm:px-6">
@@ -225,6 +141,7 @@ export default function Home() {
           <div className="mt-6 sm:mt-8">
             <ScanGridButton
               label="REGISTER"
+              onClick={() => triggerPageTransition('/register')}
               font={{
                 fontFamily: '"tiktok", sans-serif',
                 fontWeight: 700,
@@ -261,14 +178,13 @@ export default function Home() {
             />
           </div>
         </div>
-
-        {/* Circle-dissolve transition at bottom edge of hero */}
-        <CircleDissolveTransition />
       </div>
 
       <ProjectGrid />
 
-      <div id="arrow-section" className="w-full" style={{ height: '1900vh' }} />
+      <div id="arrow-section" className="w-full" style={{ height: '900vh' }} />
+
+      <HawaMahalFooter />
     </main>
   )
 }

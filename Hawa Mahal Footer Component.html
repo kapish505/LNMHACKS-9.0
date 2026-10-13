@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stack Footer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);
+  --page:#E6EAF5;--ink:#1B1740;--dot:rgba(27,23,64,.16);--panel:#14112B;--text:#EDEBFF;--mute:#A9A4D6;--acc:#FFD23F;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#0B0919;--ink:#EDEBFF;--dot:rgba(237,235,255,.14)}}
+:root[data-theme="dark"]{--page:#0B0919;--ink:#EDEBFF;--dot:rgba(237,235,255,.14)}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;min-height:100%;display:flex;flex-direction:column;background:var(--page);color:var(--ink);font-family:'DM Mono',ui-monospace,monospace}
+.stub{flex:1;display:grid;place-items:center;text-align:center;padding:14vh 24px 4vh;min-height:40vh}
+.stub p{margin:0;max-width:36ch;line-height:1.7}
+footer{margin-top:auto}
+.well{position:relative;display:block;width:100%;touch-action:pan-y}
+.well.manual{cursor:crosshair}
+canvas{display:block;width:100%}
+.panel{background:var(--panel);color:var(--text);border-top:4px solid var(--acc);padding:32px 6vw calc(20px + env(safe-area-inset-bottom,0px))}
+.grid{max-width:1180px;margin:0 auto;display:grid;gap:32px 40px;grid-template-columns:1.6fr 1fr 1fr 1fr}
+h2,h3{font-family:'Silkscreen','Courier New',monospace;font-weight:700;margin:0 0 14px}
+h2{font-size:1.6rem;letter-spacing:.02em}
+h3{font-size:.95rem;color:var(--acc)}
+.brand p{margin:0 0 16px;max-width:34ch;line-height:1.65;font-size:.92rem;color:var(--mute)}
+.stats{display:flex;gap:22px;margin:0 0 16px;font-size:.9rem}
+.stats b{display:block;font-family:'Silkscreen',monospace;font-size:1.5rem;color:var(--text)}
+.stats span{color:var(--mute)}
+button{font:inherit;font-weight:500;padding:10px 14px;border:2px solid var(--acc);background:transparent;color:var(--acc);cursor:pointer;border-radius:0}
+button[aria-pressed="true"]{background:var(--acc);color:var(--panel)}
+a{color:var(--text);text-decoration:none}
+a:hover{color:var(--acc);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+a:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+ul{list-style:none;margin:0;padding:0;display:grid;gap:9px;font-size:.92rem}
+.hint{margin:10px 0 0;font-size:.8rem;color:var(--mute);min-height:1.3em}
+.legal{max-width:1180px;margin:28px auto 0;padding-top:14px;border-top:1px dashed rgba(169,164,214,.4);display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between;font-size:.82rem;color:var(--mute)}
+.legal nav{display:flex;gap:18px}
+@media (max-width:860px){.grid{grid-template-columns:1fr 1fr 1fr}.brand{grid-column:1/-1}}
+@media (max-width:520px){.grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<section class="stub"><p>Your page ends here. The footer below is a Tetris game that never loses, and its skyline is the footer's shape.</p></section>
+
+<footer>
+  <div class="well" id="wellwrap"><canvas id="well" aria-hidden="true"></canvas></div>
+  <div class="panel">
+    <div class="grid">
+      <div class="brand">
+        <h2>&#9626;&#9630; Lineclear</h2>
+        <p>Project tools for teams who ship in small pieces. Every line you finish makes room for the next one.</p>
+        <div class="stats" aria-live="off">
+          <div><b id="nl">0</b><span>lines cleared</span></div>
+          <div><b id="np">0</b><span>pieces dropped</span></div>
+        </div>
+        <button id="mode" type="button" aria-pressed="false">Take the controller</button>
+        <p class="hint" id="hint" role="status"></p>
+      </div>
+      <nav aria-label="Product"><h3>&#9608;&#9608; Product</h3><ul><li><a href="#">Boards</a></li><li><a href="#">Timelines</a></li><li><a href="#">Automations</a></li><li><a href="#">Pricing</a></li></ul></nav>
+      <nav aria-label="Company"><h3>&#9608;&#9608; Company</h3><ul><li><a href="#">About</a></li><li><a href="#">Careers</a></li><li><a href="#">Press kit</a></li><li><a href="#">Contact</a></li></ul></nav>
+      <nav aria-label="Resources"><h3>&#9608;&#9608; Resources</h3><ul><li><a href="#">Docs</a></li><li><a href="#">Changelog</a></li><li><a href="#">Status</a></li><li><a href="#">Community</a></li></ul></nav>
+    </div>
+    <div class="legal">
+      <span>&copy; 2026 Lineclear &#9646;&#9646;&#9646; Game over? Not yet.</span>
+      <nav aria-label="Legal"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Security</a></nav>
+    </div>
+  </div>
+</footer>
+
+<script>
+const cv=document.getElementById('well'),ctx=cv.getContext('2d'),wrap=document.getElementById('wellwrap');
+const COL=['#2EE6D6','#FFD23F','#B66DFF','#4ADE80','#FF4D6D','#4C7DFF','#FF9F1C'];
+const BASE=[[[0,0],[1,0],[2,0],[3,0]],[[0,0],[1,0],[0,1],[1,1]],[[1,0],[0,1],[1,1],[2,1]],[[1,0],[2,0],[0,1],[1,1]],[[0,0],[1,0],[1,1],[2,1]],[[0,0],[0,1],[1,1],[2,1]],[[2,0],[0,1],[1,1],[2,1]]];
+const norm=c=>{const mx=Math.min(...c.map(p=>p[0])),my=Math.min(...c.map(p=>p[1]));return c.map(p=>[p[0]-mx,p[1]-my])};
+const ROTS=BASE.map(b=>{const r=[b];for(let i=1;i<4;i++)r.push(norm(r[i-1].map(([x,y])=>[-y,x])));return r});
+const wOf=(t,r)=>Math.max(...ROTS[t][r].map(p=>p[0]))+1;
+const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const H=11;let W=0,C=20,board=[],cur,tgt,clearing=null,lines=0,pieces=0,manual=false,mrot=0,pcol=0,visible=true;
+const empty=()=>new Array(W).fill(0);
+const hit=(cells,x,y)=>{for(const[a,b]of cells){const X=x+a,Y=y+b;if(X<0||X>=W||Y>=H)return true;if(Y>=0&&board[Y][X])return true}return false};
+const landY=(cells,x,y)=>{while(!hit(cells,x,y+1))y++;return y};
+function score(cells,x,y){
+  const set=[];for(const[a,b]of cells){const X=x+a,Y=y+b;if(Y>=0){board[Y][X]=1;set.push([X,Y])}}
+  let ln=0;for(let j=0;j<H;j++)if(board[j].every(v=>v))ln++;
+  let holes=0,bump=0,agg=0,prev=null;
+  for(let i=0;i<W;i++){let j=0;while(j<H&&!board[j][i])j++;const h=H-j;agg+=h;if(prev!==null)bump+=Math.abs(h-prev);prev=h;for(let k=j;k<H;k++)if(!board[k][i])holes++}
+  set.forEach(([X,Y])=>board[Y][X]=0);
+  return ln*9-holes*8-bump*.45-agg*.4+Math.random()*1.6;
+}
+function plan(t){let best={x:0,r:0},bs=-1e9;
+  for(let r=0;r<4;r++){const cells=ROTS[t][r],w=wOf(t,r);
+    for(let x=0;x+w<=W;x++){if(hit(cells,x,-3))continue;const s=score(cells,x,landY(cells,x,-3));if(s>bs){bs=s;best={x,r}}}}
+  return best}
+function crumble(){while(board.slice(0,4).some(r=>r.some(v=>v))){board.pop();board.unshift(empty())}}
+function spawn(){
+  crumble();const t=Math.floor(Math.random()*7);tgt=plan(t);
+  const x=manual?Math.floor(W/2):Math.max(0,Math.min(W-4,tgt.x+Math.floor(Math.random()*9)-4));
+  cur={t,r:0,x,y:-3};if(manual)mrot=0}
+function place(){
+  ROTS[cur.t][cur.r].forEach(([a,b])=>{const Y=cur.y+b;if(Y>=0)board[Y][cur.x+a]=cur.t+1});
+  pieces++;return board.map((r,j)=>r.every(v=>v)?j:-1).filter(j=>j>=0)}
+function applyClear(rows){rows.forEach(j=>{board.splice(j,1);board.unshift(empty())});lines+=rows.length}
+function tick(){
+  if(clearing){applyClear(clearing);clearing=null;spawn();return}
+  let tr=cur.r,tx=cur.x;
+  if(manual){tr=mrot%4;tx=Math.max(0,Math.min(W-wOf(cur.t,tr),pcol))}else{tr=tgt.r;tx=tgt.x}
+  if(cur.r!==tr){const nr=(cur.r+1)%4;if(!hit(ROTS[cur.t][nr],cur.x,cur.y))cur.r=nr}
+  for(let k=0;k<2&&cur.x!==tx;k++){const nx=cur.x+Math.sign(tx-cur.x);if(!hit(ROTS[cur.t][cur.r],nx,cur.y))cur.x=nx}
+  if(!hit(ROTS[cur.t][cur.r],cur.x,cur.y+1))cur.y++;
+  else{const rows=place();if(rows.length)clearing=rows;else spawn()}
+  document.getElementById('nl').textContent=lines;document.getElementById('np').textContent=pieces}
+function instant(n){for(let i=0;i<n;i++){spawn();cur.r=tgt.r;cur.x=tgt.x;cur.y=landY(ROTS[cur.t][cur.r],cur.x,-3);const rows=place();if(rows.length)applyClear(rows)}
+  spawn();document.getElementById('nl').textContent=lines;document.getElementById('np').textContent=pieces}
+function block(x,y,c,col,a=1){
+  ctx.globalAlpha=a;ctx.fillStyle=col;ctx.fillRect(x*c+1,y*c+1,c-2,c-2);
+  ctx.fillStyle='rgba(255,255,255,.35)';ctx.fillRect(x*c+1,y*c+1,c-2,Math.max(3,c*.16));ctx.fillRect(x*c+1,y*c+1,Math.max(3,c*.16),c-2);
+  ctx.fillStyle='rgba(0,0,0,.22)';ctx.fillRect(x*c+1,y*c+c-1-Math.max(3,c*.16),c-2,Math.max(3,c*.16));ctx.globalAlpha=1}
+function draw(){
+  const s=getComputedStyle(document.documentElement).getPropertyValue('--dot');
+  ctx.clearRect(0,0,cv.width,cv.height);ctx.save();ctx.scale(dpr,dpr);
+  ctx.fillStyle=s;for(let j=0;j<H;j++)for(let i=0;i<W;i++)ctx.fillRect(i*C+C/2-1,j*C+C/2-1,2,2);
+  for(let j=0;j<H;j++)for(let i=0;i<W;i++){const v=board[j][i];if(v)block(i,j,C,clearing&&clearing.includes(j)?'#fff':COL[v-1])}
+  if(cur){const cells=ROTS[cur.t][cur.r];
+    if(manual){const gy=landY(cells,cur.x,cur.y);ctx.strokeStyle=COL[cur.t];ctx.lineWidth=2;cells.forEach(([a,b])=>ctx.strokeRect((cur.x+a)*C+2,(gy+b)*C+2,C-4,C-4))}
+    cells.forEach(([a,b])=>{if(cur.y+b>=0)block(cur.x+a,cur.y+b,C,COL[cur.t])})}
+  ctx.restore()}
+let dpr=1;
+function resize(){
+  const w=wrap.clientWidth,cols=innerWidth<600?18:34,nw=cols;C=w/cols;dpr=Math.min(devicePixelRatio||1,2);
+  cv.width=Math.round(w*dpr);cv.height=Math.round(C*H*dpr);cv.style.height=C*H+'px';
+  if(nw!==W){W=nw;board=Array.from({length:H},empty);lines=0;pieces=0;clearing=null;instant(70)}
+  draw()}
+let last=0,acc=0;
+function loop(t){requestAnimationFrame(loop);if(!visible||reduce)return;acc+=t-last;last=t;if(acc>400)acc=0;
+  while(acc>=58){acc-=58;tick()}draw()}
+new IntersectionObserver(e=>{visible=e[0].isIntersecting}).observe(wrap);
+addEventListener('resize',resize);
+const btn=document.getElementById('mode'),hint=document.getElementById('hint');
+btn.onclick=()=>{manual=!manual;btn.setAttribute('aria-pressed',manual);wrap.classList.toggle('manual',manual);
+  btn.textContent=manual?'Give it back to the bot':'Take the controller';
+  hint.textContent=manual?'Move your pointer to steer. Click or tap to rotate.':'';
+  if(reduce)hint.textContent='Animation is paused because your device asks for reduced motion.'};
+wrap.addEventListener('pointermove',e=>{const r=wrap.getBoundingClientRect();pcol=Math.floor((e.clientX-r.left)/C)-1});
+wrap.addEventListener('pointerdown',e=>{if(manual){const r=wrap.getBoundingClientRect();pcol=Math.floor((e.clientX-r.left)/C)-1;mrot++}});
+resize();requestAnimationFrame(t=>{last=t;loop(t)});
+</script>
+</body>
+</html>

@@ -12,13 +12,31 @@ export async function GET() {
     }
 
     const files = fs.readdirSync(dirPath)
-    const images = files
+    let images = files
       .filter((file) => {
         const ext = path.extname(file).toLowerCase()
-        return VALID_EXTENSIONS.has(ext) && !file.startsWith('.')
+        return VALID_EXTENSIONS.has(ext) && !file.startsWith('.') && file.startsWith('glimpse-')
       })
       .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
       .map((file) => `/glimpses/${file}`)
+
+    if (images.length === 0) {
+      images = files
+        .filter((file) => {
+          const ext = path.extname(file).toLowerCase()
+          return VALID_EXTENSIONS.has(ext) && !file.startsWith('.')
+        })
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
+        .map((file) => `/glimpses/${encodeURIComponent(file)}`)
+    }
+
+    // Ensure carousel has enough items (at least 12) for smooth cylindrical looping
+    if (images.length > 0 && images.length < 12) {
+      const base = [...images]
+      while (images.length < 12) {
+        images = images.concat(base)
+      }
+    }
 
     return NextResponse.json({ items: images })
   } catch (error) {

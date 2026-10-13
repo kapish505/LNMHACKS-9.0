@@ -475,7 +475,13 @@ const offsetOf = (v: ItemValue): number => {
     return typeof v.offsetY === "number" ? v.offsetY : 0
 }
 
+export interface LiquidGlassCarouselController {
+    next: () => void
+    prev: () => void
+}
+
 export interface LensSettings {
+    enabled?: boolean
     shape?: "circle" | "square" | "rectangle"
     round?: number
     width?: number
@@ -519,6 +525,7 @@ export interface LiquidGlassCarouselProps {
     entry?: EntrySettings
     interaction?: InteractionSettings
     style?: React.CSSProperties
+    controllerRef?: React.MutableRefObject<LiquidGlassCarouselController | null>
 }
 
 const srcOf = (v: ImageValue): string =>
@@ -612,7 +619,7 @@ function makeParams(p: LiquidGlassCarouselProps) {
         },
 
         lens: {
-            enabled: true,
+            enabled: l.enabled !== false,
             square: l.shape === "square" || (l.shape as string) === "rectangle",
             round: typeof l.round === "number" ? clamp(l.round, 0, 1) : 0.15,
             sizeX: clamp(l.width ?? 0.565, 0.05, 3),
@@ -622,21 +629,21 @@ function makeParams(p: LiquidGlassCarouselProps) {
             rotation: l.rotation ?? 0,
             spin: 0,
             zoom: 0,
-            dispersion: clamp(l.dispersion ?? 11, 0, 60),
+            dispersion: clamp(l.dispersion ?? 0, 0, 60),
             blur: 0,
-            glow: 3,
-            whiteGlow: 0.08,
+            glow: 2.4,
+            whiteGlow: 0.06,
             novaSize: 12,
             ring: 1 * lensAlpha,
             ringRadius: 0.49,
             ringWidth: 0.014,
-            ringColor: l.ringColor ?? "#009dff",
-            shimmer: true,
+            ringColor: l.ringColor ?? "#1e60ff",
+            shimmer: false,
             shimmerFreq: 12,
             shimmerSpeed: 3.5,
-            shimmerDepth: 0.12,
-            rimStart: 0.578,
-            rimTangential: 0.6,
+            shimmerDepth: 0.0,
+            rimStart: 0.70,
+            rimTangential: (l.dispersion ?? 0) > 0 ? 0.15 : 0.0,
             rimInward: 0,
             rimFreq1: 2,
             rimFreq2: 1,
@@ -1808,36 +1815,12 @@ function createEngine(mount: HTMLElement, getParams: () => Params) {
     }
 
     let isVisible = true
-    let idleFrameCount = 0
-
     function tick(t: number) {
         if (!isVisible) {
             raf = 0
             return
         }
         raf = requestAnimationFrame(tick)
-
-        // When completely idle (not moving/dragging/animating), throttle to ~20fps to conserve GPU
-        const isMoving =
-            dragging ||
-            Math.abs(velocity) > 0.05 ||
-            Math.abs(target - scroll) > 0.05 ||
-            scrollEnergy > 0.005 ||
-            entryActive ||
-            entrySettled ||
-            focusState.active ||
-            pendingFocus !== null ||
-            entryTl !== null ||
-            focusTl !== null
-
-        if (!isMoving) {
-            idleFrameCount++
-            if (idleFrameCount % 3 !== 0) {
-                return
-            }
-        } else {
-            idleFrameCount = 0
-        }
 
         const dt = Math.min(0.05, Math.max(0, (t - lastT) / 1000))
         lastT = t
