@@ -20,13 +20,32 @@
   --foreground: #0f172a;
   --font-tiktok: 'tiktok', sans-serif;
   --reveal-duration: 0.5s;
+
+  --label: 0, 0, 0;
+  --label-d: 54, 54, 48;
+  --label-1: rgba(var(--label), 1);
+  --label-2: rgba(var(--label-d), 0.6);
+  --label-3: rgba(var(--label-d), 0.32);
+  --label-4: rgba(var(--label-d), 0.18);
+  --line: rgba(var(--label-d), 0.1);
+  --selection-bg: #c0fe04;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-l1: var(--label-1);
+  --color-l2: var(--label-2);
+  --color-l3: var(--label-3);
+  --color-line: var(--line);
+  --color-selection: var(--selection-bg);
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: var(--font-geist-mono);
+}
+
+::selection {
+  background-color: var(--selection-bg, #c0fe04);
+  color: #000000;
 }
 
 @media (prefers-color-scheme: dark) {

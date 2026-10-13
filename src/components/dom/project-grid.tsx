@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { domRegistry } from '@/lib/dom-registry'
+import { AboutRingLogo } from '@/components/dom/about-ring-logo'
 
 const LiquidGlassCarousel = dynamic(
   () => import('@/components/dom/liquid-glass-carousel'),
@@ -30,10 +31,30 @@ const PROJECTS = [
   { id: 'proj-1', title: 'NodeOps', img1: '/projects/project1.png', img2: '/projects/project1.png' },
   { id: 'proj-2', title: 'Monad Foundation', img1: '/projects/project2.png', img2: '/projects/project2.png' },
   { id: 'proj-3', title: 'Cyrene AI', img1: '/projects/project3.png', img2: '/projects/project3.png' },
+  { id: 'proj-4', title: 'Sponsor 4', img1: '/projects/project1.png', img2: '/projects/project1.png' },
+  { id: 'proj-5', title: 'Sponsor 5', img1: '/projects/project2.png', img2: '/projects/project2.png' },
+  { id: 'proj-6', title: 'Sponsor 6', img1: '/projects/project3.png', img2: '/projects/project3.png' },
 ]
 
 export function ProjectGrid() {
   const [carouselItems, setCarouselItems] = useState<string[]>(DEFAULT_ITEMS)
+
+  // ── Section-wide mouse tracking for ring light ──
+  const aboutRef = useRef<HTMLDivElement>(null)
+  const logoRef = useRef<HTMLDivElement>(null)
+  const [mouseAngle, setMouseAngle] = useState(Math.PI * 0.35)
+  const [isTracking, setIsTracking] = useState(false)
+
+  const onSectionMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!logoRef.current) return
+    const logoRect = logoRef.current.getBoundingClientRect()
+    const logoCenterX = logoRect.left + logoRect.width / 2
+    const logoCenterY = logoRect.top + logoRect.height / 2
+    // Angle from logo center to pointer (WebGL Y is inverted)
+    const dx = e.clientX - logoCenterX
+    const dy = -(e.clientY - logoCenterY)
+    setMouseAngle(Math.atan2(dy, dx))
+  }, [])
 
   useEffect(() => {
     fetch('/api/glimpses')
@@ -51,27 +72,62 @@ export function ProjectGrid() {
   return (
     <div className="relative w-full">
       {/* ── Intro / About Section ── */}
-      <div id="about" className="relative z-10 w-full min-h-[100dvh] flex items-center justify-center px-4 sm:px-6 pointer-events-none">
-        <div className="w-full max-w-7xl mx-auto pointer-events-auto py-12">
-          <div className="flex flex-col md:flex-row items-center gap-8 sm:gap-12 md:gap-24">
-            {/* Logo (No Background) */}
-            <div className="w-full max-w-xs sm:max-w-sm md:w-1/3 relative shrink-0 mx-auto flex items-center justify-center">
-              <div className="w-full aspect-square relative flex items-center justify-center p-2 sm:p-4">
-                <img
-                  src="/logo.png"
-                  alt="LNMHACKS Logo"
-                  className="w-full h-full object-contain select-none drop-shadow-md transition-transform duration-300 hover:scale-105"
+      <div
+        ref={aboutRef}
+        id="about"
+        className="relative z-10 w-full min-h-[90vh] lg:min-h-screen flex items-center justify-center px-4 sm:px-8 lg:px-14 py-16 sm:py-24 lg:py-32 pointer-events-none"
+        onMouseMove={onSectionMouseMove}
+        onMouseEnter={() => setIsTracking(true)}
+        onMouseLeave={() => {
+          setIsTracking(false)
+          setMouseAngle(Math.PI * 0.35)
+        }}
+        style={{ pointerEvents: 'auto' }}
+      >
+        <div className="w-full max-w-7xl mx-auto">
+          {/* Tight 12-col grid, items top-aligned, minimal gap — matching haoqi reference */}
+          <div className="grid grid-cols-12 gap-x-6 md:gap-x-10 lg:gap-x-12 gap-y-8 md:gap-y-0 w-full items-start">
+            {/* Left Column: Logo — compact, ~4/12 on desktop */}
+            <div
+              ref={logoRef}
+              className="relative col-span-12 md:col-span-4 flex items-start justify-center md:justify-start pt-1"
+            >
+              <div className="w-full max-w-[280px] sm:max-w-[320px] md:max-w-full">
+                <AboutRingLogo
+                  mouseAngle={mouseAngle}
+                  isTracking={isTracking}
                 />
               </div>
             </div>
 
-            {/* Text Placeholder */}
-            <div className="w-full md:w-2/3 text-center md:text-left mt-4 md:mt-0">
-              <p className="text-xl sm:text-2xl md:text-4xl lg:text-[2.75rem] font-medium text-slate-900 leading-[1.2] md:leading-[1.15] tracking-tight">
-                LNMHACKS is the largest student run hackathon all over India.It is a 72 Hour hackathon with interesting workshops and tech talks from industry biggies
+            {/* Right Column: Editorial About Typography — 8/12 on desktop */}
+            <div className="flex flex-col justify-start items-start gap-5 lg:gap-7 col-span-12 md:col-span-8 text-base lg:text-xl leading-none">
+              <p
+                className="w-full text-black md:text-[3.8vw] 2xl:text-[3.25rem] text-xl leading-[1.3] md:leading-[1.15] select-text tracking-tight"
+                style={{ fontFamily: '"tiktok", sans-serif' }}
+              >
+                LNMHACKS is the largest student run hackathon all over India. It is a 72 Hour hackathon with interesting workshops and tech talks from industry biggies.
               </p>
-              <p className="text-base sm:text-lg md:text-3xl text-slate-400 mt-4 sm:mt-6 md:mt-8 leading-[1.3] font-light">
-                We raised over 9000$+ prize pool in our last version.It gets bigger every year,So get ready for LNMHACKS 9.O
+
+              <p
+                className="w-full text-[rgba(54,54,48,0.6)] md:text-[3.8vw] 2xl:text-[3.25rem] text-xl leading-[1.3] md:leading-[1.15] select-text tracking-tight"
+                style={{ fontFamily: '"tiktok", sans-serif' }}
+              >
+                We raised over{' '}
+                <a
+                  href="#sponsors"
+                  className="inline text-black underline underline-offset-[0.08em] decoration-solid decoration-[rgba(54,54,48,0.32)] transition-[text-decoration-color] duration-150 ease-out hover:decoration-black"
+                >
+                  $9,000+ prize pool
+                </a>{' '}
+                in our last version. It gets bigger every year, so get ready for{' '}
+                <a
+                  href="#hero"
+                  className="inline text-black underline underline-offset-[0.08em] decoration-solid decoration-[rgba(54,54,48,0.32)] transition-[text-decoration-color] duration-150 ease-out hover:decoration-black"
+                >
+                  LNMHACKS 9.0™
+                </a>
+                .
               </p>
             </div>
           </div>
@@ -125,8 +181,8 @@ export function ProjectGrid() {
         </div>
       </div>
 
-      {/* ── Project Grid / Sponsors Section (Sticky Stacking Card Effect) ── */}
-      <div id="sponsors" className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 py-20 sm:py-32">
+      {/* ── Project Grid / Sponsors Section ── */}
+      <div id="sponsors" className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-32">
         <div className="text-center pb-12 sm:pb-20">
           <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-black drop-shadow-md">
             Our Past Sponsors
@@ -136,8 +192,8 @@ export function ProjectGrid() {
           </p>
         </div>
 
-        {/* 3 Sponsor Cards Grid with 3D Sticky Note Scroll Curl Effect */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 sm:gap-12 lg:gap-14 items-start max-w-6xl mx-auto">
+        {/* 6 Sponsor Cards — 3×2 grid on desktop, 2-col on tablet, 1-col on mobile */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12 items-start max-w-6xl mx-auto">
           {PROJECTS.map((p, i) => (
             <ProjectCard key={p.id} project={p} index={i} />
           ))}
