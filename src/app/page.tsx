@@ -182,7 +182,7 @@ export default function Home() {
 
       <ProjectGrid />
 
-      <div id="arrow-section" className="w-full" style={{ height: '950vh' }} />
+      <div id="arrow-section" className="w-full" style={{ height: '870vh' }} />
 
       <HawaMahalFooter />
     </main>
