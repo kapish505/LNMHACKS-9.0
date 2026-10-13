@@ -134,7 +134,7 @@ export function Navbar() {
       if (!arrowEl) arrowEl = document.getElementById('arrow-section')
       if (arrowEl) {
         const aVH = -arrowEl.getBoundingClientRect().top / vh
-        setIsRadialSection(aVH >= 2.4 && aVH <= 7.6)
+        setIsRadialSection(aVH >= 2.0 && aVH <= 6.0)
       } else {
         setIsRadialSection(false)
       }
@@ -168,7 +168,7 @@ export function Navbar() {
       if (el) {
         const vh = window.innerHeight || 800
         const arrowTop = el.getBoundingClientRect().top + window.scrollY
-        const targetScroll = arrowTop + 3.0 * vh // Lands directly at Phase 01 of Timeline
+        const targetScroll = arrowTop + 2.4 * vh // Lands directly at Phase 01 of Timeline
         if (lenis) {
           lenis.scrollTo(targetScroll, { duration: 1.4 })
         } else {

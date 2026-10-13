@@ -6,11 +6,11 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { getArrowSectionVH } from '@/lib/arrow-section-progress'
 
 // ─── Speed lines: appear AS arrow fades (no gap) ────────────────────
-const FADE_IN_START = 2.4
-const FADE_IN_END = 3.0
-const FADE_OUT_START = 7.0
-const FADE_OUT_END = 7.6
-const HIDE_VH = 7.65
+const FADE_IN_START = 2.0
+const FADE_IN_END = 2.4
+const FADE_OUT_START = 5.6
+const FADE_OUT_END = 6.0
+const HIDE_VH = 6.05
 
 const vertexShader = `
 varying vec2 vUv;

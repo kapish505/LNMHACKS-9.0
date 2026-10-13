@@ -407,7 +407,7 @@ export function HawaMahalFooter() {
   }
 
   return (
-    <footer className="relative w-full z-20 mt-auto bg-[#F0EDE8]">
+    <footer id="hawa-mahal-footer" className="relative w-full z-20 mt-auto bg-[#F0EDE8]">
       {/* ── Tetris Hawa Mahal Skyline Well ── */}
       <div
         ref={wrapRef}
@@ -527,7 +527,7 @@ export function HawaMahalFooter() {
                       if (el) {
                         const vh = window.innerHeight || 800
                         const arrowTop = el.getBoundingClientRect().top + window.scrollY
-                        const targetScroll = arrowTop + 3.0 * vh
+                        const targetScroll = arrowTop + 2.4 * vh
                         window.scrollTo({ top: targetScroll, behavior: 'smooth' })
                       }
                     }}

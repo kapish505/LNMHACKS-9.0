@@ -38,7 +38,7 @@ const MILESTONES: Milestone[] = [
     desc: 'Registration officially goes live worldwide. Form squads of 2–4 builders, claim your hacker identity, and access exclusive partner bounties and Discord lounges.',
     tags: ['OPEN TO ALL', 'TEAM FORMATION', 'BOUNTY RELEASE', 'DISCORD HUB'],
     accentColor: '#63c4fd',
-    peakVH: 3.0,
+    peakVH: 2.4,
   },
   {
     id: 2,
@@ -51,7 +51,7 @@ const MILESTONES: Milestone[] = [
     desc: 'The official ignition protocol begins. Keynote talks from industry luminaries, reveal of surprise track themes, API credentials release, and live Q&A briefing.',
     tags: ['LIVESTREAM', 'TRACK REVEAL', 'SPONSOR CREDITS', 'MISSION BRIEF'],
     accentColor: '#fb3377',
-    peakVH: 3.8,
+    peakVH: 3.0,
   },
   {
     id: 3,
@@ -64,7 +64,7 @@ const MILESTONES: Milestone[] = [
     desc: '72 hours of relentless build time. Free flow of coffee, lightning workshops, midnight arcade gaming, git commits, and real-time mentor office hours across all tracks.',
     tags: ['72 HOURS SPRINT', 'MIDNIGHT SNACKS', 'DEV SANDBOX', 'GIT COMMITS'],
     accentColor: '#1e60ff',
-    peakVH: 4.6,
+    peakVH: 3.6,
   },
   {
     id: 4,
@@ -77,7 +77,7 @@ const MILESTONES: Milestone[] = [
     desc: 'Direct 1-on-1 code reviews with staff engineers and venture leaders. Validate your product market fit, optimize system architecture, and eliminate blocker bugs.',
     tags: ['1:1 CRITIQUE', 'TECH ARCHITECTURE', 'VC INSIGHT', 'DEBUG SUPPORT'],
     accentColor: '#63c4fd',
-    peakVH: 5.4,
+    peakVH: 4.2,
   },
   {
     id: 5,
@@ -90,7 +90,7 @@ const MILESTONES: Milestone[] = [
     desc: 'Final whistle for all repositories. Submit your demo video, architecture documentation, and live deployments to Devpost. The gate closes with zero exceptions.',
     tags: ['DEVPOST UPLOAD', 'VIDEO DEMO', 'CODE REPO FREEZE', 'VERIFICATION'],
     accentColor: '#fb3377',
-    peakVH: 6.2,
+    peakVH: 4.8,
   },
   {
     id: 6,
@@ -103,15 +103,16 @@ const MILESTONES: Milestone[] = [
     desc: 'Top 10 finalist teams take the main stage for 3-minute live pitches. Winner announcements, trophy distribution, venture funding invites, and closing celebrations.',
     tags: ['LIVE DEMO PITCH', 'CASH PRIZES', 'TROPHIES & SWAG', 'AFTER-PARTY'],
     accentColor: '#c0fe04',
-    peakVH: 7.0,
+    peakVH: 5.4,
   },
 ]
 
 /* ─── Main Event Timeline Component ─── */
 export function EventTimeline() {
   const lenis = useLenis()
-  const containerRef = useRef<HTMLDivElement>(null)
   const [activeStep, setActiveStep] = useState(0)
+  const [visible, setVisible] = useState(false)
+  const [opacity, setOpacity] = useState(0)
 
   // Scroll update handler
   useEffect(() => {
@@ -120,53 +121,30 @@ export function EventTimeline() {
       ticking = false
       const aVH = getArrowSectionVH()
 
-      // Absolute safety: If footer is in view, immediately force hide
-      const footerEl = document.querySelector('footer')
-      if (footerEl) {
-        const fRect = footerEl.getBoundingClientRect()
-        const vh = window.innerHeight || 800
-        if (fRect.top <= vh) {
-          if (containerRef.current) {
-            containerRef.current.style.visibility = 'hidden'
-            containerRef.current.style.display = 'none'
-            containerRef.current.style.opacity = '0'
-          }
-          return
-        }
-      }
+      // Timeline strictly active only inside radial lines (2.0 to 6.0)
+      const FADE_IN_START = 2.0
+      const FADE_IN_END = 2.4
+      const FADE_OUT_START = 5.6
+      const FADE_OUT_END = 6.0
 
-      // Timeline strictly starts inside radial lines (radial lines enter 2.4-3.0).
-      // Timeline strictly ends inside radial lines (radial lines fade out 7.0-7.6).
-      const FADE_IN_START = 2.4
-      const FADE_IN_END = 3.0
-      const FADE_OUT_START = 7.0
-      const FADE_OUT_END = 7.6
-
-      // Absolute hard cutoff outside the radial lines
       if (aVH < FADE_IN_START || aVH > FADE_OUT_END) {
-        if (containerRef.current) {
-          containerRef.current.style.visibility = 'hidden'
-          containerRef.current.style.display = 'none'
-          containerRef.current.style.opacity = '0'
-        }
+        setVisible(false)
+        setOpacity(0)
         return
       }
 
       const fadeIn = smoothstep(FADE_IN_START, FADE_IN_END, aVH)
       const fadeOut = 1 - smoothstep(FADE_OUT_START, FADE_OUT_END, aVH)
-      const opacity = fadeIn * fadeOut
+      const op = fadeIn * fadeOut
 
-      if (containerRef.current) {
-        if (opacity <= 0.001) {
-          containerRef.current.style.visibility = 'hidden'
-          containerRef.current.style.display = 'none'
-          containerRef.current.style.opacity = '0'
-          return
-        }
-        containerRef.current.style.display = 'flex'
-        containerRef.current.style.visibility = 'visible'
-        containerRef.current.style.opacity = String(opacity)
+      if (op <= 0.01) {
+        setVisible(false)
+        setOpacity(0)
+        return
       }
+
+      setVisible(true)
+      setOpacity(op)
 
       // Find closest active milestone
       let bestIndex = 0
@@ -193,10 +171,12 @@ export function EventTimeline() {
 
     const unsubLenis = subscribeLenisScroll(onScroll)
     window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
 
     return () => {
       unsubLenis()
       window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
     }
   }, [])
 
@@ -220,13 +200,14 @@ export function EventTimeline() {
     [lenis]
   )
 
+  if (!visible) return null
+
   const curMilestone = MILESTONES[activeStep]
 
   return (
     <div
-      ref={containerRef}
-      className="fixed inset-0 z-30 pointer-events-none flex flex-col justify-between items-center px-4 sm:px-8 lg:px-14 py-8 sm:py-12 transition-opacity duration-300"
-      style={{ visibility: 'hidden', opacity: 0 }}
+      className="fixed inset-0 z-30 pointer-events-none flex flex-col justify-between items-center px-4 sm:px-8 lg:px-14 py-8 sm:py-12 transition-opacity duration-200"
+      style={{ opacity }}
     >
       {/* Spacer to keep top clear for the fixed navbar */}
       <div className="w-full h-12 pointer-events-none" />
