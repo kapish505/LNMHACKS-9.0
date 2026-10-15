@@ -27,12 +27,39 @@ export function MouseCubeTrail() {
   const colorIndexRef = useRef(0)
   const rafRef = useRef<number | null>(null)
   const isPastHeroRef = useRef(false)
+  const heroBottomRef = useRef(0)
+  const glimpsesTopRef = useRef(Infinity)
+  const footerTopRef = useRef(Infinity)
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
+
+    // Check if scrolled past hero section and cache section boundaries
+    const updateScroll = () => {
+      const hero = document.getElementById('hero')
+      if (hero) {
+        const rect = hero.getBoundingClientRect()
+        heroBottomRef.current = rect.bottom
+        isPastHeroRef.current = rect.bottom <= 0
+        // When user scrolls back up into hero, clear all remaining cubes immediately
+        if (rect.bottom > 50 && trailRef.current.length > 0) {
+          trailRef.current = []
+        }
+      } else {
+        const snap = getLenisScrollSnapshot()
+        heroBottomRef.current = -100
+        isPastHeroRef.current = snap.scrollTop > window.innerHeight
+      }
+
+      const glimpses = document.getElementById('glimpses')
+      glimpsesTopRef.current = glimpses ? glimpses.getBoundingClientRect().top : Infinity
+
+      const footer = document.getElementById('hawa-mahal-footer')
+      footerTopRef.current = footer ? footer.getBoundingClientRect().top : Infinity
+    }
 
     // Setup HiDPI Canvas
     const resize = () => {
@@ -43,23 +70,15 @@ export function MouseCubeTrail() {
       canvas.height = Math.floor(h * dpr)
       canvas.style.width = `${w}px`
       canvas.style.height = `${h}px`
+      canvas.style.pointerEvents = 'none'
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      updateScroll()
     }
+
+    canvas.style.pointerEvents = 'none'
 
     resize()
     window.addEventListener('resize', resize)
-
-    // Check if scrolled past hero section
-    const updateScroll = () => {
-      const hero = document.getElementById('hero')
-      if (hero) {
-        const rect = hero.getBoundingClientRect()
-        isPastHeroRef.current = rect.bottom <= window.innerHeight * 0.7
-      } else {
-        const snap = getLenisScrollSnapshot()
-        isPastHeroRef.current = snap.scrollTop > window.innerHeight * 0.5
-      }
-    }
 
     updateScroll()
     const unsubscribeScroll = subscribeLenisScroll(updateScroll)
@@ -93,14 +112,22 @@ export function MouseCubeTrail() {
       return cells
     }
 
-    // Mouse Move handler
+    // Mouse Move handler — reads cached boundaries without layout thrashing
     const onMouseMove = (e: MouseEvent) => {
-      // Only active in sections after the hero section
-      const hero = document.getElementById('hero')
-      if (hero) {
-        const heroRect = hero.getBoundingClientRect()
-        if (e.clientY < heroRect.bottom - 40) return
-      } else if (!isPastHeroRef.current) {
+      const heroBottom = heroBottomRef.current
+
+      // Strictly stop if cursor is anywhere inside or above the hero section
+      if (e.clientY <= heroBottom) {
+        lastPosRef.current = null
+        return
+      }
+
+      // Strictly stop if cursor is inside glimpses or footer section so all clicks and interactions are unaffected
+      const glimpsesTop = glimpsesTopRef.current
+      const footerTop = footerTopRef.current
+
+      if (e.clientY >= glimpsesTop || e.clientY >= footerTop) {
+        lastPosRef.current = null
         return
       }
 
@@ -113,6 +140,10 @@ export function MouseCubeTrail() {
       const cells = getLineCells(start.gx, start.gy, gx, gy)
 
       for (const cell of cells) {
+        const cellY = cell.gy * SQUARE_SIZE
+        // Strictly never add a cube inside hero, glimpses, or footer
+        if (cellY < heroBottom || cellY >= glimpsesTop || cellY >= footerTop) continue
+
         const existing = trailRef.current.find((t) => t.gx === cell.gx && t.gy === cell.gy)
         if (existing) {
           existing.life = CELL_LIFETIME
@@ -129,7 +160,7 @@ export function MouseCubeTrail() {
       }
 
       // Wake up render loop if asleep
-      if (!isLooping) {
+      if (!isLooping && trailRef.current.length > 0) {
         isLooping = true
         rafRef.current = requestAnimationFrame(draw)
       }
@@ -160,6 +191,9 @@ export function MouseCubeTrail() {
         return // Sleep! No requestAnimationFrame when idle
       }
 
+      const hero = document.getElementById('hero')
+      const heroBottom = hero ? hero.getBoundingClientRect().bottom : heroBottomRef.current
+
       for (let i = 0; i < trailRef.current.length; i++) {
         const t = trailRef.current[i]
         t.life -= 1
@@ -168,6 +202,9 @@ export function MouseCubeTrail() {
 
         const x = t.gx * SQUARE_SIZE
         const y = t.gy * SQUARE_SIZE
+
+        // Strictly never render inside the hero section
+        if (y < heroBottom) continue
 
         // Render completely solid color square
         ctx.fillStyle = t.color
@@ -191,7 +228,7 @@ export function MouseCubeTrail() {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none"
-      style={{ zIndex: 3 }}
+      style={{ zIndex: 15, pointerEvents: 'none' }}
     />
   )
 }

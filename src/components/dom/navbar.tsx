@@ -4,6 +4,7 @@ import { useLenis } from 'lenis/react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { subscribeWebsiteLoaded, isWebsiteLoaded } from '@/lib/loader-bus'
 import { triggerPageTransition } from '@/lib/page-transition-bus'
+import { useTheme } from '@/lib/theme-context'
 
 // Characters to cycle through while scrambling
 const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&!'
@@ -18,6 +19,73 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'SPONSORS', target: 'sponsors' },
   { label: 'TIMELINE', target: 'arrow-section' },
 ]
+
+function ThemeToggle({ className = '' }: { className?: string }) {
+  const { theme, toggleTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const isDark = mounted ? theme === 'dark' : false
+
+  return (
+    <button
+      type="button"
+      onClick={toggleTheme}
+      suppressHydrationWarning
+      aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+      className={`relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full border transition-all duration-300 cursor-pointer select-none pointer-events-auto ${
+        isDark
+          ? 'bg-white/10 hover:bg-white/20 border-white/25 text-yellow-300 shadow-[0_0_12px_rgba(253,224,71,0.25)]'
+          : 'bg-black/5 hover:bg-black/10 border-black/15 text-slate-800'
+      } ${className}`}
+    >
+      {isDark ? (
+        <svg
+          viewBox="0 0 24 24"
+          width="17"
+          height="17"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="transition-transform duration-300 hover:rotate-45"
+        >
+          <circle cx="12" cy="12" r="5" fill="currentColor" fillOpacity="0.25" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+      ) : (
+        <svg
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="transition-transform duration-300 -rotate-12 hover:rotate-0"
+        >
+          <path
+            d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+            fill="currentColor"
+            fillOpacity="0.2"
+          />
+        </svg>
+      )}
+    </button>
+  )
+}
 
 const CHAR_WINDOW_MS = 750  // each char scrambles for 750ms
 const STAGGER_MS = 150      // each char starts 150ms after the previous
@@ -114,6 +182,9 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isPastHero, setIsPastHero] = useState(false)
   const [isRadialSection, setIsRadialSection] = useState(false)
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
+  const isLightNav = !isRadialSection && !isDark
 
   useEffect(() => {
     const unsub = subscribeWebsiteLoaded((loaded) => {
@@ -199,31 +270,27 @@ export function Navbar() {
             scrollToSection('top')
           }}
           className="relative flex items-center p-1 pointer-events-auto cursor-pointer select-none transition-transform hover:scale-[1.02] active:scale-[0.98]"
-          style={{ fontFamily: '"tiktok", sans-serif', fontVariationSettings: '"wght" 800, "wdth" 120' }}
+          style={{
+            fontFamily: '"Rogient Block", "rogient-block", sans-serif',
+            filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.28)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.18))',
+          }}
         >
           <span
-            className={`font-black uppercase text-lg sm:text-2xl md:text-3xl tracking-tight transition-colors duration-200 flex items-center ${
-              isPastHero && !isRadialSection ? 'text-black' : 'text-white'
+            className={`font-normal uppercase text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] leading-none tracking-wide flex items-center transition-colors duration-200 ${
+              isLightNav ? 'text-black' : 'text-white'
             }`}
+            style={{
+              fontFamily: '"Rogient Block", "rogient-block", sans-serif',
+            }}
           >
             <ScrambleWord
               text="LNMHACKS"
               trigger={showNav}
-              charColors={[
-                '#fb3377', // L: Pink from logo
-                '#63c4fd', // N: Cyan from logo
-                '#1e60ff', // M: Royal Blue from logo
-                '#fb3377', // H: Pink from logo
-                '#fb3377', // A: Pink from logo
-                '#fb3377', // C: Pink from logo
-                '#fb3377', // K: Pink from logo
-                '#fb3377', // S: Pink from logo
-              ]}
             />
           </span>
         </a>
 
-        {/* Desktop Navigation Items — Black on light sections, White in radial line section */}
+        {/* Desktop Navigation Items — Black on light sections, White in radial line or dark mode */}
         <nav className="hidden md:flex items-center gap-2 lg:gap-4 pointer-events-auto">
           {NAV_ITEMS.map((item) => (
             <button
@@ -231,9 +298,9 @@ export function Navbar() {
               type="button"
               onClick={() => scrollToSection(item.target)}
               className={`relative p-2 uppercase cursor-pointer transition-colors duration-200 select-none text-xs sm:text-sm font-bold tracking-wider before:content-[''] before:absolute before:inset-0 before:border-2 before:border-dotted before:border-transparent before:pointer-events-none before:transition-colors before:duration-200 ${
-                isRadialSection
-                  ? 'text-white hover:text-white/80 lg:hover:before:border-white'
-                  : 'text-black hover:text-black/70 lg:hover:before:border-black'
+                isLightNav
+                  ? 'text-black hover:text-black/70 lg:hover:before:border-black'
+                  : 'text-white hover:text-white/80 lg:hover:before:border-white'
               }`}
               style={{
                 fontFamily: '"tiktok", sans-serif',
@@ -244,11 +311,14 @@ export function Navbar() {
             </button>
           ))}
 
+          {/* Theme Toggle Button */}
+          <ThemeToggle />
+
           {/* Seamless Register button: invisible on hero, appears seamlessly when scrolled, scrolls back to hero */}
           <div
             className={`transition-all duration-300 ease-out flex items-center ${
               isPastHero
-                ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto ml-2'
+                ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto ml-1'
                 : 'opacity-0 -translate-y-2 scale-90 pointer-events-none w-0 overflow-hidden ml-0'
             }`}
           >
@@ -269,6 +339,9 @@ export function Navbar() {
 
         {/* Mobile Menu Action Buttons */}
         <div className="md:hidden flex items-center gap-2 pointer-events-auto">
+          {/* Mobile Theme Toggle */}
+          <ThemeToggle />
+
           {/* Seamless Mobile Register button */}
           <div
             className={`transition-all duration-300 ease-out ${
@@ -290,22 +363,26 @@ export function Navbar() {
             type="button"
             aria-label="Toggle Navigation Menu"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
-            className="p-2 rounded-xl bg-black/10 backdrop-blur-md border border-black/15 text-black flex flex-col justify-center items-center w-10 h-10 gap-1.5 active:scale-90 transition-transform"
+            className={`p-2 rounded-xl backdrop-blur-md border flex flex-col justify-center items-center w-10 h-10 gap-1.5 active:scale-90 transition-transform ${
+              isLightNav
+                ? 'bg-black/10 border-black/15 text-black'
+                : 'bg-white/10 border-white/20 text-white'
+            }`}
           >
             <span
-              className={`block w-5 h-0.5 bg-black transition-transform duration-300 ${
-                mobileMenuOpen ? 'rotate-45 translate-y-2' : ''
-              }`}
+              className={`block w-5 h-0.5 transition-transform duration-300 ${
+                isLightNav ? 'bg-black' : 'bg-white'
+              } ${mobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`}
             />
             <span
-              className={`block w-5 h-0.5 bg-black transition-opacity duration-200 ${
-                mobileMenuOpen ? 'opacity-0' : 'opacity-100'
-              }`}
+              className={`block w-5 h-0.5 transition-opacity duration-200 ${
+                isLightNav ? 'bg-black' : 'bg-white'
+              } ${mobileMenuOpen ? 'opacity-0' : 'opacity-100'}`}
             />
             <span
-              className={`block w-5 h-0.5 bg-black transition-transform duration-300 ${
-                mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''
-              }`}
+              className={`block w-5 h-0.5 transition-transform duration-300 ${
+                isLightNav ? 'bg-black' : 'bg-white'
+              } ${mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}
             />
           </button>
         </div>
@@ -314,7 +391,7 @@ export function Navbar() {
       {/* Mobile Drawer Dropdown */}
       {mobileMenuOpen && (
         <div className="md:hidden pointer-events-auto px-4 pb-4 animate-in fade-in slide-in-from-top-4 duration-200">
-          <div className="bg-slate-900/90 backdrop-blur-xl border border-white/15 rounded-2xl p-4 shadow-2xl flex flex-col gap-2">
+          <div className="bg-slate-900/95 dark:bg-black/95 backdrop-blur-xl border border-white/15 rounded-2xl p-4 shadow-2xl flex flex-col gap-2">
             {NAV_ITEMS.map((item) => (
               <button
                 key={item.label}
@@ -343,3 +420,4 @@ export function Navbar() {
     </header>
   )
 }
+

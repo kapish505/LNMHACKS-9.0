@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+  <rect width="1000" height="1000" fill="#E87661" />
+  <g transform="translate(200, 220)">
+    <!-- Frame 1: SEE -->
+    <rect x="0" y="0" width="600" height="150" rx="16" fill="#0D0E11" stroke="#000000" stroke-width="6" />
+    <rect x="40" y="35" width="120" height="80" rx="12" fill="#262626" />
+    <text x="100" y="85" text-anchor="middle" font-family="sans-serif" font-size="44" fill="#A3A3A3">👁</text>
+    <text x="540" y="95" text-anchor="end" font-family="sans-serif" font-size="72" font-weight="900" fill="#FFFFFF" letter-spacing="4">SEE</text>
+
+    <!-- Frame 2: HEAR -->
+    <rect x="0" y="190" width="600" height="150" rx="16" fill="#0D0E11" stroke="#000000" stroke-width="6" />
+    <rect x="40" y="225" width="120" height="80" rx="12" fill="#262626" />
+    <text x="100" y="275" text-anchor="middle" font-family="sans-serif" font-size="44" fill="#A3A3A3">👂</text>
+    <text x="540" y="285" text-anchor="end" font-family="sans-serif" font-size="72" font-weight="900" fill="#FFFFFF" letter-spacing="4">HEAR</text>
+
+    <!-- Frame 3: TOUCH -->
+    <rect x="0" y="380" width="600" height="150" rx="16" fill="#0D0E11" stroke="#000000" stroke-width="6" />
+    <rect x="40" y="415" width="120" height="80" rx="12" fill="#262626" />
+    <text x="100" y="465" text-anchor="middle" font-family="sans-serif" font-size="44" fill="#A3A3A3">✋</text>
+    <text x="540" y="475" text-anchor="end" font-family="sans-serif" font-size="72" font-weight="900" fill="#FFFFFF" letter-spacing="4">TOUCH</text>
+  </g>
+</svg>

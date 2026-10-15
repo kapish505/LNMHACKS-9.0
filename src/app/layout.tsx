@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ScrollShell } from "@/components/canvas/scroll-shell";
 import { PageCircleReveal } from "@/components/canvas/page-circle-reveal";
+import { ThemeProvider } from "@/lib/theme-context";
+
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,12 +28,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="antialiased">
+    <html lang="en" className="antialiased" suppressHydrationWarning>
+      <head />
       <body className={inter.className}>
-        <PageCircleReveal />
-        <ScrollShell>
-          {children}
-        </ScrollShell>
+        <Script
+          id="theme-script"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('lnmhacks_theme');var isDark=t==='dark'||(!t&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(isDark){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){}})();`,
+          }}
+        />
+        <ThemeProvider>
+          <PageCircleReveal />
+          <ScrollShell>
+            {children}
+          </ScrollShell>
+        </ThemeProvider>
       </body>
     </html>
   );

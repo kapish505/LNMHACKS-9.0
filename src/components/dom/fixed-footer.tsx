@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTheme } from '@/lib/theme-context'
 
 /* Live IST clock */
 function useISTTime() {
@@ -59,6 +60,8 @@ function RotatingGlobe() {
 export function FixedFooter() {
   const time = useISTTime()
   const [pos, setPos] = useState({ x: 0, y: 0 })
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
 
   useEffect(() => {
     let raf = 0
@@ -87,21 +90,27 @@ export function FixedFooter() {
       style={{ zIndex: 60 }}
     >
       <div
-        className="flex items-center justify-between px-4 sm:px-6 py-2 sm:py-3 text-[11px] sm:text-[13px]"
+        className="w-full grid grid-cols-3 items-center px-5 sm:px-8 lg:px-14 py-2 sm:py-3 text-[11px] sm:text-[13px] transition-colors duration-200"
         style={{
           fontFamily: '"tronica-mono", "Courier New", monospace',
           letterSpacing: '0.1em',
-          color: 'rgba(0,0,0,0.6)',
+          color: isDark ? 'rgba(255, 255, 255, 0.65)' : 'rgba(0, 0, 0, 0.6)',
         }}
       >
-        {/* Left: IST time */}
-        <span>IST IN {time}</span>
+        {/* Left Column: IST time (aligned LEFT of Grid 1) */}
+        <div className="flex items-center justify-start pl-3 sm:pl-5 lg:pl-6">
+          <span>IST IN {time}</span>
+        </div>
 
-        {/* Center: cursor coordinates (desktop only) */}
-        <span className="hidden sm:inline">{px} X {py} Y</span>
+        {/* Center Column: Cursor coordinates (aligned CENTRE of Grid 2) */}
+        <div className="flex items-center justify-center text-center">
+          <span className="hidden sm:inline">{px} X {py} Y</span>
+        </div>
 
-        {/* Right: rotating globe */}
-        <RotatingGlobe />
+        {/* Right Column: Rotating globe (aligned RIGHT of Grid 3) */}
+        <div className="flex items-center justify-end pr-3 sm:pr-5 lg:pr-6">
+          <RotatingGlobe />
+        </div>
       </div>
     </footer>
   )

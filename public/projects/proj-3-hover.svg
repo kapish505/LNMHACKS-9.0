@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750">
+  <rect width="1200" height="750" fill="#0C0D10" />
+  <rect x="80" y="80" width="1040" height="590" rx="16" fill="#15171E" stroke="#2D3139" stroke-width="2" />
+  <circle cx="120" cy="120" r="10" fill="#FF5F56" />
+  <circle cx="150" cy="120" r="10" fill="#FFBD2E" />
+  <circle cx="180" cy="120" r="10" fill="#27C93F" />
+  <text x="120" y="200" font-family="monospace" font-size="28" font-weight="bold" fill="#65D26E">$ wasm-bench --threads 8 --simd128</text>
+  <text x="120" y="260" font-family="monospace" font-size="24" fill="#A0AEC0">&gt; JS Fallback:    142.4 ms [1.0x]</text>
+  <text x="120" y="310" font-family="monospace" font-size="24" fill="#A0AEC0">&gt; WASM Baseline:   24.1 ms [5.9x]</text>
+  <text x="120" y="360" font-family="monospace" font-size="24" font-weight="bold" fill="#c0fe04">&gt; WASM + SIMD:      4.2 ms [33.9x] ✓ OPTIMIZED</text>
+  
+  <rect x="120" y="440" width="960" height="24" rx="12" fill="#2D3139" />
+  <rect x="120" y="440" width="910" height="24" rx="12" fill="#c0fe04" />
+  <text x="120" y="520" font-family="monospace" font-size="24" fill="#E2E8F0">HEAP ALLOC: 12.8 MB // 120 FPS LOCK // ZERO GC JANK</text>
+</svg>

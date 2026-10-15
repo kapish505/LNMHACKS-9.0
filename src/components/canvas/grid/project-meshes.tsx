@@ -1,22 +1,23 @@
 'use client'
 
-import { useRef, useMemo, useEffect } from 'react'
+import { useRef, useMemo, useEffect, useState } from 'react'
 import * as THREE from 'three'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useTexture } from '@react-three/drei'
+import { getPointerUV, isPointerInside } from '@/lib/pointer-bus'
 import { getLenisScrollSnapshot } from '@/lib/scroll-bus'
 import { createCurlStrengthSampler } from './curl-strength'
 import { vertexShader, fragmentShader } from '@/shaders/dom-sync'
 import { domRegistry } from '@/lib/dom-registry'
 import { PROJECTS } from '@/components/dom/project-grid'
 
-function ProjectMesh({ project, index = 0 }: { project: any, index?: number }) {
+function ProjectMesh({ project, index = 0, parentInView = true }: { project: any, index?: number, parentInView?: boolean }) {
   const meshRef = useRef<THREE.Mesh>(null)
   const materialRef = useRef<THREE.ShaderMaterial>(null)
   const { size } = useThree()
-  
+
   const [map1, map2] = useTexture([project.img1, project.img2])
-  
+
   // Apply sRGB correctly & maximum texture sharpness
   useMemo(() => {
     if (map1) {
@@ -36,9 +37,8 @@ function ProjectMesh({ project, index = 0 }: { project: any, index?: number }) {
       map2.needsUpdate = true
     }
   }, [map1, map2])
-  
+
   const hoverSpring = useRef(0)
-  const polaritySpring = useRef(1.0)
   const curlSamplerRef = useRef(createCurlStrengthSampler())
 
   const uniforms = useMemo(() => ({
@@ -52,42 +52,32 @@ function ProjectMesh({ project, index = 0 }: { project: any, index?: number }) {
     uCurlStrength: { value: 0 }
   }), [map1, map2, size])
 
-  const isIntersectingRef = useRef(false)
-  useEffect(() => {
-    const unsub = domRegistry.subscribe(() => {
-      const entry = domRegistry.getEntry(project.id)
-      if (entry && entry.el && !ioRef.current) {
-        const io = new IntersectionObserver(([e]) => {
-          isIntersectingRef.current = e.isIntersecting
-        }, { rootMargin: '200px' })
-        io.observe(entry.el)
-        ioRef.current = io
-      }
-    })
-    const ioRef = { current: null as IntersectionObserver | null }
-    const initialEntry = domRegistry.getEntry(project.id)
-    if (initialEntry && initialEntry.el) {
-      const io = new IntersectionObserver(([e]) => {
-        isIntersectingRef.current = e.isIntersecting
-      }, { rootMargin: '200px' })
-      io.observe(initialEntry.el)
-      ioRef.current = io
-    }
-    return () => {
-      unsub()
-      ioRef.current?.disconnect()
-    }
-  }, [project.id])
-
   useFrame((state, delta) => {
     if (!materialRef.current || !meshRef.current) return
+    if (!parentInView) {
+      if (meshRef.current.visible) meshRef.current.visible = false
+      return
+    }
+
     const entry = domRegistry.getEntry(project.id)
-    if (!entry || !entry.el || !isIntersectingRef.current) {
+    if (!entry || !entry.el) {
       meshRef.current.visible = false
       return
     }
 
     const rect = entry.el.getBoundingClientRect()
+    // Robust viewport culling: only render when anywhere near the screen
+    const isVisible =
+      rect.bottom >= -200 &&
+      rect.top <= size.height + 200 &&
+      rect.width > 0 &&
+      rect.height > 0
+
+    if (!isVisible) {
+      meshRef.current.visible = false
+      return
+    }
+
     meshRef.current.visible = true
 
     const clampedDelta = Math.min(delta, 0.1)
@@ -104,8 +94,26 @@ function ProjectMesh({ project, index = 0 }: { project: any, index?: number }) {
     mat.uniforms.uViewportPx.value.set(size.width, size.height)
     mat.uniforms.uCurlStrength.value = curl
 
-    const targetHover = entry.hovered ? 1 : 0
-    hoverSpring.current += (targetHover - hoverSpring.current) * (1 - Math.exp(-clampedDelta * 8))
+    // Dual-guarantee hover detection: DOM event OR direct cursor hit-testing
+    const pointer = getPointerUV()
+    const pointerInside = isPointerInside()
+    const mouseX = pointer.x * size.width
+    const mouseY = (1.0 - pointer.y) * size.height
+    const isDirectlyOver =
+      pointerInside &&
+      mouseX >= rect.left &&
+      mouseX <= rect.right &&
+      mouseY >= rect.top &&
+      mouseY <= rect.bottom
+
+    const isHovered = Boolean(entry.hovered || isDirectlyOver)
+    const targetHover = isHovered ? 1.0 : 0.0
+
+    hoverSpring.current += (targetHover - hoverSpring.current) * (1 - Math.exp(-clampedDelta * 12))
+    if (hoverSpring.current < 0.0005 && targetHover === 0.0) {
+      hoverSpring.current = 0.0
+    }
+
     mat.uniforms.uHoverRevealProgress.value = hoverSpring.current
     mat.uniforms.uPolarityPositive.value = 1.0
   })
@@ -127,10 +135,25 @@ function ProjectMesh({ project, index = 0 }: { project: any, index?: number }) {
 }
 
 export function ProjectMeshes() {
+  const active = PROJECTS.filter((p: any) => p.useWebgl)
+  const [inView, setInView] = useState(false)
+
+  useEffect(() => {
+    const el = document.getElementById('sponsors')
+    if (!el) return
+    const io = new IntersectionObserver(([entry]) => {
+      setInView(entry.isIntersecting)
+    }, { rootMargin: '400px 0px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+
+  if (active.length === 0) return null
+
   return (
     <group>
-      {PROJECTS.map((p, i) => (
-        <ProjectMesh key={p.id} project={p} index={i} />
+      {active.map((p, i) => (
+        <ProjectMesh key={p.id} project={p} index={i} parentInView={inView} />
       ))}
     </group>
   )

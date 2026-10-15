@@ -269,8 +269,10 @@ export function HawaMahalFooter() {
       ctx.save()
       ctx.scale(dpr, dpr)
 
-      // Dot matrix pattern on the cream background
-      ctx.fillStyle = 'rgba(54, 54, 48, 0.12)'
+      // Dot matrix pattern on the background
+      ctx.fillStyle = document.documentElement.classList.contains('dark')
+        ? 'rgba(255, 255, 255, 0.14)'
+        : 'rgba(54, 54, 48, 0.12)'
       for (let j = 0; j < H; j++) {
         for (let i = 0; i < W; i++) {
           ctx.fillRect(i * C + C / 2 - 1, j * C + C / 2 - 1, 2, 2)
@@ -407,7 +409,7 @@ export function HawaMahalFooter() {
   }
 
   return (
-    <footer id="hawa-mahal-footer" className="relative w-full z-20 mt-auto bg-[#F0EDE8]">
+    <footer id="hawa-mahal-footer" className="relative w-full z-40 mt-auto bg-[#F0EDE8] dark:bg-[#090d16] transition-colors duration-500 ease-in-out pointer-events-auto">
       {/* ── Tetris Hawa Mahal Skyline Well ── */}
       <div
         ref={wrapRef}
@@ -419,7 +421,7 @@ export function HawaMahalFooter() {
 
       {/* ── Main Footer Panel — Compact, Perfectly Aligned, and Unified Typography ── */}
       <div
-        className="w-full bg-[#0a0e1a] text-[#EDEBFF] border-t-4 border-[#1e60ff] px-4 sm:px-8 lg:px-14 pt-6 sm:pt-8 pb-8 sm:pb-10"
+        className="w-full bg-[#0a0e1a] text-[#EDEBFF] border-t-4 border-[#1e60ff] px-4 sm:px-8 lg:px-14 pt-6 sm:pt-8 pb-8 sm:pb-10 relative z-10 pointer-events-auto"
       >
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           {/* Brand & Tetris Game Controls */}

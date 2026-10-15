@@ -34,7 +34,7 @@ const DEFAULT_TRANSITION: Transition = {
     duration: 0.3,
 };
 
-export type IconConfig = {
+type IconConfig = {
     type?: "symbol" | "image";
     symbol?: string;
     image?: string | { src?: string; srcSet?: string; alt?: string };

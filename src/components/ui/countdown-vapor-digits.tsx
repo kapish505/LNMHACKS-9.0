@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { subscribeThemeChange } from "@/lib/theme-context";
 
 // ---------------------------------------------------------------------------
 // deterministic 2-octave value noise — house field, no deps
@@ -86,7 +87,7 @@ export function VaporCountdown({
     const digitEls = Array.from(
       root.querySelectorAll<HTMLSpanElement>("[data-vc-digit]"),
     );
-    if (digitEls.length !== 9) return;
+    if (digitEls.length !== 8) return;
 
     const reduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -100,7 +101,7 @@ export function VaporCountdown({
 
     let disposed = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    let digits = "000000000";
+    let digits = "00000000";
 
     const remaining = () => Math.max(0, targetMs - Date.now());
     const toDigits = () => {
@@ -110,17 +111,17 @@ export function VaporCountdown({
       const m = Math.floor((rem % 3600) / 60);
       const s = rem % 60;
       return (
-        String(d).padStart(3, "0") +
+        String(d).padStart(2, "0") +
         String(h).padStart(2, "0") +
         String(m).padStart(2, "0") +
         String(s).padStart(2, "0")
       );
     };
     const applyDateTime = () => {
-      const d = digits.slice(0, 3);
-      const h = digits.slice(3, 5);
-      const m = digits.slice(5, 7);
-      const s = digits.slice(7, 9);
+      const d = digits.slice(0, 2);
+      const h = digits.slice(2, 4);
+      const m = digits.slice(4, 6);
+      const s = digits.slice(6, 8);
       timeEl.setAttribute(
         "datetime",
         `P${parseInt(d, 10)}DT${parseInt(h, 10)}H${parseInt(m, 10)}M${parseInt(s, 10)}S`,
@@ -136,7 +137,7 @@ export function VaporCountdown({
     };
     updateGrainColor();
 
-    const slots: Slot[] = Array.from({ length: 9 }, () => ({
+    const slots: Slot[] = Array.from({ length: 8 }, () => ({
       g: new Float32Array(MAX_GRAINS * FLOATS),
       v: new Float32Array(MAX_GRAINS * FLOATS),
       gc: 0,
@@ -165,7 +166,7 @@ export function VaporCountdown({
       ctx.fillStyle = grainColor;
       let anyActive = false;
 
-      for (let s = 0; s < 9; s++) {
+      for (let s = 0; s < digitEls.length; s++) {
         const slot = slots[s];
         const g = slot.g;
         const v = slot.v;
@@ -401,7 +402,7 @@ export function VaporCountdown({
       }
 
       // seat every slot on its current digit, settled — calm first paint
-      for (let s = 0; s < 9; s++) {
+      for (let s = 0; s < digitEls.length; s++) {
         const slot = slots[s];
         const homes = glyphs[Number(digits.charAt(s))];
         const cell = cells[s];
@@ -431,7 +432,7 @@ export function VaporCountdown({
     const tick = () => {
       const next = toDigits();
       if (next !== digits) {
-        for (let s = 0; s < 9; s++) {
+        for (let s = 0; s < digitEls.length; s++) {
           if (next.charAt(s) !== digits.charAt(s)) {
             digitEls[s].textContent = next.charAt(s);
             if (!reduced) transition(s, Number(next.charAt(s)));
@@ -445,7 +446,7 @@ export function VaporCountdown({
     };
 
     digits = toDigits();
-    for (let s = 0; s < 9; s++) digitEls[s].textContent = digits.charAt(s);
+    for (let s = 0; s < digitEls.length; s++) digitEls[s].textContent = digits.charAt(s);
     applyDateTime();
     if (remaining() > 0) schedule();
 
@@ -519,12 +520,11 @@ export function VaporCountdown({
     >
       {/* real element: screen‑reader truth; visible static under reduced motion */}
       <time ref={timeRef} aria-live="off" style={{ display: "contents" }}>
-        {/* Days: 3 digits */}
+        {/* Days: 2 digits */}
         <span
           key="group-days"
           className="flex justify-center font-black leading-none tracking-tight text-white opacity-0 tabular-nums motion-reduce:opacity-100"
         >
-          <span data-vc-digit>0</span>
           <span data-vc-digit>0</span>
           <span data-vc-digit>0</span>
         </span>
@@ -563,5 +563,3 @@ export function VaporCountdown({
     </div>
   );
 }
-
-export default VaporCountdown;

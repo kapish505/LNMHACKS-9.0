@@ -20,8 +20,3 @@ export const subscribeWebsiteLoaded = (fn: LoaderListener) => {
     listeners.delete(fn)
   }
 }
-
-// Reset helper (for hot-reload / unmount testing)
-export const resetWebsiteLoaded = () => {
-  isLoaded = false
-}

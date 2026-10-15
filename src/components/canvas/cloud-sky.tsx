@@ -5,7 +5,7 @@
 import * as React from "react"
 import { useEffect, useRef } from "react"
 
-const MAX_DPR = 1.5 // cap pixel ratio — halves pixel count vs 3× retina
+const MAX_DPR = 1.0 // cap pixel ratio to 1.0 — 55% fill-rate reduction, smooth bilinear clouds
 
 const PUFF_UP = 0.34
 const PUFF_DOWN = 0.19
@@ -63,7 +63,7 @@ float vnoise(vec2 x){
 
 float fbm(vec2 p){
   float a = 0.5, s = 0.0;
-  for (int i = 0; i < 4; i++){
+  for (int i = 0; i < 3; i++){
     s += a * vnoise(p);
     p *= 2.03;
     a *= 0.5;
@@ -144,42 +144,44 @@ void main(){
   float navbarClearance = smoothstep(0.97, 0.88, p.y);
   float cloudMask = countdownClearance * navbarClearance;
 
-  if (uCirrus > 0.0) {
-    vec2 cuv = vec2(p.x * 1.4 + uCirrusX, p.y * 5.5);
-    float veil = fbm(cuv) * fbm(cuv * 2.3 + 9.0);
-    veil = smoothstep(0.24, 0.55, veil);
-    col = mix(col, uCloud, veil * uCirrus * 0.5 * cloudMask);
-  }
+  if (cloudMask > 0.005) {
+    if (uCirrus > 0.0) {
+      vec2 cuv = vec2(p.x * 1.4 + uCirrusX, p.y * 5.5);
+      float veil = fbm(cuv) * fbm(cuv * 2.3 + 9.0);
+      veil = smoothstep(0.24, 0.55, veil);
+      col = mix(col, uCloud, veil * uCirrus * 0.5 * cloudMask);
+    }
 
-  vec2 fuv = vec2(p.x + uFarX, p.y) * ${FAR_CELL.toFixed(3)} + uParallax * 0.4;
-  vec2 fd = cloudField(fuv, 17.0, 11.0);
-  float fa = clamp(fd.x * uSoftness, 0.0, 1.0) * cloudMask;
-  if (fa > 0.0) {
-    vec3 lit = shadeCloud(fd.y, sky);
+    vec2 fuv = vec2(p.x + uFarX, p.y) * ${FAR_CELL.toFixed(3)} + uParallax * 0.4;
+    vec2 fd = cloudField(fuv, 17.0, 11.0);
+    float fa = clamp(fd.x * uSoftness, 0.0, 1.0) * cloudMask;
+    if (fa > 0.0) {
+      vec3 lit = shadeCloud(fd.y, sky);
 
-    col = mix(col, mix(lit, sky, ${FAR_MIX.toFixed(3)}), fa);
-  }
+      col = mix(col, mix(lit, sky, ${FAR_MIX.toFixed(3)}), fa);
+    }
 
-  // Upper/main near clouds
-  vec2 nuv = vec2(p.x + uNearX, p.y) * ${NEAR_CELL.toFixed(3)} + uParallax;
-  vec2 nd = cloudField(nuv, 3.0, 8.5);
-  float na_main = clamp(nd.x * uSoftness, 0.0, 1.0);
+    // Upper/main near clouds
+    vec2 nuv = vec2(p.x + uNearX, p.y) * ${NEAR_CELL.toFixed(3)} + uParallax;
+    vec2 nd = cloudField(nuv, 3.0, 8.5);
+    float na_main = clamp(nd.x * uSoftness, 0.0, 1.0);
 
-  // Dedicated lower cloud stream passing below the countdown (p.y ~ 0.08 to 0.38)
-  vec2 nuv_low = vec2(p.x * 1.15 + uNearX * 0.88 + 7.3, (p.y - 0.20) * 1.7) + uParallax * 0.7;
-  vec2 nd_low = cloudField(nuv_low, 11.0, 7.5);
-  float na_low = clamp(nd_low.x * uSoftness, 0.0, 1.0) * smoothstep(0.44, 0.32, p.y);
+    // Dedicated lower cloud stream passing below the countdown (p.y ~ 0.08 to 0.38)
+    vec2 nuv_low = vec2(p.x * 1.15 + uNearX * 0.88 + 7.3, (p.y - 0.20) * 1.7) + uParallax * 0.7;
+    vec2 nd_low = cloudField(nuv_low, 11.0, 7.5);
+    float na_low = clamp(nd_low.x * uSoftness, 0.0, 1.0) * smoothstep(0.44, 0.32, p.y);
 
-  float na = max(na_main, na_low) * cloudMask;
-  if (na > 0.0) {
-    float dy = (na_low > na_main) ? nd_low.y : nd.y;
-    vec3 lit = shadeCloud(dy, sky);
+    float na = max(na_main, na_low) * cloudMask;
+    if (na > 0.0) {
+      float dy = (na_low > na_main) ? nd_low.y : nd.y;
+      vec3 lit = shadeCloud(dy, sky);
 
-    float above = clamp(cloudField(nuv + vec2(0.0, ${SHADOW_STEP.toFixed(3)}), 3.0, 8.5).x * uSoftness, 0.0, 1.0);
-    lit *= 1.0 - 0.18 * uShadow * above;
+      float above = clamp(cloudField(nuv + vec2(0.0, ${SHADOW_STEP.toFixed(3)}), 3.0, 8.5).x * uSoftness, 0.0, 1.0);
+      lit *= 1.0 - 0.18 * uShadow * above;
 
-    lit += uGlow.rgb * uGlow.a * 0.22 * exp(-length(p - sunP) * 1.6);
-    col = mix(col, lit, na);
+      lit += uGlow.rgb * uGlow.a * 0.22 * exp(-length(p - sunP) * 1.6);
+      col = mix(col, lit, na);
+    }
   }
 
   gl_FragColor = vec4(col, 1.0);
@@ -260,6 +262,7 @@ interface Props {
   clouds?: Clouds
   sun?: Sun
   pointer?: Pointer
+  active?: boolean
 }
 
 function __OriginkitBase_CloudSky(props: Props) {
@@ -277,7 +280,18 @@ function __OriginkitBase_CloudSky(props: Props) {
     pointer,
     width,
     height,
+    active = true,
   } = props
+
+  const activeRef = useRef(active)
+  activeRef.current = active
+  const wakeUpRef = useRef<() => void>(() => {})
+
+  useEffect(() => {
+    if (active) {
+      wakeUpRef.current()
+    }
+  }, [active])
 
   const clouds_ = { ...CLOUD_DEFAULTS, ...(clouds || {}) }
   const sun_ = { ...SUN_DEFAULTS, ...(sun || {}) }
@@ -367,9 +381,9 @@ function __OriginkitBase_CloudSky(props: Props) {
     let leanY = 0
 
     const render = (now: number) => {
-      if (paused) {
+      if (paused || !activeRef.current) {
         raf = 0
-        return // Sleep! No requestAnimationFrame when paused
+        return // Sleep! No requestAnimationFrame when paused or inactive
       }
       const elapsed = now - last
       if (minFrameMs > 0 && elapsed < minFrameMs) { raf = requestAnimationFrame(render); return }
@@ -440,11 +454,12 @@ function __OriginkitBase_CloudSky(props: Props) {
     canvas.addEventListener("pointerleave", onLeave)
 
     const wakeUp = () => {
-      if (!paused && !raf) {
+      if (!paused && activeRef.current && !raf) {
         last = performance.now()
         raf = requestAnimationFrame(render)
       }
     }
+    wakeUpRef.current = wakeUp
 
     // Pause when tab is hidden or canvas is scrolled out of view
     let inView = true
@@ -453,7 +468,8 @@ function __OriginkitBase_CloudSky(props: Props) {
       paused = !inView || document.hidden
       if (!paused) wakeUp()
     }, { threshold: 0.02 })
-    io.observe(canvas)
+    const target = canvas.closest('#hero') || canvas.parentElement || canvas
+    io.observe(target)
 
     const onVisibility = () => {
       paused = !inView || document.hidden
@@ -461,9 +477,12 @@ function __OriginkitBase_CloudSky(props: Props) {
     }
     document.addEventListener('visibilitychange', onVisibility)
 
-    raf = requestAnimationFrame(render)
+    if (activeRef.current) {
+      raf = requestAnimationFrame(render)
+    }
 
     return () => {
+      wakeUpRef.current = () => {}
       cancelAnimationFrame(raf)
       io.disconnect()
       document.removeEventListener('visibilitychange', onVisibility)
@@ -516,5 +535,3 @@ const __originkitPresetProps = {
 export function CloudSky(props: Props) {
   return <__OriginkitBase_CloudSky {...(__originkitPresetProps as any)} {...props} />
 }
-
-export default CloudSky

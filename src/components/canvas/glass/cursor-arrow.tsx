@@ -13,11 +13,11 @@ const APPEAR_END_VH = -0.3
 const FADE_START_VH = 2.0
 const FADE_END_VH = 2.5
 
-// ─── Reverse Scroll Ranges (Finishes and fades completely by 7.6 VH) ───
-const REV_FADE_IN_START = 6.0
-const REV_FADE_IN_END = 6.4
-const REV_FADE_OUT_START = 7.3
-const REV_FADE_OUT_END = 7.6
+// ─── Reverse Scroll Ranges (Finishes and fades completely by 6.8 VH) ───
+const REV_FADE_IN_START = 5.6
+const REV_FADE_IN_END = 6.0
+const REV_FADE_OUT_START = 6.4
+const REV_FADE_OUT_END = 6.8
 
 const BASE_SCALE = 0.85
 
@@ -217,24 +217,24 @@ export function CursorArrow() {
       // 1. Enters at 100% coverage at 180°, shrinks to 90% (aVH: 6.0 to 6.4)
       // 2. Shrinks from 90% to stage 1 while rotating 180° back to 0° (aVH: 6.4 to 7.0)
       // 3. Settles to base scale at 0° rotation (aVH: 7.0 to 7.3)
-      // 4. Shrinks smoothly away into 0 by 7.6 VH (well before footer appears at 8.5 VH)
-      if (aVH <= 6.0) {
+      // ── Backward Arrow Phase Timeline (Exact Mirror Reverse, Finishes cleanly by 6.8 VH) ──
+      if (aVH <= 5.6) {
         scale = SCALE_100
         rotY = Math.PI
-      } else if (aVH < 6.4) {
-        const p3 = easeInOutCubic(smoothstep(6.0, 6.4, aVH))
+      } else if (aVH < 6.0) {
+        const p3 = easeInOutCubic(smoothstep(5.6, 6.0, aVH))
         scale = SCALE_100 - p3 * (SCALE_100 - SCALE_90)
         rotY = Math.PI
-      } else if (aVH < 7.0) {
-        const p2 = easeInOutCubic(smoothstep(6.4, 7.0, aVH))
+      } else if (aVH < 6.4) {
+        const p2 = easeInOutCubic(smoothstep(6.0, 6.4, aVH))
         scale = SCALE_90 - p2 * (SCALE_90 - STAGE1_SCALE)
         rotY = (1.0 - p2) * Math.PI
-      } else if (aVH < 7.3) {
-        const p1 = easeInOutCubic(smoothstep(7.0, 7.3, aVH))
+      } else if (aVH < 6.6) {
+        const p1 = easeInOutCubic(smoothstep(6.4, 6.6, aVH))
         scale = STAGE1_SCALE - p1 * (STAGE1_SCALE - BASE_SCALE)
         rotY = 0
       } else {
-        const pShrink = easeInOutCubic(smoothstep(7.3, 7.6, aVH))
+        const pShrink = easeInOutCubic(smoothstep(6.6, 6.8, aVH))
         scale = Math.max(0, BASE_SCALE * (1.0 - pShrink))
         rotY = 0
       }

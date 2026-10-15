@@ -182,6 +182,7 @@ export function AboutRingLogo({
 }: AboutRingLogoProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [sweepProgress, setSweepProgress] = useState(0)
+  const [isInView, setIsInView] = useState(false)
   const isAnimatingRef = useRef(false)
   const wasVisibleRef = useRef(false)
 
@@ -210,7 +211,7 @@ export function AboutRingLogo({
     requestAnimationFrame(animate)
   }, [])
 
-  // IntersectionObserver — always re-triggers on every scroll in (up or down)
+  // IntersectionObserver — controls frameloop and triggers sweep on visible
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
@@ -218,6 +219,7 @@ export function AboutRingLogo({
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
+          setIsInView(entry.isIntersecting)
           if (entry.isIntersecting && entry.intersectionRatio >= 0.2) {
             // Fire sweep every time it becomes visible
             if (!wasVisibleRef.current) {
@@ -250,12 +252,13 @@ export function AboutRingLogo({
         draggable={false}
       />
 
-      {/* Layer 2: Transparent WebGL glint overlay */}
+      {/* Layer 2: Transparent WebGL glint overlay — sleeps when scrolled out of view */}
       <div className="absolute inset-0" style={{ mixBlendMode: 'screen' }}>
         <Canvas
+          frameloop={isInView ? 'always' : 'never'}
           camera={{ position: [0, 0, 5], fov: 45 }}
           gl={{ alpha: true, antialias: true, powerPreference: 'high-performance', premultipliedAlpha: false }}
-          dpr={typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1}
+          dpr={typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 1.25) : 1}
           style={{ width: '100%', height: '100%', background: 'transparent' }}
         >
           <GlintOverlay

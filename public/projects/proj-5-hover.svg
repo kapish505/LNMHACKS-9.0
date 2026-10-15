@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 750" width="1000" height="750">
+  <defs>
+    <linearGradient id="holoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F2FE" />
+      <stop offset="50%" stop-color="#4FACFE" />
+      <stop offset="100%" stop-color="#6B11FF" />
+    </linearGradient>
+  </defs>
+  <rect width="1000" height="750" fill="#07080B" />
+  <rect x="80" y="80" width="840" height="590" rx="24" fill="url(#holoGrad)" />
+  <rect x="82" y="82" width="836" height="586" rx="22" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="3" />
+  <text x="140" y="200" font-family="monospace" font-size="64" font-weight="900" fill="#FFFFFF" letter-spacing="-1">DARKSIDE OLED</text>
+  <text x="140" y="280" font-family="monospace" font-size="26" font-weight="bold" fill="rgba(255,255,255,0.85)" letter-spacing="4">HDR WIDE COLOR GAMUT // P3 100%</text>
+  <g transform="translate(140, 480)" fill="#FFFFFF">
+    <rect x="0" y="40" width="12" height="60" rx="6" />
+    <rect x="24" y="10" width="12" height="90" rx="6" />
+    <rect x="48" y="0" width="12" height="100" rx="6" />
+    <rect x="72" y="30" width="12" height="70" rx="6" />
+    <rect x="96" y="50" width="12" height="50" rx="6" />
+  </g>
+  <text x="900" y="600" text-anchor="end" font-family="monospace" font-size="24" font-weight="bold" fill="#c0fe04">SPECTRAL CONTRAST ∞:1</text>
+</svg>

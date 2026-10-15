@@ -33,7 +33,7 @@ const EXPO_INOUT: Ease = (t) =>
             ? Math.pow(2, 20 * t - 10) / 2
             : (2 - Math.pow(2, -20 * t + 10)) / 2
 
-export interface FramerTransition {
+interface FramerTransition {
     type?: string
     duration?: number
     delay?: number
@@ -458,7 +458,7 @@ const SIZE_MODES: Record<string, CardSizing> = {
 
 type ImageValue = string | { src?: string } | null | undefined
 
-export interface CarouselItem {
+interface CarouselItem {
     image?: ImageValue
     offsetY?: number
 }
@@ -475,12 +475,12 @@ const offsetOf = (v: ItemValue): number => {
     return typeof v.offsetY === "number" ? v.offsetY : 0
 }
 
-export interface LiquidGlassCarouselController {
+interface LiquidGlassCarouselController {
     next: () => void
     prev: () => void
 }
 
-export interface LensSettings {
+interface LensSettings {
     enabled?: boolean
     shape?: "circle" | "square" | "rectangle"
     round?: number
@@ -491,20 +491,20 @@ export interface LensSettings {
     ringColor?: string
 }
 
-export interface MotionSettings {
+interface MotionSettings {
     sensitivity?: number
     glide?: number
     snap?: boolean
 }
 
-export interface EntrySettings {
+interface EntrySettings {
     enabled?: boolean
     transition?: FramerTransition
     enterFrom?: string
     triggerOnScroll?: boolean
 }
 
-export interface InteractionSettings {
+interface InteractionSettings {
     wheel?: boolean
     drag?: boolean
     clickToFocus?: boolean
@@ -746,7 +746,7 @@ function createEngine(mount: HTMLElement, getParams: () => Params) {
         try {
             clearColor.set(pp.background)
         } catch {
-            clearColor.set("#ffffff")
+            clearColor.set("#F0EDE8")
         }
         renderer.setClearColor(clearColor, 1)
     }
@@ -2017,6 +2017,7 @@ export default function LiquidGlassCarousel(props: LiquidGlassCarouselProps) {
 
                 touchAction: "none",
                 background: paramsRef.current.background,
+                transition: "background-color 0.5s ease-in-out",
                 ...props.style,
             }}
         >

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+  <rect width="1000" height="1000" fill="#C6C8F5" />
+  <g transform="translate(250, 200) scale(3.5)">
+    <!-- White isometric building structures -->
+    <path d="M 20,40 L 35,32 L 35,65 L 20,73 Z" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+    <path d="M 20,40 L 35,32 L 45,38 L 30,46 Z" fill="#F8FAFC" stroke="#94A3B8" stroke-width="1" />
+    <path d="M 50,30 L 65,22 L 65,65 L 50,73 Z" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+    <path d="M 80,40 L 95,32 L 95,65 L 80,73 Z" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+    <path d="M 110,25 L 125,17 L 125,65 L 110,73 Z" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+    
+    <!-- Accent cubes -->
+    <polygon points="35,20 45,14 55,20 45,26" fill="#F87171" />
+    <polygon points="35,20 45,26 45,36 35,30" fill="#EF4444" />
+    <polygon points="55,20 45,26 45,36 55,30" fill="#DC2626" />
+
+    <polygon points="120,40 130,34 140,40 130,46" fill="#60A5FA" />
+    <polygon points="120,40 130,46 130,56 120,50" fill="#3B82F6" />
+    <polygon points="140,40 130,46 130,56 140,50" fill="#2563EB" />
+
+    <!-- Isometric grid -->
+    <path d="M 25,85 L 60,65 L 75,74 L 40,94 Z" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+    <path d="M 35,92 L 50,83 L 50,125 L 35,134 Z" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1" />
+    <path d="M 65,85 L 115,56 L 130,65 L 80,94 Z" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+    <path d="M 85,92 L 100,83 L 100,125 L 85,134 Z" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1" />
+
+    <polygon points="25,120 35,114 45,120 35,126" fill="#4ADE80" />
+    <polygon points="25,120 35,126 35,136 25,130" fill="#22C55E" />
+    <polygon points="45,120 35,126 35,136 45,130" fill="#16A34A" />
+  </g>
+</svg>

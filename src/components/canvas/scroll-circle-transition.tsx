@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { subscribeLenisScroll, getLenisScrollSnapshot } from '@/lib/scroll-bus'
+import { subscribeThemeChange } from '@/lib/theme-context'
 
 /**
  * ScrollCircleTransition — Scroll-driven dot/circle dissolve transition
@@ -21,15 +22,15 @@ export function ScrollCircleTransition() {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const SPACING = 18 // Distance between circle centers
-    const MAX_RADIUS = SPACING * 0.73 // Overlaps adjacent circles for solid fill at progress = 1
+    const SPACING = 22 // Distance between circle centers
+    const MAX_RADIUS = SPACING * 0.74 // Overlaps adjacent circles for solid fill at progress = 1
 
     let width = window.innerWidth
     let height = window.innerHeight
     let dpr = 1
 
     const resize = () => {
-      dpr = Math.min(2, window.devicePixelRatio || 1)
+      dpr = Math.min(1.25, window.devicePixelRatio || 1)
       const parent = canvas.parentElement
       width = parent ? parent.clientWidth : window.innerWidth
       height = parent ? parent.clientHeight : window.innerHeight
@@ -73,7 +74,9 @@ export function ScrollCircleTransition() {
       const cols = Math.ceil(width / SPACING) + 2
       const rows = Math.ceil(height / SPACING) + 2
 
-      ctx.fillStyle = '#F0EDE8'
+      ctx.fillStyle = document.documentElement.classList.contains('dark') ? '#090d16' : '#F0EDE8'
+      ctx.beginPath()
+      let hasCircles = false
 
       for (let r = 0; r < rows; r++) {
         const cy = r * SPACING
@@ -97,10 +100,14 @@ export function ScrollCircleTransition() {
           const easeProg = progress * progress * (3 - 2 * progress)
           const radius = easeProg * MAX_RADIUS
 
-          ctx.beginPath()
+          ctx.moveTo(cx + radius, cy)
           ctx.arc(cx, cy, radius, 0, Math.PI * 2)
-          ctx.fill()
+          hasCircles = true
         }
+      }
+
+      if (hasCircles) {
+        ctx.fill()
       }
     }
 
@@ -121,11 +128,14 @@ export function ScrollCircleTransition() {
       resize()
       draw()
     }
-    window.addEventListener('resize', onResize)
+    const unsubTheme = subscribeThemeChange(() => {
+      draw()
+    })
 
     return () => {
       if (rafId) cancelAnimationFrame(rafId)
       unsubLenis()
+      unsubTheme()
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', resize)
       window.removeEventListener('resize', onResize)

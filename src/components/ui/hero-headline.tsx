@@ -99,10 +99,10 @@ export function HeroHeadline() {
 
   return (
     <div
-      className="absolute bottom-12 sm:bottom-16 lg:bottom-20 left-4 sm:left-8 lg:left-14 z-10 pointer-events-none select-none"
+      className="absolute top-[calc(66.666667vh+1rem)] sm:top-[calc(66.666667vh+1.5rem)] left-4 sm:left-8 lg:left-14 pl-3 sm:pl-5 lg:pl-6 z-10 pointer-events-none select-none"
     >
       <h1
-        className="font-extrabold tracking-tight uppercase text-black"
+        className="font-extrabold tracking-tight uppercase text-black dark:text-white transition-colors duration-200"
         style={{
           fontFamily: '"tiktok", sans-serif',
           fontVariationSettings: '"wght" 800, "wdth" 105',

@@ -97,9 +97,8 @@ export function PageCircleReveal() {
     // ── Helper: trigger reveal animation ──
     const triggerReveal = () => {
       if (mode === 'reveal') return
-      setIsActive(true)
       mode = 'reveal'
-      animStart = performance.now()
+      animStart = 0 // Initialized inside drawFrame(now) so frame 1 starts at exactly 0.0 progress
       if (rafId) cancelAnimationFrame(rafId)
       rafId = requestAnimationFrame(drawFrame)
     }
@@ -148,11 +147,20 @@ export function PageCircleReveal() {
     const drawFrame = (now: number) => {
       if (mode === 'idle') return
 
+      if (animStart === 0) {
+        animStart = now
+      }
+
       const duration = mode === 'reveal' ? REVEAL_DURATION : EXIT_DURATION
-      const elapsed = now - animStart
+      const elapsed = Math.max(0, now - animStart)
       const rawProgress = Math.min(1, elapsed / duration)
-      // Ease out cubic
-      const progress = 1 - Math.pow(1 - rawProgress, 3)
+      // Reveal: ease-in-out cubic (starts softly from center with 0 initial velocity, eliminating any start jerk)
+      // Exit: swift ease-out cubic for instant responsive feedback
+      const progress = mode === 'reveal'
+        ? (rawProgress < 0.5
+            ? 4 * rawProgress * rawProgress * rawProgress
+            : 1 - Math.pow(-2 * rawProgress + 2, 3) / 2)
+        : (1 - Math.pow(1 - rawProgress, 3))
       const waveRadius = progress * (maxDist + 350)
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -236,14 +244,16 @@ export function PageCircleReveal() {
           }
           resetLenisScroll()
 
-          // 150ms buffer: screen stays clean solid black while React & Three.js mount
-          // the target page in the background, ensuring 100% smooth 120fps reveal
+          // Snappy buffer: short 180ms pause allows route swap to complete,
+          // then smoothly triggers the dot-matrix reveal without feeling stalled!
           if (swapTimer) clearTimeout(swapTimer)
+          const isHome = dest === '/' || dest === ''
+          const swapDelay = isHome ? 180 : 100
           swapTimer = setTimeout(() => {
-            mode = 'reveal'
-            animStart = performance.now()
-            rafId = requestAnimationFrame(drawFrame)
-          }, 150)
+            requestAnimationFrame(() => {
+              triggerReveal()
+            })
+          }, swapDelay)
         }
       }
     }
@@ -304,9 +314,7 @@ export function PageCircleReveal() {
     <canvas
       ref={canvasRef}
       id="page-circle-reveal"
-      className={`fixed inset-0 z-[98] ${
-        isActive ? 'pointer-events-auto' : 'pointer-events-none'
-      }`}
+      className="fixed inset-0 z-[98] pointer-events-none"
       aria-hidden="true"
     />
   )

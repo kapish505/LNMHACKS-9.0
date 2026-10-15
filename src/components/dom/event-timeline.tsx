@@ -111,8 +111,9 @@ const MILESTONES: Milestone[] = [
 export function EventTimeline() {
   const lenis = useLenis()
   const [activeStep, setActiveStep] = useState(0)
-  const [visible, setVisible] = useState(false)
-  const [opacity, setOpacity] = useState(0)
+  const activeStepRef = useRef(0)
+  activeStepRef.current = activeStep
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // Scroll update handler
   useEffect(() => {
@@ -127,9 +128,13 @@ export function EventTimeline() {
       const FADE_OUT_START = 5.6
       const FADE_OUT_END = 6.0
 
+      const el = containerRef.current
       if (aVH < FADE_IN_START || aVH > FADE_OUT_END) {
-        setVisible(false)
-        setOpacity(0)
+        if (el) {
+          el.style.opacity = '0'
+          el.style.pointerEvents = 'none'
+          el.style.display = 'none'
+        }
         return
       }
 
@@ -138,13 +143,19 @@ export function EventTimeline() {
       const op = fadeIn * fadeOut
 
       if (op <= 0.01) {
-        setVisible(false)
-        setOpacity(0)
+        if (el) {
+          el.style.opacity = '0'
+          el.style.pointerEvents = 'none'
+          el.style.display = 'none'
+        }
         return
       }
 
-      setVisible(true)
-      setOpacity(op)
+      if (el) {
+        el.style.display = 'flex'
+        el.style.opacity = op.toFixed(3)
+        el.style.pointerEvents = op > 0.1 ? 'auto' : 'none'
+      }
 
       // Find closest active milestone
       let bestIndex = 0
@@ -156,7 +167,10 @@ export function EventTimeline() {
           bestIndex = idx
         }
       }
-      setActiveStep(bestIndex)
+      if (bestIndex !== activeStepRef.current) {
+        activeStepRef.current = bestIndex
+        setActiveStep(bestIndex)
+      }
     }
 
     const onScroll = () => {
@@ -200,14 +214,13 @@ export function EventTimeline() {
     [lenis]
   )
 
-  if (!visible) return null
-
   const curMilestone = MILESTONES[activeStep]
 
   return (
     <div
-      className="fixed inset-0 z-30 pointer-events-none flex flex-col justify-between items-center px-4 sm:px-8 lg:px-14 py-8 sm:py-12 transition-opacity duration-200"
-      style={{ opacity }}
+      ref={containerRef}
+      className="fixed inset-0 z-30 pointer-events-none flex flex-col justify-between items-center px-4 sm:px-8 lg:px-14 py-8 sm:py-12 transition-opacity duration-150"
+      style={{ opacity: 0, pointerEvents: 'none', display: 'none' }}
     >
       {/* Spacer to keep top clear for the fixed navbar */}
       <div className="w-full h-12 pointer-events-none" />
