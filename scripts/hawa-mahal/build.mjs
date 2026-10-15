@@ -308,8 +308,7 @@ function buildSvg() {
     turretLayer('apex') +
     g({ id: 'lighting-overlays' })
   return (
-    `<svg id="hawa-mahal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEW.w} ${VIEW.h}" role="img" aria-labelledby="hm-title">` +
-    `<title id="hm-title">Hawa Mahal facade</title>` +
+    `<svg id="hawa-mahal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEW.w} ${VIEW.h}" role="img" aria-label="Hawa Mahal facade">` +
     `<style>${css}</style>` +
     defs() +
     body +

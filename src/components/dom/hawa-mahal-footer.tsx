@@ -112,7 +112,6 @@ function Moon({ cx, cy, r }: { cx: number; cy: number; r: number }) {
   const lit = Math.round(((1 - Math.cos(2 * Math.PI * phase)) / 2) * 1000) / 1000
   return (
     <g className={styles.moon} transform={`translate(${cx} ${cy})`} role="img" aria-label={`Moon, tonight ${phaseName(tonight).toLowerCase()}`}>
-      <title>{`Moon — tonight: ${phaseName(tonight)}`}</title>
       <circle r={r * 2.6} fill="url(#hmf-moon-halo)" opacity={(0.35 + lit * 0.65).toFixed(3)} />
       <circle r={r} fill="#1b2050" />
       <circle r={r} fill="none" stroke="#5a5f8a" strokeWidth="0.8" />
@@ -324,21 +323,26 @@ export function HawaMahalFooter() {
           </p>
         </div>
 
+        {/* the moon hangs on the left, between the wordmark and the left tower */}
+        <svg className={styles.moonBox} viewBox="-112 -112 224 224">
+          <defs>
+            <radialGradient id="hmf-moon-halo">
+              <stop offset="0%" stopColor="#fff3c4" stopOpacity="0.55" />
+              <stop offset="40%" stopColor="#ffe9a8" stopOpacity="0.16" />
+              <stop offset="100%" stopColor="#ffe9a8" stopOpacity="0" />
+            </radialGradient>
+            <radialGradient id="hmf-moon-face" cx="38%" cy="35%" r="75%">
+              <stop offset="0%" stopColor="#fffbe9" />
+              <stop offset="70%" stopColor="#f3e6b8" />
+              <stop offset="100%" stopColor="#d9c99a" />
+            </radialGradient>
+          </defs>
+          <Moon cx={0} cy={0} r={42} />
+        </svg>
+
         <div className={styles.building}>
           {/* stars and moon share the facade's coordinate space so they sit in real sky */}
           <svg className={styles.skyLayer} viewBox="0 0 2022 778" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
-            <defs>
-              <radialGradient id="hmf-moon-halo">
-                <stop offset="0%" stopColor="#fff3c4" stopOpacity="0.55" />
-                <stop offset="40%" stopColor="#ffe9a8" stopOpacity="0.16" />
-                <stop offset="100%" stopColor="#ffe9a8" stopOpacity="0" />
-              </radialGradient>
-              <radialGradient id="hmf-moon-face" cx="38%" cy="35%" r="75%">
-                <stop offset="0%" stopColor="#fffbe9" />
-                <stop offset="70%" stopColor="#f3e6b8" />
-                <stop offset="100%" stopColor="#d9c99a" />
-              </radialGradient>
-            </defs>
             {stars.map((s, i) => (
               <g key={i} className={styles.star} style={{ animationDuration: `${s.dur}s`, animationDelay: `${s.delay}s` }}>
                 <circle cx={s.x} cy={s.y} r={s.r} fill="#fff" />
@@ -350,7 +354,6 @@ export function HawaMahalFooter() {
                 )}
               </g>
             ))}
-            <Moon cx={1300} cy={-30} r={42} />
           </svg>
 
           <HawaMahalFacade

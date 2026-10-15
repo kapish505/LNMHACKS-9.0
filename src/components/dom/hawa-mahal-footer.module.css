@@ -85,6 +85,19 @@
   filter: drop-shadow(0 0 14px rgba(255, 240, 190, 0.35));
 }
 
+/* the moon: left side of the sky, under the wordmark, above the left tower */
+.moonBox {
+  position: absolute;
+  z-index: 5;
+  left: clamp(1.2rem, 4.5vw, 4.5rem);
+  top: 33%;
+  width: clamp(72px, 9vw, 160px);
+  aspect-ratio: 1;
+  overflow: visible;
+  opacity: var(--reveal);
+  pointer-events: none;
+}
+
 /* header: wordmark top-left, in open sky above the left tower */
 .header {
   position: absolute;
@@ -142,6 +155,14 @@
 
   .header {
     top: 15%;
+  }
+
+  /* no room on the left of a phone: the moon takes the top-right instead */
+  .moonBox {
+    left: auto;
+    right: 6%;
+    top: 13%;
+    width: 64px;
   }
 }
 
