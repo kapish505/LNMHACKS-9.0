@@ -46,8 +46,9 @@ computationally, not by eye:
   side-lights, mullions, the hood eave tips, recess strips (the dark gaps between
   the projecting octagonal bays) and the ground-floor panel rhythm.
 - **Palette** – dominant colours per material class, sampled from the daylight
-  cut-out; the night palette was sampled from the floodlit reference
-  `public/hawa-mahal-footer-scene.png` and is applied as CSS variables.
+  cut-out; the night palette was sampled from the floodlit night photo the old
+  footer used (since removed from `public/`, the values live in
+  `hawa-mahal-facade.tsx` as `NIGHT_VARS`) and is applied as CSS variables.
 
 The facade is modelled as perfectly symmetric. The reference is hand-symmetric
 to within ~10 px for the bays and ~24 px for the corner towers; the mean of each
