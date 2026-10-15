@@ -1,4 +1,5 @@
 import type Lenis from 'lenis'
+import { invalidateArrowSectionVH } from './arrow-section-progress'
 
 type ScrollSnapshot = {
   scrollTop: number
@@ -29,6 +30,10 @@ export const bindLenisScrollBus = (lenis: Lenis | null) => {
       direction: e.direction,
       viewportHeight: window.innerHeight,
     }
+    // Must happen before listeners run: the first consumer to call
+    // getArrowSectionVH() this frame takes the single measurement, and the
+    // other two read it from cache.
+    invalidateArrowSectionVH()
     for (const l of listeners) l()
   }
 

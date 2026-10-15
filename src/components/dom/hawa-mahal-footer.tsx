@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import { triggerPageTransition } from '@/lib/page-transition-bus'
+import { subscribeThemeChange } from '@/lib/theme-context'
 
 // LNMHACKS brand palette for the Tetris blocks — strictly matching logo facets
 const BLOCK_COLORS = [
@@ -55,6 +56,9 @@ export function HawaMahalFooter() {
 
   const isManualRef = useRef(false)
   isManualRef.current = isManual
+
+  // Lets effects outside the canvas closure ask for a repaint.
+  const requestDrawRef = useRef<() => void>(() => {})
 
   useEffect(() => {
     const cv = canvasRef.current
@@ -341,6 +345,11 @@ export function HawaMahalFooter() {
     let last = 0
     let acc = 0
     let rafId: number | null = null
+    // The simulation steps every 160ms (~6fps) but draw() was called on every
+    // animation frame, repainting ~300 dot-matrix rects plus up to ~1200 bevel
+    // rects to produce a pixel-identical image five frames out of six.
+    // Redraw only when something actually changed.
+    let needsDraw = true
 
     const loop = (t: number) => {
       if (!visible || reduce) {
@@ -352,17 +361,36 @@ export function HawaMahalFooter() {
       acc += t - last
       last = t
       if (acc > 500) acc = 0
+      let ticked = false
       while (acc >= 160) {
         acc -= 160
         tick()
+        ticked = true
       }
-      draw()
+      if (ticked || needsDraw) {
+        draw()
+        needsDraw = false
+      }
     }
+
+    const requestDraw = () => {
+      needsDraw = true
+      if (visible && !reduce && !rafId) {
+        last = performance.now()
+        rafId = requestAnimationFrame(loop)
+      }
+    }
+    requestDrawRef.current = requestDraw
+
+    // draw() samples the dark class for the dot-matrix colour, so a theme flip
+    // has to invalidate even though no game state moved.
+    const unsubTheme = subscribeThemeChange(requestDraw)
 
     const obs = new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting
       if (visible && !reduce) {
         last = performance.now()
+        needsDraw = true
         if (!rafId) {
           rafId = requestAnimationFrame(loop)
         }
@@ -375,7 +403,11 @@ export function HawaMahalFooter() {
 
     const onPointerMove = (e: PointerEvent) => {
       const r = wrap.getBoundingClientRect()
-      pcol = Math.floor((e.clientX - r.left) / C) - 1
+      const next = Math.floor((e.clientX - r.left) / C) - 1
+      if (next === pcol) return
+      pcol = next
+      // Only the manual-mode ghost outline follows the pointer.
+      if (isManualRef.current) needsDraw = true
     }
 
     const onPointerDown = (e: PointerEvent) => {
@@ -383,6 +415,7 @@ export function HawaMahalFooter() {
         const r = wrap.getBoundingClientRect()
         pcol = Math.floor((e.clientX - r.left) / C) - 1
         mrot++
+        needsDraw = true
       }
     }
 
@@ -390,13 +423,20 @@ export function HawaMahalFooter() {
     wrap.addEventListener('pointerdown', onPointerDown)
 
     return () => {
+      requestDrawRef.current = () => {}
       if (rafId) cancelAnimationFrame(rafId)
       obs.disconnect()
+      unsubTheme()
       window.removeEventListener('resize', resize)
       wrap.removeEventListener('pointermove', onPointerMove)
       wrap.removeEventListener('pointerdown', onPointerDown)
     }
   }, [])
+
+  // Toggling manual mode adds or removes the ghost outline, so force a repaint.
+  useEffect(() => {
+    requestDrawRef.current()
+  }, [isManual])
 
   const toggleManual = () => {
     const next = !isManual

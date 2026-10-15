@@ -1,9 +1,50 @@
 export const vertexShader = `
+uniform vec4 uRect;          // card rect in 0..1 screen space (x, y from bottom, w, h)
+uniform vec2 uViewportPx;
+uniform float uCurlStrength;
+
 varying vec2 vUv;
+
+/**
+ * The quad used to be a full-screen triangle pair, with the card's rectangle
+ * cut out in the fragment shader via early-return + discard. That rasterised
+ * the entire viewport once per card (ten cards => ~32M fragment invocations
+ * per frame to produce ~1.5M useful pixels) and defeated early-Z.
+ *
+ * Here the quad is fitted to the card's on-screen footprint instead. vUv is
+ * still the screen UV, so every line of the fragment shader below behaves
+ * exactly as before and the rendered result is pixel-identical.
+ */
 void main() {
-  vUv = uv;
-  // position is from a plane covering -1 to 1
-  gl_Position = vec4(position, 1.0);
+  // Degenerate rect (before the first useFrame has measured the card):
+  // push the whole primitive outside the clip volume so nothing rasterises.
+  if (uRect.z <= 0.0 || uRect.w <= 0.0) {
+    vUv = vec2(0.0);
+    gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+    return;
+  }
+
+  // A few pixels of slack so rounded-corner antialiasing has room.
+  vec2 margin = vec2(3.0) / max(uViewportPx, vec2(1.0));
+  float x0 = uRect.x - margin.x;
+  float x1 = uRect.x + uRect.z + margin.x;
+  float y0 = uRect.y - margin.y;
+  float y1 = uRect.y + uRect.w + margin.y;
+
+  // The fragment shader samples through applyCurl(), which pulls x toward 0.5
+  // by up to uCurlStrength. Inverting that pushes the on-screen footprint away
+  // from 0.5, so cover the union of the un-curled and fully-curled extents.
+  // This is a conservative bound, so no interpolation error can clip the card.
+  float invMax = 1.0 / max(1.0 - uCurlStrength, 1e-3);
+  float e0 = (x0 - 0.5) * invMax + 0.5;
+  float e1 = (x1 - 0.5) * invMax + 0.5;
+
+  float left  = min(min(x0, x1), min(e0, e1));
+  float right = max(max(x0, x1), max(e0, e1));
+
+  // applyCurl() leaves y untouched, so the vertical extent is exact.
+  vUv = vec2(mix(left, right, uv.x), mix(y0, y1, uv.y));
+  gl_Position = vec4(vUv * 2.0 - 1.0, 0.0, 1.0);
 }
 `
 
@@ -34,7 +75,7 @@ vec3 applyPolarity(vec3 rgb) {
 
 vec4 revealHoverImage(vec2 screenUv) {
   vec2 localUv = (screenUv - uRect.xy) / uRect.zw;
-  
+
   // Early discard: skip all pixels outside card rectangle immediately
   if (localUv.x < -0.005 || localUv.x > 1.005 || localUv.y < -0.005 || localUv.y > 1.005) {
     return vec4(0.0);
@@ -95,9 +136,9 @@ vec4 revealHoverImage(vec2 screenUv) {
 void main() {
   vec2 curledUv = applyCurl(vUv);
   vec4 color = revealHoverImage(curledUv);
-  
+
   if (color.a < 0.01) discard;
-  
+
   color.rgb = applyPolarity(color.rgb);
   gl_FragColor = color;
 }

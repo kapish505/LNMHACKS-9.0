@@ -77,14 +77,18 @@ void main() {
 
 const LOGO_ASPECT = 1031 / 1149
 
+/** Shared mutable pointer state, written by the parent section without re-rendering. */
+export interface RingPointerState {
+  angle: number
+  tracking: boolean
+}
+
 function GlintOverlay({
-  sweepProgress,
-  mouseAngle,
-  isTracking,
+  sweepRef,
+  pointerState,
 }: {
-  sweepProgress: number
-  mouseAngle: number
-  isTracking: boolean
+  sweepRef: React.MutableRefObject<number>
+  pointerState?: React.MutableRefObject<RingPointerState>
 }) {
   const meshRef = useRef<THREE.Mesh>(null)
   const materialRef = useRef<THREE.ShaderMaterial>(null)
@@ -98,7 +102,9 @@ function GlintOverlay({
     tex.generateMipmaps = true
     tex.minFilter = THREE.LinearMipmapLinearFilter
     tex.magFilter = THREE.LinearFilter
-    tex.anisotropy = 16
+    // The logo quad is screen-aligned and sampled near 1:1, so anisotropic
+    // filtering cannot pick a different texel set than trilinear does.
+    tex.anisotropy = 4
     return tex
   }, [])
 
@@ -122,6 +128,8 @@ function GlintOverlay({
     materialRef.current.uniforms.uCameraPos.value.copy(camera.position)
     meshRef.current.rotation.set(0, 0, 0)
 
+    const sweepProgress = sweepRef.current
+
     if (sweepProgress > 0 && sweepProgress < 1) {
       // 360° sweep animation
       const angle = -Math.PI / 2 + sweepProgress * Math.PI * 2
@@ -133,6 +141,8 @@ function GlintOverlay({
       materialRef.current.uniforms.uLightIntensity.value = 3.8
     } else {
       // Follow pointer angle from anywhere in the about section
+      const isTracking = pointerState?.current.tracking ?? false
+      const mouseAngle = pointerState?.current.angle ?? Math.PI * 0.35
       const targetAngle = isTracking ? mouseAngle : Math.PI * 0.35
 
       const shortest = Math.atan2(
@@ -169,20 +179,20 @@ function GlintOverlay({
 
 export interface AboutRingLogoProps {
   className?: string
-  /** Angle (radians) from logo center toward the pointer — computed by parent */
-  mouseAngle?: number
-  /** Whether the pointer is active in the about section */
-  isTracking?: boolean
+  /** Shared pointer state written by the parent section, read in useFrame. */
+  pointerState?: React.MutableRefObject<RingPointerState>
 }
 
-export function AboutRingLogo({
-  className = '',
-  mouseAngle = Math.PI * 0.35,
-  isTracking = false,
-}: AboutRingLogoProps) {
+export function AboutRingLogo({ className = '', pointerState }: AboutRingLogoProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [sweepProgress, setSweepProgress] = useState(0)
   const [isInView, setIsInView] = useState(false)
+  // The WebGL context, shader program and logo texture used to be created on
+  // mount — during the hero, five screens before this is visible. Defer the
+  // whole canvas until the section is approached, then keep it alive.
+  const [mounted, setMounted] = useState(false)
+  // Driven by rAF. This was React state, so a 1.6s sweep meant 96 renders of
+  // this component (and its Canvas) back to back.
+  const sweepRef = useRef(0)
   const isAnimatingRef = useRef(false)
   const wasVisibleRef = useRef(false)
 
@@ -197,13 +207,12 @@ export function AboutRingLogo({
     const animate = (now: number) => {
       const elapsed = now - startTime
       const raw = Math.min(1, elapsed / duration)
-      const ease = 1 - Math.pow(1 - raw, 3)
-      setSweepProgress(ease)
+      sweepRef.current = 1 - Math.pow(1 - raw, 3)
 
       if (raw < 1) {
         requestAnimationFrame(animate)
       } else {
-        setSweepProgress(1)
+        sweepRef.current = 1
         isAnimatingRef.current = false
       }
     }
@@ -219,6 +228,7 @@ export function AboutRingLogo({
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
+          if (entry.isIntersecting) setMounted(true)
           setIsInView(entry.isIntersecting)
           if (entry.isIntersecting && entry.intersectionRatio >= 0.2) {
             // Fire sweep every time it becomes visible
@@ -232,7 +242,7 @@ export function AboutRingLogo({
           }
         })
       },
-      { threshold: [0, 0.05, 0.2, 0.5] }
+      { threshold: [0, 0.05, 0.2, 0.5], rootMargin: '400px 0px' }
     )
 
     observer.observe(el)
@@ -254,19 +264,24 @@ export function AboutRingLogo({
 
       {/* Layer 2: Transparent WebGL glint overlay — sleeps when scrolled out of view */}
       <div className="absolute inset-0" style={{ mixBlendMode: 'screen' }}>
-        <Canvas
-          frameloop={isInView ? 'always' : 'never'}
-          camera={{ position: [0, 0, 5], fov: 45 }}
-          gl={{ alpha: true, antialias: true, powerPreference: 'high-performance', premultipliedAlpha: false }}
-          dpr={typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 1.25) : 1}
-          style={{ width: '100%', height: '100%', background: 'transparent' }}
-        >
-          <GlintOverlay
-            sweepProgress={sweepProgress}
-            mouseAngle={mouseAngle}
-            isTracking={isTracking}
-          />
-        </Canvas>
+        {mounted && (
+          <Canvas
+            frameloop={isInView ? 'always' : 'never'}
+            camera={{ position: [0, 0, 5], fov: 45 }}
+            /*
+             * antialias was on, which allocated an MSAA buffer and ran a
+             * resolve pass every frame. The only geometry is one screen-aligned
+             * quad with no geometric edges to sample — every visible edge comes
+             * from the texture's alpha, which MSAA does not touch. Disabling it
+             * is pixel-identical here.
+             */
+            gl={{ alpha: true, antialias: false, powerPreference: 'high-performance', premultipliedAlpha: false }}
+            dpr={typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 1.25) : 1}
+            style={{ width: '100%', height: '100%', background: 'transparent' }}
+          >
+            <GlintOverlay sweepRef={sweepRef} pointerState={pointerState} />
+          </Canvas>
+        )}
       </div>
     </div>
   )

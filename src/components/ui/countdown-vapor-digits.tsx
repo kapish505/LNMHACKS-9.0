@@ -152,7 +152,52 @@ export function VaporCountdown({
     let lastH = 0;
     let raf = 0;
     let last = 0;
+    let dpr = 1;
     const dampC = 2 * ZETA * Math.sqrt(SPRING_K); // s⁻¹
+
+    // ---- settled-slot cache --------------------------------------------------
+    // Only the seconds column transitions on a typical frame; the other seven
+    // slots are pixel-identical frame to frame. They were still being redrawn
+    // in full every frame (~2000 fillRect calls per slot, so ~16k calls/frame
+    // for one animating digit). Bake the sleeping slots into an offscreen
+    // layer and blit it instead — same pixels, one drawImage.
+    let sleepCanvas: HTMLCanvasElement | null = null;
+    let sleepCtx: CanvasRenderingContext2D | null = null;
+    let sleepDirty = true;
+
+    const markSleepDirty = () => {
+      sleepDirty = true;
+    };
+
+    const rebuildSleepLayer = () => {
+      if (!sleepCanvas) {
+        sleepCanvas = document.createElement("canvas");
+        sleepCtx = sleepCanvas.getContext("2d");
+      }
+      if (!sleepCtx) return;
+      if (sleepCanvas.width !== canvas.width || sleepCanvas.height !== canvas.height) {
+        sleepCanvas.width = canvas.width;
+        sleepCanvas.height = canvas.height;
+      }
+
+      sleepCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      sleepCtx.clearRect(0, 0, cw, ch);
+      sleepCtx.fillStyle = grainColor;
+      // Same constant alpha the inline path used for settled grains, so the
+      // baked pixels match exactly.
+      sleepCtx.globalAlpha = 0.98;
+      for (let s = 0; s < slots.length; s++) {
+        const slot = slots[s];
+        if (slot.active) continue;
+        const g = slot.g;
+        for (let i = 0; i < slot.gc; i++) {
+          const o = i * FLOATS;
+          sleepCtx.fillRect(g[o] - 0.9, g[o + 1] - 0.9, 1.8, 1.8);
+        }
+      }
+      sleepCtx.globalAlpha = 1;
+      sleepDirty = false;
+    };
 
     let inView = true;
     const loop = (now: number) => {
@@ -163,23 +208,24 @@ export function VaporCountdown({
       const dt = Math.min(Math.max((now - last) / 1000, 0), DT_MAX);
       last = now;
       ctx.clearRect(0, 0, cw, ch);
+
+      if (sleepDirty) rebuildSleepLayer();
+      if (sleepCanvas && sleepCanvas.width > 0) {
+        ctx.drawImage(sleepCanvas, 0, 0, cw, ch);
+      }
+
       ctx.fillStyle = grainColor;
       let anyActive = false;
+      let lastAlpha = -1;
 
       for (let s = 0; s < digitEls.length; s++) {
         const slot = slots[s];
         const g = slot.g;
         const v = slot.v;
 
-        if (!slot.active) {
-          // asleep: grains sit on their homes — one flat pass, no physics
-          ctx.globalAlpha = 0.98; // settled — crisp bright white particles with bold, solid contours
-          for (let i = 0; i < slot.gc; i++) {
-            const o = i * FLOATS;
-            ctx.fillRect(g[o] - 0.9, g[o + 1] - 0.9, 1.8, 1.8);
-          }
-          continue;
-        }
+        // Asleep: already present in the blitted sleep layer.
+        if (!slot.active) continue;
+
         anyActive = true;
         let settled = true;
 
@@ -213,7 +259,11 @@ export function VaporCountdown({
           }
 
           const speed = Math.hypot(vx, vy);
-          ctx.globalAlpha = 0.88 + 0.12 * Math.min(1, speed / 500);
+          const a = 0.88 + 0.12 * Math.min(1, speed / 500);
+          if (a !== lastAlpha) {
+            ctx.globalAlpha = a;
+            lastAlpha = a;
+          }
           ctx.fillRect(x - 0.9, y - 0.9, 1.8, 1.8);
         }
 
@@ -259,8 +309,11 @@ export function VaporCountdown({
           v[o + 3] = vy;
 
           const speed = Math.hypot(vx, vy);
-          ctx.globalAlpha =
-            (1 - age / life) * (0.75 + 0.25 * Math.min(1, speed / 500));
+          const a = (1 - age / life) * (0.75 + 0.25 * Math.min(1, speed / 500));
+          if (a !== lastAlpha) {
+            ctx.globalAlpha = a;
+            lastAlpha = a;
+          }
           ctx.fillRect(x - 0.9, y - 0.9, 1.8, 1.8);
           j++;
         }
@@ -276,6 +329,7 @@ export function VaporCountdown({
             g[o + 3] = 0;
           }
           slot.active = false;
+          markSleepDirty();
         }
       }
       ctx.globalAlpha = 1;
@@ -335,6 +389,8 @@ export function VaporCountdown({
         g[o + 5] = hy;
       }
       slot.active = true;
+      // This slot is now animated inline, so it must leave the baked layer.
+      markSleepDirty();
     };
 
     const init = () => {
@@ -347,10 +403,11 @@ export function VaporCountdown({
       lastH = h;
       cw = w + PAD_X * 2;
       ch = h + PAD_TOP + PAD_BOTTOM;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = cw * dpr;
       canvas.height = ch * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      markSleepDirty();
 
       cells = digitEls.map((el) => {
         const r = el.getBoundingClientRect();
@@ -477,6 +534,7 @@ export function VaporCountdown({
     // documentElement, and OS‑level scheme changes fire through matchMedia.
     const onThemeChange = () => {
       updateGrainColor();
+      markSleepDirty();
       wake();
     };
     const mo = new MutationObserver(onThemeChange);

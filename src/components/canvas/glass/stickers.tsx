@@ -176,7 +176,13 @@ export function FallingStickers() {
             transparent
             opacity={1}
             depthWrite={false}
-            side={THREE.DoubleSide}
+            /*
+             * These planes face the camera and never rotate (rotation is reset
+             * to identity every frame), so the back face is never visible.
+             * DoubleSide was disabling backface culling and submitting twice
+             * the triangles for an identical image.
+             */
+            side={THREE.FrontSide}
           />
         </mesh>
       ))}

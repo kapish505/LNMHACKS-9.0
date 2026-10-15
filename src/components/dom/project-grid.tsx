@@ -1,7 +1,7 @@
 'use client'
 
-import { useRef, useState, useCallback, useEffect } from 'react'
-import { AboutRingLogo } from '@/components/dom/about-ring-logo'
+import { useRef, useCallback, useEffect } from 'react'
+import { AboutRingLogo, type RingPointerState } from '@/components/dom/about-ring-logo'
 import { domRegistry } from '@/lib/dom-registry'
 
 interface ProjectItem {
@@ -433,17 +433,41 @@ function CardFofDesignSystem() {
 export function ProjectGrid() {
   const aboutRef = useRef<HTMLDivElement>(null)
   const logoRef = useRef<HTMLDivElement>(null)
-  const [mouseAngle, setMouseAngle] = useState(Math.PI * 0.35)
-  const [isTracking, setIsTracking] = useState(false)
 
-  const onSectionMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!logoRef.current) return
+  // Shared mutable state instead of React state. setMouseAngle() used to run on
+  // every mousemove over the about section, re-rendering this whole subtree —
+  // ten cards of inline SVG plus the ring-logo Canvas — at pointer rate.
+  const pointerStateRef = useRef<RingPointerState>({ angle: Math.PI * 0.35, tracking: false })
+  const pendingPointerRef = useRef<{ x: number; y: number } | null>(null)
+  const angleRafRef = useRef(0)
+
+  const computeAngle = useCallback(() => {
+    angleRafRef.current = 0
+    const pending = pendingPointerRef.current
+    if (!pending || !logoRef.current) return
     const logoRect = logoRef.current.getBoundingClientRect()
     const logoCenterX = logoRect.left + logoRect.width / 2
     const logoCenterY = logoRect.top + logoRect.height / 2
-    const dx = e.clientX - logoCenterX
-    const dy = -(e.clientY - logoCenterY)
-    setMouseAngle(Math.atan2(dy, dx))
+    const dx = pending.x - logoCenterX
+    const dy = -(pending.y - logoCenterY)
+    pointerStateRef.current.angle = Math.atan2(dy, dx)
+  }, [])
+
+  // Coalesced to one measurement per frame; previously every mousemove event
+  // forced its own layout read.
+  const onSectionMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      pendingPointerRef.current = { x: e.clientX, y: e.clientY }
+      if (angleRafRef.current) return
+      angleRafRef.current = requestAnimationFrame(computeAngle)
+    },
+    [computeAngle]
+  )
+
+  useEffect(() => {
+    return () => {
+      if (angleRafRef.current) cancelAnimationFrame(angleRafRef.current)
+    }
   }, [])
 
   return (
@@ -454,10 +478,12 @@ export function ProjectGrid() {
         id="about"
         className="relative z-10 w-full min-h-[90vh] lg:min-h-screen flex items-center justify-center px-4 sm:px-8 lg:px-14 py-16 sm:py-24 lg:py-32 pointer-events-none"
         onMouseMove={onSectionMouseMove}
-        onMouseEnter={() => setIsTracking(true)}
+        onMouseEnter={() => {
+          pointerStateRef.current.tracking = true
+        }}
         onMouseLeave={() => {
-          setIsTracking(false)
-          setMouseAngle(Math.PI * 0.35)
+          pointerStateRef.current.tracking = false
+          pointerStateRef.current.angle = Math.PI * 0.35
         }}
         style={{ pointerEvents: 'auto' }}
       >
@@ -469,10 +495,7 @@ export function ProjectGrid() {
               className="relative col-span-12 md:col-span-4 flex items-start justify-center md:justify-start pt-1"
             >
               <div className="w-full max-w-[260px] sm:max-w-[300px] md:max-w-[340px]">
-                <AboutRingLogo
-                  mouseAngle={mouseAngle}
-                  isTracking={isTracking}
-                />
+                <AboutRingLogo pointerState={pointerStateRef} />
               </div>
             </div>
 

@@ -379,6 +379,37 @@ function __OriginkitBase_CloudSky(props: Props) {
     let cirrusX = 0
     let leanX = 0
     let leanY = 0
+    let lastW = -1
+    let lastH = -1
+
+    // These uniforms derive from props that never change after mount in
+    // practice, but the loop re-ran four parseColor() calls (regex + parseInt
+    // on literal strings) and eleven uniform uploads on every single frame.
+    // Uniform state lives on the program, so only push them when a value
+    // actually differs. Comparing primitives is far cheaper than the uploads.
+    let prevStatic = ''
+    const uploadStaticUniforms = () => {
+      const v = vRef.current
+      const key = `${v.zenith}|${v.horizon}|${v.cloud}|${v.glow}|${v.coverage}|${v.size}|${v.softness}|${v.shadow}|${v.cirrus}|${v.sunX}|${v.sunY}`
+      if (key === prevStatic) return
+      prevStatic = key
+
+      const zen = parseColor(v.zenith as string, [0.369, 0.576, 0.824, 1])
+      const hor = parseColor(v.horizon as string, [0.706, 0.824, 0.941, 1])
+      const cld = parseColor(v.cloud as string, [1, 1, 1, 1])
+      const glow = parseColor(v.glow as string, [0.91, 0.953, 1, 0.9])
+
+      gl.uniform1f(u("uCoverage"), v.coverage as number)
+      gl.uniform1f(u("uSize"), v.size as number)
+      gl.uniform1f(u("uSoftness"), v.softness as number)
+      gl.uniform1f(u("uShadow"), v.shadow as number)
+      gl.uniform1f(u("uCirrus"), v.cirrus as number)
+      gl.uniform2f(u("uSun"), v.sunX as number, v.sunY as number)
+      gl.uniform3f(u("uZenith"), zen[0], zen[1], zen[2])
+      gl.uniform3f(u("uHorizon"), hor[0], hor[1], hor[2])
+      gl.uniform3f(u("uCloud"), cld[0], cld[1], cld[2])
+      gl.uniform4f(u("uGlow"), glow[0], glow[1], glow[2], glow[3])
+    }
 
     const render = (now: number) => {
       if (paused || !activeRef.current) {
@@ -411,28 +442,19 @@ function __OriginkitBase_CloudSky(props: Props) {
         canvas.width = bw
         canvas.height = bh
       }
-      gl.viewport(0, 0, bw, bh)
+      if (bw !== lastW || bh !== lastH) {
+        lastW = bw
+        lastH = bh
+        gl.viewport(0, 0, bw, bh)
+        gl.uniform2f(u("uRes"), bw, bh)
+      }
 
-      const zen = parseColor(v.zenith as string, [0.369, 0.576, 0.824, 1])
-      const hor = parseColor(v.horizon as string, [0.706, 0.824, 0.941, 1])
-      const cld = parseColor(v.cloud as string, [1, 1, 1, 1])
-      const glow = parseColor(v.glow as string, [0.91, 0.953, 1, 0.9])
+      uploadStaticUniforms()
 
-      gl.uniform2f(u("uRes"), bw, bh)
       gl.uniform1f(u("uNearX"), nearX)
       gl.uniform1f(u("uFarX"), farX)
       gl.uniform1f(u("uCirrusX"), cirrusX)
-      gl.uniform1f(u("uCoverage"), v.coverage as number)
-      gl.uniform1f(u("uSize"), v.size as number)
-      gl.uniform1f(u("uSoftness"), v.softness as number)
-      gl.uniform1f(u("uShadow"), v.shadow as number)
-      gl.uniform1f(u("uCirrus"), v.cirrus as number)
-      gl.uniform2f(u("uSun"), v.sunX as number, v.sunY as number)
       gl.uniform2f(u("uParallax"), -leanX * (v.parallax as number) * 0.07, -leanY * (v.parallax as number) * 0.05)
-      gl.uniform3f(u("uZenith"), zen[0], zen[1], zen[2])
-      gl.uniform3f(u("uHorizon"), hor[0], hor[1], hor[2])
-      gl.uniform3f(u("uCloud"), cld[0], cld[1], cld[2])
-      gl.uniform4f(u("uGlow"), glow[0], glow[1], glow[2], glow[3])
 
       gl.drawArrays(gl.TRIANGLES, 0, 3)
       raf = requestAnimationFrame(render)

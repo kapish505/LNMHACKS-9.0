@@ -1,7 +1,7 @@
 'use client'
 
 import { useLenis } from 'lenis/react'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { subscribeWebsiteLoaded, isWebsiteLoaded } from '@/lib/loader-bus'
 import { triggerPageTransition } from '@/lib/page-transition-bus'
 import { useTheme } from '@/lib/theme-context'
@@ -91,49 +91,43 @@ const CHAR_WINDOW_MS = 750  // each char scrambles for 750ms
 const STAGGER_MS = 150      // each char starts 150ms after the previous
 
 /**
- * Scramble-reveal a string character by character.
- * Each char gets its own CHAR_WINDOW_MS scramble window, staggered by STAGGER_MS.
+ * One shared requestAnimationFrame for every scramble word on screen.
+ *
+ * Each ScrambleWord used to own a rAF loop that called setDisplay() per frame,
+ * so the four words in the navbar produced four React state updates \u2014 and four
+ * subtree re-renders with freshly randomised inline styles on every span \u2014 on
+ * every frame for ~2.2s. That lands exactly when the WebGL contexts are
+ * compiling shaders and the textures are decoding.
+ *
+ * The animation only ever changes one text node and one colour per character,
+ * so it is driven straight onto the DOM and React is left out of it entirely.
  */
-function useScrambleReveal(text: string, trigger: boolean) {
-  const [display, setDisplay] = useState<string[]>(() => Array.from({ length: text.length }, () => '\u00A0'))
-  const rafRef = useRef<number | null>(null)
-  const startRef = useRef<number | null>(null)
-  const totalMs = (text.length - 1) * STAGGER_MS + CHAR_WINDOW_MS
+interface ScrambleJob {
+  start: number
+  tick: (now: number) => boolean
+}
 
-  const animate = useCallback((now: number) => {
-    if (startRef.current === null) startRef.current = now
-    const elapsed = now - startRef.current
+const scrambleJobs = new Set<ScrambleJob>()
+let scrambleRaf = 0
 
-    const next = Array.from(text).map((final, i) => {
-      const charStart = i * STAGGER_MS          // when this char starts scrambling
-      const charLock  = charStart + CHAR_WINDOW_MS // when it locks to final value
+function pumpScramble(now: number) {
+  for (const job of Array.from(scrambleJobs)) {
+    if (!job.tick(now)) scrambleJobs.delete(job)
+  }
+  scrambleRaf = scrambleJobs.size ? requestAnimationFrame(pumpScramble) : 0
+}
 
-      if (elapsed < charStart) return '\u00A0'   // not started yet
-      if (elapsed >= charLock) return final       // locked in
+function addScrambleJob(job: ScrambleJob) {
+  scrambleJobs.add(job)
+  if (!scrambleRaf) scrambleRaf = requestAnimationFrame(pumpScramble)
+}
 
-      // Actively scrambling: random glyph at rAF speed (~60fps)
-      return GLYPHS[Math.floor(Math.random() * GLYPHS.length)]
-    })
-
-    setDisplay(next)
-
-    if (elapsed < totalMs + 80) {
-      rafRef.current = requestAnimationFrame(animate)
-    } else {
-      setDisplay(Array.from(text))
-    }
-  }, [text, totalMs])
-
-  useEffect(() => {
-    if (!trigger) return
-    startRef.current = null
-    rafRef.current = requestAnimationFrame(animate)
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    }
-  }, [trigger, animate])
-
-  return display
+function removeScrambleJob(job: ScrambleJob) {
+  scrambleJobs.delete(job)
+  if (!scrambleJobs.size && scrambleRaf) {
+    cancelAnimationFrame(scrambleRaf)
+    scrambleRaf = 0
+  }
 }
 
 /** Renders a scramble-revealed word as individual <span>s with optional per-char colors */
@@ -148,30 +142,79 @@ function ScrambleWord({
   className?: string
   charColors?: (string | undefined)[]
 }) {
-  const chars = useScrambleReveal(text, trigger)
+  const spanRefs = useRef<(HTMLSpanElement | null)[]>([])
+
+  useEffect(() => {
+    if (!trigger) return
+
+    const chars = Array.from(text)
+    const totalMs = (chars.length - 1) * STAGGER_MS + CHAR_WINDOW_MS
+
+    const settle = () => {
+      for (let i = 0; i < chars.length; i++) {
+        const el = spanRefs.current[i]
+        if (!el) continue
+        el.textContent = chars[i]
+        el.style.color = charColors?.[i] ?? ''
+      }
+    }
+
+    const job: ScrambleJob = {
+      start: 0,
+      tick(now: number) {
+        if (!job.start) job.start = now
+        const elapsed = now - job.start
+
+        for (let i = 0; i < chars.length; i++) {
+          const el = spanRefs.current[i]
+          if (!el) continue
+
+          const charStart = i * STAGGER_MS          // when this char starts scrambling
+          const charLock = charStart + CHAR_WINDOW_MS // when it locks to final value
+
+          if (elapsed < charStart) {
+            // not started yet
+            if (el.textContent !== '\u00A0') el.textContent = '\u00A0'
+            if (el.style.color) el.style.color = charColors?.[i] ?? ''
+          } else if (elapsed >= charLock) {
+            // locked in
+            if (el.textContent !== chars[i]) el.textContent = chars[i]
+            const final = charColors?.[i] ?? ''
+            if (el.style.color !== final) el.style.color = final
+          } else {
+            // Actively scrambling: random glyph at rAF speed (~60fps)
+            el.textContent = GLYPHS[(Math.random() * GLYPHS.length) | 0]
+            el.style.color = `hsl(${Math.random() * 360}, 100%, 70%)`
+          }
+        }
+
+        if (elapsed < totalMs + 80) return true
+        settle()
+        return false
+      },
+    }
+
+    addScrambleJob(job)
+    return () => removeScrambleJob(job)
+  }, [text, trigger, charColors])
 
   return (
     <>
-      {chars.map((c, i) => {
-        const isLocked = c === text[i]
-        const finalColor = charColors?.[i]
-        return (
-          <span
-            key={i}
-            className={`inline-block ${className ?? ''}`}
-            style={{
-              color:
-                !isLocked && c !== '\u00A0'
-                  ? `hsl(${Math.random() * 360}, 100%, 70%)`
-                  : finalColor || undefined,
-              transition: 'color 0.05s',
-              minWidth: '0.55em',
-            }}
-          >
-            {c}
-          </span>
-        )
-      })}
+      {Array.from(text).map((_, i) => (
+        <span
+          key={i}
+          ref={(el) => {
+            spanRefs.current[i] = el
+          }}
+          className={`inline-block ${className ?? ''}`}
+          style={{
+            transition: 'color 0.05s',
+            minWidth: '0.55em',
+          }}
+        >
+          {'\u00A0'}
+        </span>
+      ))}
     </>
   )
 }
@@ -205,7 +248,10 @@ export function Navbar() {
       if (!arrowEl) arrowEl = document.getElementById('arrow-section')
       if (arrowEl) {
         const aVH = -arrowEl.getBoundingClientRect().top / vh
-        setIsRadialSection(aVH >= 2.0 && aVH <= 6.0)
+        // Upper bound follows the timeline window (2.0→7.0). If this stayed at
+        // 6.0 the nav would flip to black text while the dark timeline field
+        // is still on screen.
+        setIsRadialSection(aVH >= 2.0 && aVH <= 7.0)
       } else {
         setIsRadialSection(false)
       }

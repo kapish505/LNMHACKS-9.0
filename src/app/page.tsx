@@ -24,6 +24,77 @@ import { GlobalGridOverlay } from '@/components/ui/global-grid-overlay'
 import { triggerPageTransition } from '@/lib/page-transition-bus'
 import { useTheme } from '@/lib/theme-context'
 import { NightCloudSky } from '@/components/canvas/night-cloud-sky'
+import { getArrowSectionVH } from '@/lib/arrow-section-progress'
+import { subscribeLenisScroll } from '@/lib/scroll-bus'
+
+/**
+ * The main canvas only has something to draw inside a known scroll window:
+ * CursorArrow lives in aVH [-0.8, 2.5] and [6.6, 7.8], RadialSpeedLines in
+ * [2.0, 7.0], and ProjectMeshes while the sponsors grid is near the viewport.
+ * Everywhere else — notably the entire hero, which is the heaviest part of the
+ * page — it was still clearing and compositing a full-viewport transparent
+ * buffer and running twelve useFrame callbacks every frame.
+ *
+ * The window is padded past each child's fade-out so at least one frame always
+ * renders with everything already invisible; the frozen buffer is therefore
+ * fully transparent and stopping is not observable.
+ */
+function useMainCanvasActive(): boolean {
+  const [active, setActive] = useState(false)
+  const activeRef = useRef(false)
+
+  useEffect(() => {
+    let sponsorsNear = false
+    let ticking = false
+
+    const evaluate = () => {
+      ticking = false
+      const aVH = getArrowSectionVH()
+      // Upper bound tracks the backward arrow's new end (7.8) plus padding.
+      // It was 7.3, which would now freeze the canvas part-way through that
+      // animation.
+      const next = sponsorsNear || (aVH > -1.3 && aVH < 8.1)
+      if (next !== activeRef.current) {
+        activeRef.current = next
+        setActive(next)
+      }
+    }
+
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true
+        requestAnimationFrame(evaluate)
+      }
+    }
+
+    const el = document.getElementById('sponsors')
+    const io = el
+      ? new IntersectionObserver(
+          ([entry]) => {
+            sponsorsNear = entry.isIntersecting
+            evaluate()
+          },
+          { rootMargin: '600px 0px' },
+        )
+      : null
+    io?.observe(el!)
+
+    evaluate()
+
+    const unsub = subscribeLenisScroll(onScroll)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
+
+    return () => {
+      io?.disconnect()
+      unsub()
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+    }
+  }, [])
+
+  return active
+}
 
 /**
  * HeroFallingStickers — pauses WebGL rendering loop when hero is scrolled out of view
@@ -74,6 +145,15 @@ function ParallaxSky() {
   // Only when theme actually flips do we run both for 1.6s during cross-fade.
   const [activeTheme, setActiveTheme] = useState<'light' | 'dark' | 'both'>(() => isDark ? 'dark' : 'light')
   const prevDarkRef = useRef(isDark)
+
+  // The night sky is a second raw-WebGL context with its own shader program.
+  // `active` stopped its draw loop but the context, program and buffers were
+  // still created on mount for every visitor. Mount it only once dark mode has
+  // actually been used, then keep it so toggling back and forth is free.
+  const [nightMounted, setNightMounted] = useState(false)
+  useEffect(() => {
+    if (isDark) setNightMounted(true)
+  }, [isDark])
 
   useEffect(() => {
     if (prevDarkRef.current !== isDark) {
@@ -143,15 +223,19 @@ function ParallaxSky() {
           transition: 'opacity 1.4s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
-        <NightCloudSky
-          active={activeTheme === 'dark' || activeTheme === 'both'}
-        />
+        {nightMounted && (
+          <NightCloudSky
+            active={activeTheme === 'dark' || activeTheme === 'both'}
+          />
+        )}
       </div>
     </div>
   )
 }
 
 export default function Home() {
+  const mainCanvasActive = useMainCanvasActive()
+
   return (
     <main className="relative min-h-screen overflow-x-hidden">
       <WebsiteLoader />
@@ -161,6 +245,7 @@ export default function Home() {
       {/* R3F Canvas — cursor + project meshes */}
       <div className="fixed inset-0 z-[10] pointer-events-none">
         <Canvas
+          frameloop={mainCanvasActive ? 'always' : 'never'}
           camera={{ position: [0, 0, 5], fov: 45 }}
           gl={{ alpha: true, powerPreference: 'high-performance' }}
           dpr={typeof window !== 'undefined' && window.innerWidth < 768 ? [1, 1] : [1, 1.25]}
@@ -252,7 +337,7 @@ export default function Home() {
 
       <ProjectGrid />
 
-      <div id="arrow-section" className="w-full" style={{ height: '750vh' }} />
+      <div id="arrow-section" className="w-full" style={{ height: '937.5vh' }} />
 
       <GlimpsesSection />
 

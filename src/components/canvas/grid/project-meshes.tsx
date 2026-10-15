@@ -11,6 +11,11 @@ import { vertexShader, fragmentShader } from '@/shaders/dom-sync'
 import { domRegistry } from '@/lib/dom-registry'
 import { PROJECTS } from '@/components/dom/project-grid'
 
+// These quads are axis-aligned in screen space and sampled at close to 1:1, so
+// anisotropic filtering never contributes a different sample than trilinear
+// does. 16x was costing texel fetches for an identical result.
+const ANISOTROPY = 4
+
 function ProjectMesh({ project, index = 0, parentInView = true }: { project: any, index?: number, parentInView?: boolean }) {
   const meshRef = useRef<THREE.Mesh>(null)
   const materialRef = useRef<THREE.ShaderMaterial>(null)
@@ -25,7 +30,7 @@ function ProjectMesh({ project, index = 0, parentInView = true }: { project: any
       map1.generateMipmaps = true
       map1.minFilter = THREE.LinearMipmapLinearFilter
       map1.magFilter = THREE.LinearFilter
-      map1.anisotropy = 16
+      map1.anisotropy = ANISOTROPY
       map1.needsUpdate = true
     }
     if (map2) {
@@ -33,7 +38,7 @@ function ProjectMesh({ project, index = 0, parentInView = true }: { project: any
       map2.generateMipmaps = true
       map2.minFilter = THREE.LinearMipmapLinearFilter
       map2.magFilter = THREE.LinearFilter
-      map2.anisotropy = 16
+      map2.anisotropy = ANISOTROPY
       map2.needsUpdate = true
     }
   }, [map1, map2])
@@ -135,20 +140,41 @@ function ProjectMesh({ project, index = 0, parentInView = true }: { project: any
 }
 
 export function ProjectMeshes() {
-  const active = PROJECTS.filter((p: any) => p.useWebgl)
+  const active = useMemo(() => PROJECTS.filter((p: any) => p.useWebgl), [])
   const [inView, setInView] = useState(false)
+  // Sticky: once the sponsors section is within loading range we keep the
+  // meshes mounted, so their textures are fetched and decoded exactly once.
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     const el = document.getElementById('sponsors')
     if (!el) return
-    const io = new IntersectionObserver(([entry]) => {
+
+    // Two ranges on purpose. `loadIo` fires well before the section is on
+    // screen so textures are already decoded by the time it scrolls in;
+    // `viewIo` is the tight range that actually lets the meshes draw.
+    // Previously every texture was requested during the hero, putting ~7MB of
+    // sponsor PNGs on the critical path for a section five screens down.
+    const loadIo = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setMounted(true)
+        loadIo.disconnect()
+      }
+    }, { rootMargin: '1800px 0px' })
+
+    const viewIo = new IntersectionObserver(([entry]) => {
       setInView(entry.isIntersecting)
     }, { rootMargin: '400px 0px' })
-    io.observe(el)
-    return () => io.disconnect()
+
+    loadIo.observe(el)
+    viewIo.observe(el)
+    return () => {
+      loadIo.disconnect()
+      viewIo.disconnect()
+    }
   }, [])
 
-  if (active.length === 0) return null
+  if (!mounted || active.length === 0) return null
 
   return (
     <group>
@@ -158,4 +184,3 @@ export function ProjectMeshes() {
     </group>
   )
 }
-

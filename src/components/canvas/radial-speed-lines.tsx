@@ -8,9 +8,10 @@ import { getArrowSectionVH } from '@/lib/arrow-section-progress'
 // ─── Speed lines: appear AS arrow fades (no gap) ────────────────────
 const FADE_IN_START = 2.0
 const FADE_IN_END = 2.4
-const FADE_OUT_START = 5.6
-const FADE_OUT_END = 6.0
-const HIDE_VH = 6.05
+// Window widened from 2.0→6.0 to 2.0→7.0 (+25% scroll), matching
+// EventTimeline's fade and the backward CursorArrow's shifted entry.
+const FADE_OUT_START = 6.6
+const FADE_OUT_END = 7.0
 
 const vertexShader = `
 varying vec2 vUv;
@@ -42,16 +43,16 @@ vec4 hash41(float p) {
   return fract((p4.xxyz + p4.yzzw) * p4.zywx);
 }
 
-// ── Single starburst layer with early-exit ──────────────────────────
-float starburstLayer(
-  vec2 uv, float dist, float angle,
-  float numSlots, float seed, float density,
+// ── Single vertical line layer ──────────────────────────
+float verticalLayer(
+  vec2 uv, float numSlots, float seed, float density,
   float scroll, float time
 ) {
-  // Fluid wave distortion along radial lines
-  float waveDistort = sin(dist * 14.0 - time * 1.5 + seed * 3.14) * 0.035;
-  float slotNorm = (angle + waveDistort + PI) / TAU;
-  float slotFloat = slotNorm * numSlots;
+  // Divide X axis into vertical slots
+  float slotNorm = (uv.x + 0.5) / 1.0; // normalised 0..1 across width
+  // Add seed offset for layer variety
+  float shiftedX = uv.x + seed * 3.71;
+  float slotFloat = (shiftedX + 1.0) * numSlots * 0.5;
   float slotIdx = floor(slotFloat) + seed * 1000.0;
   float slotFrac = fract(slotFloat);
 
@@ -66,27 +67,31 @@ float starburstLayer(
   float h4 = h.w;
   float h5 = fract(h.x * 13.37 + h.w * 31.41);
 
-  // Line properties — chunky streaks
+  // Line properties — chunky vertical streaks (same thickness as original radial)
   float thickness = 0.20 + h2 * 0.40;
   float lineLen = 0.15 + h3 * 0.35;
 
-  float innerR = 0.10;
-  float lineStart = innerR + h4 * 0.8;
+  // Y position range
+  float lineStart = -0.5 + h4 * 1.5;
 
-  // Scroll-driven rush: lines stream outward
+  // Scroll-driven rush: lines stream upward as you scroll down, and back down
+  // when you scroll up. uScroll grows with downward scroll, and uv.y points up,
+  // so adding the rush walks the band toward the top of the screen.
   float speed = 0.25 + h5 * 0.75;
   float rush = scroll * speed * 1.2;
 
-  float animStart = mod(lineStart + rush, 2.0);
-  animStart = max(animStart, innerR);
+  // Fluid wave distortion along vertical lines
+  float waveDistort = sin(uv.y * 14.0 - time * 1.5 + seed * 3.14) * 0.035;
+
+  float animStart = mod(lineStart + rush, 2.5) - 1.0;
   float animEnd = animStart + lineLen;
 
-  // Angular mask — line body
-  float angleMask = smoothstep(thickness, thickness * 0.25, abs(slotFrac - 0.5) * 2.0);
+  // Horizontal mask — line body (how wide the line appears)
+  float angleMask = smoothstep(thickness, thickness * 0.25, abs(slotFrac - 0.5 + waveDistort) * 2.0);
 
-  // Radial mask
-  float distMask = smoothstep(animStart, animStart + 0.02, dist)
-                 * (1.0 - smoothstep(animEnd - 0.02, animEnd, dist));
+  // Vertical mask — where the line starts and ends
+  float distMask = smoothstep(animStart, animStart + 0.02, uv.y)
+                 * (1.0 - smoothstep(animEnd - 0.02, animEnd, uv.y));
 
   return angleMask * distMask;
 }
@@ -95,22 +100,20 @@ void main() {
   vec2 uv = vUv - 0.5;
   uv.x *= uResolution.x / uResolution.y;
 
-  float dist  = length(uv);
+  float dist = length(uv);
   if (dist > 2.2) {
     gl_FragColor = vec4(0.012, 0.010, 0.018, uOpacity);
     return;
   }
 
-  float angle = atan(uv.y, uv.x);
-
   // ── Layers: on mobile 2 lean layers, on desktop 3 rich layers ──
   float slots1 = uIsMobile > 0.5 ? 75.0 : 110.0;
   float slots2 = uIsMobile > 0.5 ? 45.0 : 80.0;
-  float layer1 = starburstLayer(uv, dist, angle, slots1, 0.0, uDensity, uScroll, uTime);
-  float layer2 = starburstLayer(uv, dist, angle + 0.015, slots2, 1.0, uDensity * 0.85, uScroll * 1.1, uTime);
+  float layer1 = verticalLayer(uv, slots1, 0.0, uDensity, uScroll, uTime);
+  float layer2 = verticalLayer(uv, slots2, 1.0, uDensity * 0.85, uScroll * 1.1, uTime);
   float layer3 = 0.0;
   if (uIsMobile < 0.5) {
-    layer3 = starburstLayer(uv, dist, angle - 0.01, 55.0, 2.0, uDensity * 0.6, uScroll * 0.9, uTime);
+    layer3 = verticalLayer(uv, 55.0, 2.0, uDensity * 0.6, uScroll * 0.9, uTime);
   }
 
   // ── Premium dark background with subtle atmospheric breathing ──
@@ -121,8 +124,8 @@ void main() {
   vec3 bgAmbient  = vec3(0.035, 0.025, 0.045);
   vec3 bgColor    = bgDeep + bgAmbient * radialGlow * uOpacity;
 
-  // ── Color palette: lavender, rose-gold, champagne, blush ──
-  float cs = fract(angle * 2.7 + dist * 3.1);
+  // ── Color palette: lavender, rose-gold, champagne, blush (ORIGINAL) ──
+  float cs = fract(uv.x * 2.7 + uv.y * 3.1);
 
   vec3 lavender    = vec3(0.72, 0.62, 0.88);
   vec3 roseGold    = vec3(0.90, 0.72, 0.65);

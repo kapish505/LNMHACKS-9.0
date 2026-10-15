@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useEffect, useState, useCallback } from 'react'
+import React, { useRef, useEffect, useCallback } from 'react'
 import { subscribeLenisScroll } from '@/lib/scroll-bus'
 import { getArrowSectionVH } from '@/lib/arrow-section-progress'
 import { useLenis } from 'lenis/react'
@@ -14,127 +14,131 @@ function smoothstep(edge0: number, edge1: number, x: number): number {
 /* ─── Timeline Milestones Configuration ─── */
 interface Milestone {
   id: number
-  phase: string
+  stepNumber: string
   title: string
-  subtitle: string
   date: string
   time: string
   location: string
   desc: string
-  tags: string[]
   accentColor: string
-  peakVH: number
+  /** Same colour as `accentColor`, as an "r, g, b" triple so the scroll loop
+   *  can build rgba() strings without parsing hex on the hot path. */
+  accentRgb: string
 }
 
 const MILESTONES: Milestone[] = [
   {
     id: 1,
-    phase: 'PHASE 01',
-    title: 'REGISTRATION & PORTAL OPEN',
-    subtitle: 'ENLIST SQUADRON & INITIALIZE',
+    stepNumber: '01',
+    title: 'Registration & Squad Assembly',
     date: 'OCTOBER 24, 2026',
     time: '10:00 AM IST',
     location: 'GLOBAL VIRTUAL PORTAL',
-    desc: 'Registration officially goes live worldwide. Form squads of 2–4 builders, claim your hacker identity, and access exclusive partner bounties and Discord lounges.',
-    tags: ['OPEN TO ALL', 'TEAM FORMATION', 'BOUNTY RELEASE', 'DISCORD HUB'],
+    desc: 'Registration officially opens worldwide. Assemble your squad of 2–4 hackers, claim your hacker identity, and unlock exclusive partner bounties and Discord lounges.',
     accentColor: '#63c4fd',
-    peakVH: 2.4,
+    accentRgb: '99, 196, 253',
   },
   {
     id: 2,
-    phase: 'PHASE 02',
-    title: 'OPENING KEYNOTE & IGNITION',
-    subtitle: 'SYSTEMS ONLINE // LAUNCH SEQUENCE',
+    stepNumber: '02',
+    title: 'Opening Keynote & Ignition',
     date: 'OCTOBER 24, 2026',
     time: '06:00 PM IST',
-    location: 'MAIN AUDITORIUM & STREAM',
-    desc: 'The official ignition protocol begins. Keynote talks from industry luminaries, reveal of surprise track themes, API credentials release, and live Q&A briefing.',
-    tags: ['LIVESTREAM', 'TRACK REVEAL', 'SPONSOR CREDITS', 'MISSION BRIEF'],
+    location: 'MAIN AUDITORIUM & LIVESTREAM',
+    desc: 'The official ignition protocol begins. Keynote talks from industry leaders, surprise track themes reveal, API credentials release, and live Q&A briefing.',
     accentColor: '#fb3377',
-    peakVH: 3.0,
+    accentRgb: '251, 51, 119',
   },
   {
     id: 3,
-    phase: 'PHASE 03',
-    title: '72-HOUR HACKING SPRINT',
-    subtitle: 'UNINTERRUPTED CODE & HARDWARE FORGE',
+    stepNumber: '03',
+    title: '72-Hour Continuous Forge',
     date: 'OCTOBER 24–27, 2026',
-    time: '08:00 PM IST (START)',
-    location: 'HACKATHON CAMPUS & DISCORD',
-    desc: '72 hours of relentless build time. Free flow of coffee, lightning workshops, midnight arcade gaming, git commits, and real-time mentor office hours across all tracks.',
-    tags: ['72 HOURS SPRINT', 'MIDNIGHT SNACKS', 'DEV SANDBOX', 'GIT COMMITS'],
-    accentColor: '#1e60ff',
-    peakVH: 3.6,
+    time: '08:00 PM IST START',
+    location: 'HACKER LABS & DISCORD ARENA',
+    desc: '72 hours of uninterrupted building. Free-flowing caffeine, midnight snacks, hardware lab benches, git commits, and real-time mentor office hours across all tracks.',
+    accentColor: '#c0fe04',
+    accentRgb: '192, 254, 4',
   },
   {
     id: 4,
-    phase: 'PHASE 04',
-    title: 'MENTORSHIP & ARCHITECTURE REVIEW',
-    subtitle: 'SYNAPSE RADAR // EXPERT GUIDANCE',
-    date: 'OCTOBER 25–26, 2026',
+    stepNumber: '04',
+    title: 'Mentorship & Code Clinics',
+    date: 'OCTOBER 26, 2026',
     time: '02:00 PM – 06:00 PM IST',
-    location: '1-ON-1 MENTOR CLINICS',
-    desc: 'Direct 1-on-1 code reviews with staff engineers and venture leaders. Validate your product market fit, optimize system architecture, and eliminate blocker bugs.',
-    tags: ['1:1 CRITIQUE', 'TECH ARCHITECTURE', 'VC INSIGHT', 'DEBUG SUPPORT'],
+    location: '1-ON-1 TECH CLINICS',
+    desc: 'Direct 1-on-1 architecture reviews and blocker debugging with staff engineers and VC mentors. Validate your product market fit before final submission.',
+    // Was #f59e0b (amber) — off the site's palette entirely.
     accentColor: '#63c4fd',
-    peakVH: 4.2,
+    accentRgb: '99, 196, 253',
   },
   {
     id: 5,
-    phase: 'PHASE 05',
-    title: 'CODE FREEZE & VAULT SUBMISSION',
-    subtitle: 'QUANTUM UPLINK // COMMITS LOCKED',
+    stepNumber: '05',
+    title: 'Code Freeze & Vault Submission',
     date: 'OCTOBER 27, 2026',
     time: '08:00 PM IST SHARP',
-    location: 'DEVPOST & GITHUB VAULT',
-    desc: 'Final whistle for all repositories. Submit your demo video, architecture documentation, and live deployments to Devpost. The gate closes with zero exceptions.',
-    tags: ['DEVPOST UPLOAD', 'VIDEO DEMO', 'CODE REPO FREEZE', 'VERIFICATION'],
-    accentColor: '#fb3377',
-    peakVH: 4.8,
+    location: 'DEVPOST & GIT GATEWAY',
+    desc: 'Repository lock for all teams. Submit your live demo video, architecture documentation, and final commits to Devpost. The gate closes with zero exceptions.',
+    accentColor: '#1e60ff',
+    accentRgb: '30, 96, 255',
   },
   {
     id: 6,
-    phase: 'PHASE 06',
-    title: 'GRAND FINALE & AWARDS CEREMONY',
-    subtitle: 'APEX CORONATION // $9,000+ PRIZE POOL',
+    stepNumber: '06',
+    title: 'Grand Finale & Apex Awards',
     date: 'OCTOBER 28, 2026',
     time: '11:00 AM IST',
     location: 'CENTRAL AUDITORIUM',
-    desc: 'Top 10 finalist teams take the main stage for 3-minute live pitches. Winner announcements, trophy distribution, venture funding invites, and closing celebrations.',
-    tags: ['LIVE DEMO PITCH', 'CASH PRIZES', 'TROPHIES & SWAG', 'AFTER-PARTY'],
+    desc: 'Top 10 finalist squads take the stage for 3-minute live pitches. Grand jury evaluation, trophy distribution, venture funding invites, and closing celebrations.',
+    // Was #a855f7 (purple) — off-palette. Lime is the site's peak accent, which
+    // suits the finale.
     accentColor: '#c0fe04',
-    peakVH: 5.4,
+    accentRgb: '192, 254, 4',
   },
 ]
 
-/* ─── Main Event Timeline Component ─── */
 export function EventTimeline() {
   const lenis = useLenis()
-  const [activeStep, setActiveStep] = useState(0)
-  const activeStepRef = useRef(0)
-  activeStepRef.current = activeStep
-  const containerRef = useRef<HTMLDivElement>(null)
 
-  // Scroll update handler
+  const containerRef = useRef<HTMLDivElement>(null)
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([])
+  const activeStatesRef = useRef<(boolean | undefined)[]>([])
+
   useEffect(() => {
     let ticking = false
+    // Tracks whether the container is already in the hidden state, so the
+    // hide path does not rewrite display/opacity/pointerEvents on every scroll
+    // frame for the ~744vh of this page where the timeline is not on screen.
+    let hidden: boolean | null = null
+
     const updateTimeline = () => {
       ticking = false
       const aVH = getArrowSectionVH()
 
-      // Timeline strictly active only inside radial lines (2.0 to 6.0)
       const FADE_IN_START = 2.0
       const FADE_IN_END = 2.4
-      const FADE_OUT_START = 5.6
-      const FADE_OUT_END = 6.0
+      // Fade-out pushed out by 1.0vh so this section occupies 25% more scroll
+      // (window 2.0→7.0 instead of 2.0→6.0). The backward CursorArrow
+      // cross-fades in over exactly this range, so its REV_FADE_* constants
+      // moved with it.
+      const FADE_OUT_START = 6.6
+      const FADE_OUT_END = 7.0
 
       const el = containerRef.current
-      if (aVH < FADE_IN_START || aVH > FADE_OUT_END) {
+
+      const hide = () => {
+        if (hidden === true) return
+        hidden = true
         if (el) {
           el.style.opacity = '0'
           el.style.pointerEvents = 'none'
           el.style.display = 'none'
         }
+      }
+
+      if (aVH < FADE_IN_START || aVH > FADE_OUT_END) {
+        hide()
         return
       }
 
@@ -143,34 +147,82 @@ export function EventTimeline() {
       const op = fadeIn * fadeOut
 
       if (op <= 0.01) {
-        if (el) {
-          el.style.opacity = '0'
-          el.style.pointerEvents = 'none'
-          el.style.display = 'none'
-        }
+        hide()
         return
       }
 
+      hidden = false
       if (el) {
         el.style.display = 'flex'
         el.style.opacity = op.toFixed(3)
         el.style.pointerEvents = op > 0.1 ? 'auto' : 'none'
       }
 
-      // Find closest active milestone
-      let bestIndex = 0
-      let bestDist = Infinity
-      for (let idx = 0; idx < MILESTONES.length; idx++) {
-        const dist = Math.abs(aVH - MILESTONES[idx].peakVH)
-        if (dist < bestDist) {
-          bestDist = dist
-          bestIndex = idx
+      // Card progression now spans 2.2 → 6.5 (4.3 VH instead of 3.5), so each
+      // step holds the centre ~25% longer before the next one rotates in.
+      const scrollProgress = Math.max(0, Math.min(1, (aVH - 2.2) / (6.5 - 2.2)))
+      const currentStep = scrollProgress * (MILESTONES.length - 1)
+
+      // ─── Update 3D Sticky Spiral Transforms for each card ───
+      const isMobile = window.innerWidth < 768
+      const radiusX = isMobile ? 200 : 380
+      const radiusZ = isMobile ? 450 : 700
+      // Vertical pitch per step. Raised so the helix climbs over a much taller
+      // Y span — the cards now sweep up past the viewport instead of stacking
+      // in a shallow band near the centre.
+      const pitchY = isMobile ? 100 : 170
+      const stepAngle = 0.75
+
+      cardRefs.current.forEach((cardEl, i) => {
+        if (!cardEl) return
+
+        const offset = i - currentStep
+        const theta = offset * stepAngle
+
+        const x = Math.sin(theta) * radiusX
+        const z = (Math.cos(theta) - 1) * radiusZ
+        const y = offset * pitchY
+
+        const rotateY = -theta * (180 / Math.PI) * 0.85
+        const rotateX = offset * 3.5
+
+        const distFromCenter = Math.abs(offset)
+        const scale = Math.max(0.45, 1 - distFromCenter * 0.14)
+        const opacity = Math.max(0.08, Math.min(1, 1 - distFromCenter * 0.30))
+        const zIndex = Math.round(1000 + z)
+
+        const isActiveCard = distFromCenter < 0.45
+
+        cardEl.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(1)}px) rotateY(${rotateY.toFixed(2)}deg) rotateX(${rotateX.toFixed(2)}deg) scale(${scale.toFixed(3)})`
+        cardEl.style.opacity = opacity.toFixed(3)
+        cardEl.style.zIndex = String(zIndex)
+
+        // borderColor and boxShadow were reassigned every frame regardless of
+        // whether the value changed. Each card carries backdrop-blur-xl inside
+        // a preserve-3d stage, so touching a paint property invalidated the
+        // backdrop and forced all six cards to re-blur on every frame. Only
+        // write when the active state actually flips.
+        if (activeStatesRef.current[i] !== isActiveCard) {
+          activeStatesRef.current[i] = isActiveCard
+          // Glow now uses the card's own accent instead of a flat purple that
+          // appeared nowhere else on the site. The inset hairline is the lit
+          // top edge that reads as a polished panel rather than a flat fill.
+          const rgb = MILESTONES[i].accentRgb
+          if (isActiveCard) {
+            cardEl.style.borderColor = `rgba(${rgb}, 0.5)`
+            cardEl.style.boxShadow =
+              `0 0 50px rgba(${rgb}, 0.18),` +
+              ` 0 0 110px rgba(${rgb}, 0.07),` +
+              ` 0 30px 80px rgba(0, 0, 0, 0.90),` +
+              ` inset 0 1px 0 rgba(255, 255, 255, 0.08)`
+          } else {
+            cardEl.style.borderColor = 'rgba(255, 255, 255, 0.075)'
+            cardEl.style.boxShadow =
+              `0 20px 60px rgba(0, 0, 0, 0.80),` +
+              ` inset 0 1px 0 rgba(255, 255, 255, 0.04)`
+          }
         }
-      }
-      if (bestIndex !== activeStepRef.current) {
-        activeStepRef.current = bestIndex
-        setActiveStep(bestIndex)
-      }
+      })
     }
 
     const onScroll = () => {
@@ -180,7 +232,6 @@ export function EventTimeline() {
       }
     }
 
-    // Run immediately on mount
     updateTimeline()
 
     const unsubLenis = subscribeLenisScroll(onScroll)
@@ -194,14 +245,14 @@ export function EventTimeline() {
     }
   }, [])
 
-  // Programmatic scroll to a specific milestone
   const scrollToMilestone = useCallback(
     (index: number) => {
       const arrowSection = document.getElementById('arrow-section')
       if (!arrowSection) return
 
       const vh = window.innerHeight || 800
-      const targetVH = MILESTONES[index].peakVH
+      // Map milestone index back to VH position within the 2.2–6.5 range
+      const targetVH = 2.2 + (index / (MILESTONES.length - 1)) * (6.5 - 2.2)
       const arrowTop = arrowSection.getBoundingClientRect().top + window.scrollY
       const targetScroll = arrowTop + targetVH * vh
 
@@ -214,137 +265,123 @@ export function EventTimeline() {
     [lenis]
   )
 
-  const curMilestone = MILESTONES[activeStep]
-
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-30 pointer-events-none flex flex-col justify-between items-center px-4 sm:px-8 lg:px-14 py-8 sm:py-12 transition-opacity duration-150"
+      className="fixed inset-0 z-30 pointer-events-none flex items-center justify-center px-4 sm:px-8 lg:px-14 transition-opacity duration-150 select-none overflow-hidden"
       style={{ opacity: 0, pointerEvents: 'none', display: 'none' }}
     >
-      {/* Spacer to keep top clear for the fixed navbar */}
-      <div className="w-full h-12 pointer-events-none" />
-
-      {/* ─── Centered Milestone Typography (No cards, no images, pure typography on cosmic lines) ─── */}
-      <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify-center text-center pointer-events-auto my-auto py-6">
-        {/* Phase Pill & Date Stamp */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-4">
-          <span
-            className="px-3.5 py-1 rounded-full text-xs font-black tracking-wider uppercase"
-            style={{
-              backgroundColor: `${curMilestone.accentColor}25`,
-              color: curMilestone.accentColor,
-              border: `1px solid ${curMilestone.accentColor}60`,
-              fontFamily: '"tiktok", sans-serif',
-            }}
-          >
-            {curMilestone.phase}
-          </span>
-
-          <span
-            className="text-xs font-mono text-white/70 tracking-widest uppercase flex items-center gap-2"
-            style={{ fontFamily: '"tronica-mono", monospace' }}
-          >
-            <span>●</span>
-            <span>{curMilestone.date}</span>
-            <span className="text-white/40">|</span>
-            <span className="text-[#63c4fd]">{curMilestone.time}</span>
-          </span>
-        </div>
-
-        {/* Milestone Big Title */}
-        <h2
-          key={curMilestone.id}
-          className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black uppercase text-white tracking-tight leading-[0.96] transition-all duration-300"
-          style={{
-            fontFamily: '"tiktok", sans-serif',
-            fontVariationSettings: '"wght" 900, "wdth" 110',
-            letterSpacing: '-0.03em',
-            textShadow: '0 0 50px rgba(99,196,253,0.3)',
-          }}
+      {/* ─── 3D Sticky Spiral Stage ─── */}
+      <div
+        className="relative w-full max-w-5xl flex items-center justify-center pointer-events-none"
+        style={{
+          perspective: '1200px',
+          transformStyle: 'preserve-3d',
+        }}
+      >
+        <div
+          className="relative w-full flex items-center justify-center pointer-events-auto"
+          style={{ transformStyle: 'preserve-3d' }}
         >
-          {curMilestone.title}
-        </h2>
-
-        {/* Subtitle */}
-        <p
-          className="mt-3 text-xs sm:text-sm font-mono tracking-widest uppercase text-white/50"
-          style={{ fontFamily: '"tronica-mono", monospace' }}
-        >
-          {curMilestone.subtitle}
-        </p>
-
-        {/* Description */}
-        <p
-          className="mt-5 text-sm sm:text-base md:text-lg text-neutral-300 leading-relaxed max-w-2xl"
-          style={{ fontFamily: '"tiktok", sans-serif' }}
-        >
-          {curMilestone.desc}
-        </p>
-
-        {/* Tags */}
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          {curMilestone.tags.map((tag) => (
-            <span
-              key={tag}
-              className="px-3 py-1 rounded-md text-[11px] font-mono tracking-wider text-white/80 bg-white/5 border border-white/10 backdrop-blur-md"
-              style={{ fontFamily: '"tronica-mono", monospace' }}
-            >
-              #{tag}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* ─── Bottom Interactive Milestone Scrubber Rail ─── */}
-      <div className="w-full max-w-4xl mx-auto pt-4 border-t border-white/10 pointer-events-auto">
-        <div className="relative flex items-center justify-between">
-          {/* Progress Connector Track */}
-          <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-white/10 z-0">
+          {MILESTONES.map((m, idx) => (
             <div
-              className="h-full bg-gradient-to-r from-[#fb3377] via-[#63c4fd] to-[#c0fe04] transition-all duration-300 shadow-[0_0_12px_#63c4fd]"
-              style={{ width: `${(activeStep / (MILESTONES.length - 1)) * 100}%` }}
-            />
-          </div>
+              key={m.id}
+              ref={(el) => {
+                cardRefs.current[idx] = el
+              }}
+              onClick={() => scrollToMilestone(idx)}
+              className="absolute w-[88vw] sm:w-[480px] md:w-[540px] rounded-2xl cursor-pointer select-none border border-white/[0.07] backdrop-blur-xl overflow-hidden"
+              style={{
+                transformStyle: 'preserve-3d',
+                backfaceVisibility: 'visible',
+                willChange: 'transform, opacity',
+                /*
+                 * Replaces the flat `bg-[#0a0e14]` fill. Four stacked layers,
+                 * all pure colour — no geometry changes:
+                 *   1. top sheen, the lit edge of a polished panel
+                 *   2. fine vertical hairlines, echoing the speed lines behind
+                 *      the stage so the card belongs to this section
+                 *   3. a corner bloom in the card's own accent
+                 *   4. deep navy body, from the site's #090d16 family, left
+                 *      ~2% translucent so the existing backdrop-blur actually
+                 *      catches a whisper of the lines without hurting legibility
+                 */
+                background: [
+                  'linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0) 22%)',
+                  'repeating-linear-gradient(90deg, rgba(255,255,255,0.016) 0px, rgba(255,255,255,0.016) 1px, rgba(255,255,255,0) 1px, rgba(255,255,255,0) 7px)',
+                  `radial-gradient(125% 95% at 0% 0%, rgba(${m.accentRgb},0.11) 0%, rgba(${m.accentRgb},0) 58%)`,
+                  'linear-gradient(165deg, rgba(18,26,40,0.97) 0%, rgba(11,16,24,0.975) 48%, rgba(7,10,17,0.98) 100%)',
+                ].join(', '),
+              }}
+            >
+              {/* Accent top edge */}
+              <div
+                className="h-[3px] w-full"
+                style={{
+                  // White specular at the leading edge, then the accent, then a
+                  // long soft tail — reads as a lit chrome rule instead of a
+                  // single hard colour stop.
+                  background: `linear-gradient(90deg, rgba(255,255,255,0.9) 0%, ${m.accentColor} 13%, ${m.accentColor} 40%, rgba(${m.accentRgb},0.28) 72%, rgba(${m.accentRgb},0) 93%)`,
+                }}
+              />
 
-          {/* Milestone Step Nodes */}
-          {MILESTONES.map((m, idx) => {
-            const isCurrent = idx === activeStep
-            const isPassed = idx < activeStep
-
-            return (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => scrollToMilestone(idx)}
-                className="relative z-10 flex flex-col items-center gap-2 group cursor-pointer"
-              >
-                {/* Node Pill */}
-                <div
-                  className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-mono font-bold transition-all duration-300 ${
-                    isCurrent
-                      ? 'scale-125 bg-white text-black shadow-[0_0_20px_#63c4fd]'
-                      : isPassed
-                      ? 'bg-[#1e60ff] text-white border border-[#63c4fd]'
-                      : 'bg-black/80 text-white/50 border border-white/20 group-hover:border-white/60 group-hover:text-white'
-                  }`}
-                  style={{ fontFamily: '"tronica-mono", monospace' }}
-                >
-                  0{m.id}
-                </div>
-
-                {/* Milestone Node Label */}
+              <div className="relative px-7 sm:px-9 py-6 sm:py-8">
+                {/* Large watermark step number */}
                 <span
-                  className={`hidden md:block text-[10px] tracking-wider uppercase transition-colors text-center max-w-[90px] truncate ${
-                    isCurrent ? 'text-white font-bold' : 'text-white/40 group-hover:text-white/80'
-                  }`}
-                  style={{ fontFamily: '"tiktok", sans-serif' }}
+                  className="absolute top-3 right-5 text-[5rem] sm:text-[6.5rem] font-black leading-none select-none pointer-events-none"
+                  style={{
+                    fontFamily: '"tiktok", sans-serif',
+                    // Was a flat white/3%. Tinting it with the accent makes the
+                    // watermark read as deliberate branding rather than grime.
+                    color: `rgba(${m.accentRgb}, 0.07)`,
+                  }}
                 >
-                  {m.title.split(' ')[0]}
+                  {m.stepNumber}
                 </span>
-              </button>
-            )
-          })}
+
+                {/* Step label */}
+                <span
+                  className="inline-block text-[11px] sm:text-xs tracking-[0.15em] uppercase mb-3"
+                  style={{
+                    fontFamily: '"tiktok", sans-serif',
+                    fontWeight: 600,
+                    color: m.accentColor,
+                    textShadow: `0 0 18px rgba(${m.accentRgb}, 0.45)`,
+                  }}
+                >
+                  Step {m.stepNumber}
+                </span>
+
+                {/* Title */}
+                <h3
+                  className="text-[1.5rem] sm:text-[1.75rem] md:text-[2rem] leading-[1.15] tracking-[-0.02em]"
+                  style={{
+                    fontFamily: '"tiktok", sans-serif',
+                    fontWeight: 700,
+                    color: 'rgba(255,255,255,0.97)',
+                  }}
+                >
+                  {m.title}
+                </h3>
+
+                {/* Description */}
+                <p
+                  className="mt-4 text-[13px] sm:text-[15px] leading-[1.7]"
+                  style={{ fontFamily: '"tiktok", sans-serif', color: 'rgba(255,255,255,0.56)' }}
+                >
+                  {m.desc}
+                </p>
+
+                {/* Date & Time */}
+                <p
+                  className="mt-5 text-[10px] sm:text-[11px] tracking-[0.08em] uppercase"
+                  style={{ fontFamily: '"tiktok", sans-serif', color: 'rgba(255,255,255,0.32)' }}
+                >
+                  {m.date} · {m.time}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

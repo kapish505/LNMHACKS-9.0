@@ -302,11 +302,53 @@ function generateStars(count = 95): Star[] {
   return stars
 }
 
+/**
+ * Pre-rendered radial glow sprite, one per star colour.
+ *
+ * The per-frame `createRadialGradient` + `arc` + `fill` for every spiked star
+ * allocated a fresh gradient object per star per frame. A sprite drawn with
+ * `globalAlpha` is mathematically the same result — scaling a gradient whose
+ * stops run alpha 1 -> 0 by a constant is identical to building it with
+ * alpha a -> 0 — for one `drawImage` instead.
+ */
+const GLOW_SPRITE_PX = 64
+const glowSprites = new Map<string, HTMLCanvasElement>()
+
+function getGlowSprite(color: string): HTMLCanvasElement | null {
+  const cached = glowSprites.get(color)
+  if (cached) return cached
+  if (typeof document === "undefined") return null
+
+  const c = document.createElement("canvas")
+  c.width = GLOW_SPRITE_PX
+  c.height = GLOW_SPRITE_PX
+  const g = c.getContext("2d")
+  if (!g) return null
+
+  const r = GLOW_SPRITE_PX / 2
+  const grad = g.createRadialGradient(r, r, 0, r, r, r)
+  grad.addColorStop(0, `rgba(${color}, 1)`)
+  grad.addColorStop(1, `rgba(${color}, 0)`)
+  g.fillStyle = grad
+  g.fillRect(0, 0, GLOW_SPRITE_PX, GLOW_SPRITE_PX)
+
+  glowSprites.set(color, c)
+  return c
+}
+
 export function TwinklingStars({ active, immediate = false }: { active: boolean; immediate?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const starsRef = useRef<Star[]>([])
   const [starsStarted, setStarsStarted] = useState(immediate && active)
   const fadeRef = useRef({ alpha: immediate && active ? 1 : 0, target: immediate && active ? 1 : 0 })
+
+  // Mirrored into refs so the render loop can read the latest values without
+  // the effect tearing down and rebuilding on every change.
+  const activeRef = useRef(active)
+  activeRef.current = active
+  const startedRef = useRef(starsStarted)
+  startedRef.current = starsStarted
+  const wakeRef = useRef<() => void>(() => {})
 
   // Trigger stars blinking (immediately or 3 seconds after dark mode becomes active)
   useEffect(() => {
@@ -328,6 +370,12 @@ export function TwinklingStars({ active, immediate = false }: { active: boolean;
     }
   }, [active, immediate])
 
+  // Any change to active/starsStarted has to restart a loop that may have
+  // parked itself, so poke it rather than recreating the whole canvas setup.
+  useEffect(() => {
+    wakeRef.current()
+  }, [active, starsStarted])
+
   useEffect(() => {
     if (!starsRef.current.length) {
       starsRef.current = generateStars(100)
@@ -340,6 +388,7 @@ export function TwinklingStars({ active, immediate = false }: { active: boolean;
 
     let raf = 0
     let last = performance.now()
+    let inView = true
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 1.25)
@@ -350,14 +399,20 @@ export function TwinklingStars({ active, immediate = false }: { active: boolean;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     }
     resize()
-    window.addEventListener("resize", resize)
 
     const render = (now: number) => {
+      // This loop previously had no pause of any kind: it ran forever, in light
+      // mode, scrolled out of view, and in a background tab.
+      if (!inView || document.hidden) {
+        raf = 0
+        return
+      }
+
       const dt = Math.min(0.05, (now - last) / 1000)
       last = now
 
       // Smoothly ramp overall star field alpha in or out
-      const targetAlpha = (active && starsStarted) ? 1.0 : 0.0
+      const targetAlpha = (activeRef.current && startedRef.current) ? 1.0 : 0.0
       fadeRef.current.target = targetAlpha
       const k = 1 - Math.exp(-2.2 * dt)
       fadeRef.current.alpha += (targetAlpha - fadeRef.current.alpha) * k
@@ -367,6 +422,14 @@ export function TwinklingStars({ active, immediate = false }: { active: boolean;
       const h = canvas.clientHeight || window.innerHeight
 
       ctx.clearRect(0, 0, w, h)
+
+      // Fully faded out with nothing to fade toward: park the loop instead of
+      // clearing an empty canvas 60 times a second.
+      if (currentGlobalAlpha <= 0.005 && targetAlpha === 0) {
+        fadeRef.current.alpha = 0
+        raf = 0
+        return
+      }
 
       if (currentGlobalAlpha > 0.01) {
         const timeSec = now * 0.001
@@ -386,6 +449,7 @@ export function TwinklingStars({ active, immediate = false }: { active: boolean;
           if (starAlpha <= 0.02) continue
 
           // Draw pinpoint star core
+          ctx.globalAlpha = 1
           ctx.beginPath()
           ctx.arc(px, py, s.radius, 0, Math.PI * 2)
           ctx.fillStyle = `rgba(${s.color}, ${starAlpha})`
@@ -394,13 +458,12 @@ export function TwinklingStars({ active, immediate = false }: { active: boolean;
           // Draw soft radial glow for prominent stars
           if (s.hasSpikes && starAlpha > 0.3) {
             const glowR = s.radius * 3.5
-            const grad = ctx.createRadialGradient(px, py, 0, px, py, glowR)
-            grad.addColorStop(0, `rgba(${s.color}, ${starAlpha * 0.45})`)
-            grad.addColorStop(1, `rgba(${s.color}, 0)`)
-            ctx.beginPath()
-            ctx.arc(px, py, glowR, 0, Math.PI * 2)
-            ctx.fillStyle = grad
-            ctx.fill()
+            const sprite = getGlowSprite(s.color)
+            if (sprite) {
+              ctx.globalAlpha = starAlpha * 0.45
+              ctx.drawImage(sprite, px - glowR, py - glowR, glowR * 2, glowR * 2)
+              ctx.globalAlpha = 1
+            }
 
             // Subtle 4-point cross diffraction spikes
             const spikeLen = s.radius * 4.2 * (0.8 + 0.4 * twinkle)
@@ -415,18 +478,47 @@ export function TwinklingStars({ active, immediate = false }: { active: boolean;
             ctx.stroke()
           }
         }
+        ctx.globalAlpha = 1
       }
 
       raf = requestAnimationFrame(render)
     }
 
-    raf = requestAnimationFrame(render)
+    const wake = () => {
+      if (!raf && inView && !document.hidden) {
+        last = performance.now()
+        raf = requestAnimationFrame(render)
+      }
+    }
+    wakeRef.current = wake
+
+    const onResize = () => {
+      resize()
+      wake()
+    }
+    window.addEventListener("resize", onResize)
+
+    const io = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting
+      if (inView) wake()
+    }, { threshold: 0.02 })
+    io.observe(canvas.closest("#hero") || canvas.parentElement || canvas)
+
+    const onVisibility = () => {
+      if (!document.hidden) wake()
+    }
+    document.addEventListener("visibilitychange", onVisibility)
+
+    wake()
 
     return () => {
+      wakeRef.current = () => {}
       cancelAnimationFrame(raf)
-      window.removeEventListener("resize", resize)
+      io.disconnect()
+      document.removeEventListener("visibilitychange", onVisibility)
+      window.removeEventListener("resize", onResize)
     }
-  }, [active, starsStarted])
+  }, [])
 
   return (
     <canvas
@@ -535,6 +627,33 @@ export function NightCloudSky({
     let nearX = 0
     let farX = 0
     let cirrusX = 0
+    let lastW = -1
+    let lastH = -1
+
+    // Every value below is a compile-time constant for this component, yet all
+    // fourteen uniforms were re-parsed (four parseColor calls on literal
+    // strings) and re-uploaded every frame. Uniform state persists on the
+    // program, so upload the static set once and leave only the three drifting
+    // offsets plus the resolution in the hot loop.
+    {
+      const v = vRef.current
+      const zen = parseColor(v.zenith as string, [0.01, 0.02, 0.04, 1])
+      const hor = parseColor(v.horizon as string, [0.05, 0.10, 0.17, 1])
+      const cld = parseColor(v.cloud as string, [0.20, 0.26, 0.36, 1])
+      const glow = parseColor(v.glow as string, [0.73, 0.84, 1.0, 0.38])
+
+      gl.uniform1f(u("uCoverage"), v.coverage as number)
+      gl.uniform1f(u("uSize"), v.size as number)
+      gl.uniform1f(u("uSoftness"), v.softness as number)
+      gl.uniform1f(u("uShadow"), v.shadow as number)
+      gl.uniform1f(u("uCirrus"), v.cirrus as number)
+      gl.uniform2f(u("uSun"), v.sunX as number, v.sunY as number)
+      gl.uniform2f(u("uParallax"), 0, 0) // No parallax
+      gl.uniform3f(u("uZenith"), zen[0], zen[1], zen[2])
+      gl.uniform3f(u("uHorizon"), hor[0], hor[1], hor[2])
+      gl.uniform3f(u("uCloud"), cld[0], cld[1], cld[2])
+      gl.uniform4f(u("uGlow"), glow[0], glow[1], glow[2], glow[3])
+    }
 
     const render = (now: number) => {
       if (paused || !activeRef.current) {
@@ -565,28 +684,16 @@ export function NightCloudSky({
         canvas.width = bw
         canvas.height = bh
       }
-      gl.viewport(0, 0, bw, bh)
+      if (bw !== lastW || bh !== lastH) {
+        lastW = bw
+        lastH = bh
+        gl.viewport(0, 0, bw, bh)
+        gl.uniform2f(u("uRes"), bw, bh)
+      }
 
-      const zen = parseColor(v.zenith as string, [0.01, 0.02, 0.04, 1])
-      const hor = parseColor(v.horizon as string, [0.05, 0.10, 0.17, 1])
-      const cld = parseColor(v.cloud as string, [0.20, 0.26, 0.36, 1])
-      const glow = parseColor(v.glow as string, [0.73, 0.84, 1.0, 0.38])
-
-      gl.uniform2f(u("uRes"), bw, bh)
       gl.uniform1f(u("uNearX"), nearX)
       gl.uniform1f(u("uFarX"), farX)
       gl.uniform1f(u("uCirrusX"), cirrusX)
-      gl.uniform1f(u("uCoverage"), v.coverage as number)
-      gl.uniform1f(u("uSize"), v.size as number)
-      gl.uniform1f(u("uSoftness"), v.softness as number)
-      gl.uniform1f(u("uShadow"), v.shadow as number)
-      gl.uniform1f(u("uCirrus"), v.cirrus as number)
-      gl.uniform2f(u("uSun"), v.sunX as number, v.sunY as number)
-      gl.uniform2f(u("uParallax"), 0, 0) // No parallax
-      gl.uniform3f(u("uZenith"), zen[0], zen[1], zen[2])
-      gl.uniform3f(u("uHorizon"), hor[0], hor[1], hor[2])
-      gl.uniform3f(u("uCloud"), cld[0], cld[1], cld[2])
-      gl.uniform4f(u("uGlow"), glow[0], glow[1], glow[2], glow[3])
 
       gl.drawArrays(gl.TRIANGLES, 0, 3)
       raf = requestAnimationFrame(render)

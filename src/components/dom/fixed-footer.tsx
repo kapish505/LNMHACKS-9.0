@@ -59,30 +59,43 @@ function RotatingGlobe() {
 
 export function FixedFooter() {
   const time = useISTTime()
-  const [pos, setPos] = useState({ x: 0, y: 0 })
+  const coordsRef = useRef<HTMLSpanElement>(null)
   const { theme } = useTheme()
   const isDark = theme === 'dark'
 
   useEffect(() => {
     let raf = 0
-    let pending = { x: 0, y: 0 }
-    const onMove = (e: MouseEvent) => {
-      pending = { x: e.clientX, y: e.clientY }
-      if (raf) return
-      raf = requestAnimationFrame(() => {
-        setPos(pending)
-        raf = 0
-      })
+    let pendingX = 0
+    let pendingY = 0
+    let lastText = ''
+
+    // This used to call setPos() once per animation frame, re-rendering the
+    // footer (and re-reading theme context) 60 times a second for the whole
+    // time the pointer was moving. The readout is a single text node, so write
+    // it directly and keep React out of the pointer path. The JSX children of
+    // this span are a constant, so re-renders from the clock never clobber it.
+    const flush = () => {
+      raf = 0
+      const text = `${String(pendingX).padStart(4, '0')} X ${String(pendingY).padStart(4, '0')} Y`
+      if (text === lastText) return
+      lastText = text
+      const el = coordsRef.current
+      if (el) el.textContent = text
     }
+
+    const onMove = (e: MouseEvent) => {
+      pendingX = e.clientX
+      pendingY = e.clientY
+      if (raf) return
+      raf = requestAnimationFrame(flush)
+    }
+
     window.addEventListener('mousemove', onMove, { passive: true })
     return () => {
       window.removeEventListener('mousemove', onMove)
-      cancelAnimationFrame(raf)
+      if (raf) cancelAnimationFrame(raf)
     }
   }, [])
-
-  const px = String(pos.x).padStart(4, '0')
-  const py = String(pos.y).padStart(4, '0')
 
   return (
     <footer
@@ -104,7 +117,7 @@ export function FixedFooter() {
 
         {/* Center Column: Cursor coordinates (aligned CENTRE of Grid 2) */}
         <div className="flex items-center justify-center text-center">
-          <span className="hidden sm:inline">{px} X {py} Y</span>
+          <span ref={coordsRef} className="hidden sm:inline">0000 X 0000 Y</span>
         </div>
 
         {/* Right Column: Rotating globe (aligned RIGHT of Grid 3) */}
