@@ -3,19 +3,18 @@
   isolation: isolate;
   overflow: hidden;
   width: 100%;
-  background-color: var(--background);
-  transition: background-color 500ms ease;
+  min-height: calc(100vw * 0.563);
 }
 
 .facade {
-  position: relative;
+  position: absolute;
   z-index: 1;
+  inset: 0;
   display: block;
   width: 100%;
-  height: auto;
-  filter: saturate(0.88) contrast(1.025);
-  animation: facade-arrive 1.4s cubic-bezier(0.2, 0.72, 0.18, 1) both, facade-breathe 9s ease-in-out 1.4s infinite;
-  transform-origin: 50% 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
 
 .fairyLights {
@@ -57,36 +56,39 @@
   animation: fairy-flow 22s linear infinite, fairy-twinkle 4.7s ease-in-out infinite alternate;
 }
 
-:global(.dark) .facade {
-  filter: saturate(0.82) brightness(0.88) contrast(1.08);
+.footerContent {
+  position: absolute;
+  z-index: 5;
+  inset-inline: 0;
+  bottom: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(3, 6, 13, 0) 0%,
+    rgba(3, 6, 13, 0.12) 18%,
+    rgba(3, 6, 13, 0.34) 68%,
+    rgba(3, 6, 13, 0.46) 100%
+  );
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
 }
 
-:global(.dark) .lightCable {
-  stroke: rgba(255, 206, 127, 0.82);
-  stroke-width: 2.2;
-  filter: drop-shadow(0 0 3px rgba(255, 172, 86, 0.5));
-}
+@media (max-width: 767px) {
+  .stage {
+    min-height: clamp(42rem, 80svh, 58rem);
+  }
 
-:global(.dark) .bulbGlow {
-  stroke: rgba(255, 164, 74, 0.88);
-  stroke-width: 17;
-  filter: drop-shadow(0 0 8px rgba(255, 153, 59, 0.74));
-}
+  .facade {
+    object-position: center;
+  }
 
-:global(.dark) .bulbs {
-  stroke: #ffe2a0;
-  stroke-width: 8;
-  filter: drop-shadow(0 0 5px rgba(255, 170, 75, 0.95));
-}
-
-@keyframes facade-arrive {
-  from { opacity: 0; transform: translateY(22px) scale(1.015); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@keyframes facade-breathe {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+  .footerContent {
+    background: linear-gradient(
+      180deg,
+      rgba(3, 6, 13, 0.12) 0%,
+      rgba(3, 6, 13, 0.24) 24%,
+      rgba(3, 6, 13, 0.46) 64%,
+      rgba(3, 6, 13, 0.56) 100%
+    );
+  }
 }
 
 @keyframes fairy-twinkle {
@@ -100,7 +102,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .facade,
   .bulbGlow,
   .bulbs {
     animation: none;

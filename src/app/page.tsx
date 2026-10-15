@@ -25,6 +25,7 @@ import { useTheme } from '@/lib/theme-context'
 import { NightCloudSky } from '@/components/canvas/night-cloud-sky'
 import { getArrowSectionVH } from '@/lib/arrow-section-progress'
 import { subscribeLenisScroll } from '@/lib/scroll-bus'
+import { Mascot } from 'page-mascot'
 
 /**
  * The main canvas only has something to draw inside a known scroll window:
@@ -330,6 +331,15 @@ export default function Home() {
               />
             </div>
           </div>
+        </div>
+
+        <div className="pointer-events-auto absolute bottom-5 right-5 z-30 scale-75 origin-bottom-right sm:bottom-8 sm:right-8 sm:scale-100">
+          <Mascot
+            directions="/mascots/kamran-directions.webp"
+            reactions="/mascots/kamran-reactions.webp"
+            size={140}
+            label="Kamran"
+          />
         </div>
       </div>
 

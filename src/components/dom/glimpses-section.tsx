@@ -1,50 +1,221 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import dynamic from 'next/dynamic'
-import { useTheme } from '@/lib/theme-context'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import Image from 'next/image'
+import styles from './glimpses-section.module.css'
 
-const LiquidGlassCarousel = dynamic(
-  () => import('@/components/dom/liquid-glass-carousel'),
-  { ssr: false }
-)
-
-const DEFAULT_ITEMS: string[] = [
-  '/glimpses/glimpse-1.jpg',
-  '/glimpses/glimpse-2.jpg',
-  '/glimpses/glimpse-3.jpg',
-  '/glimpses/glimpse-4.jpg',
-  '/glimpses/glimpse-1.jpg',
-  '/glimpses/glimpse-2.jpg',
-  '/glimpses/glimpse-3.jpg',
-  '/glimpses/glimpse-4.jpg',
+const DEFAULT_ITEMS = [
   '/glimpses/glimpse-1.jpg',
   '/glimpses/glimpse-2.jpg',
   '/glimpses/glimpse-3.jpg',
   '/glimpses/glimpse-4.jpg',
 ]
 
+type DragState = {
+  row: number
+  startX: number
+  startOffset: number
+  moved: boolean
+}
+
 export function GlimpsesSection() {
-  const [carouselItems, setCarouselItems] = useState<string[]>(DEFAULT_ITEMS)
-  const { theme } = useTheme()
-  const carouselBackground = theme === 'dark' ? '#090d16' : '#F0EDE8'
+  const [items, setItems] = useState<string[]>(DEFAULT_ITEMS)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const sectionRef = useRef<HTMLElement>(null)
+  const trackRefs = useRef<Array<HTMLDivElement | null>>([])
+  const rowOffsets = useRef([0, 0])
+  const rowWidths = useRef([0, 0])
+  const dragRef = useRef<DragState | null>(null)
+  const suppressClickRef = useRef(false)
+  const scrollBoostRef = useRef({ current: 1, target: 1, lastAt: 0, scrollY: 0 })
+
+  const uniqueItems = useMemo(() => [...new Set(items)], [items])
+  const rows = useMemo(() => {
+    const midpoint = Math.floor(uniqueItems.length / 2)
+    const offsetItems = uniqueItems.length > 1
+      ? [...uniqueItems.slice(midpoint), ...uniqueItems.slice(0, midpoint)]
+      : uniqueItems
+    return [uniqueItems, offsetItems]
+  }, [uniqueItems])
 
   useEffect(() => {
     fetch('/api/glimpses')
-      .then((res) => res.json())
+      .then((response) => response.json())
       .then((data) => {
         if (data && Array.isArray(data.items) && data.items.length > 0) {
-          setCarouselItems(data.items)
+          setItems(data.items)
         }
       })
-      .catch((err) => {
-        console.error('Failed to load glimpses from /api/glimpses', err)
-      })
+      .catch((error) => console.error('Failed to load glimpses from /api/glimpses', error))
   }, [])
 
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver(() => {
+      trackRefs.current.forEach((track, index) => {
+        if (!track) return
+        const width = track.scrollWidth / 2
+        rowWidths.current[index] = width
+        if (width > 0) {
+          rowOffsets.current[index] = ((rowOffsets.current[index] % width) + width) % width
+          track.style.transform = `translate3d(${-rowOffsets.current[index]}px, 0, 0)`
+        }
+      })
+    })
+
+    trackRefs.current.forEach((track) => track && resizeObserver.observe(track))
+    return () => resizeObserver.disconnect()
+  }, [rows])
+
+  useEffect(() => {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    let frame = 0
+    let previousTime = performance.now()
+    let inView = false
+    let pageVisible = !document.hidden
+    let running = false
+
+    const animate = (now: number) => {
+      const delta = Math.min((now - previousTime) / 1000, 0.05)
+      previousTime = now
+
+      const boost = scrollBoostRef.current
+      boost.target = now - boost.lastAt > 140 ? 1 : boost.target
+      boost.current += (boost.target - boost.current) * Math.min(1, delta * 3.5)
+
+      if (!reduceMotion && !dragRef.current) {
+        trackRefs.current.forEach((track, index) => {
+          const width = rowWidths.current[index]
+          if (!track || width <= 0) return
+          const direction = index === 0 ? -1 : 1
+          const speed = (index === 0 ? 34 : 30) * boost.current
+          let offset = rowOffsets.current[index] + direction * speed * delta
+          if (offset <= -width) offset += width
+          if (offset > 0) offset -= width
+          rowOffsets.current[index] = offset
+          track.style.transform = `translate3d(${offset}px, 0, 0)`
+        })
+      }
+
+      frame = requestAnimationFrame(animate)
+    }
+
+    const startAnimation = () => {
+      if (reduceMotion || !inView || !pageVisible || running) return
+      previousTime = performance.now()
+      running = true
+      frame = requestAnimationFrame(animate)
+    }
+
+    const stopAnimation = () => {
+      if (!running) return
+      cancelAnimationFrame(frame)
+      running = false
+      frame = 0
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting
+      if (inView) startAnimation()
+      else stopAnimation()
+    }, { rootMargin: '120px 0px' })
+    if (sectionRef.current) observer.observe(sectionRef.current)
+
+    const onScroll = () => {
+      const now = performance.now()
+      const last = scrollBoostRef.current
+      const delta = Math.abs(window.scrollY - last.scrollY)
+      const elapsed = Math.max(16, now - last.lastAt)
+      last.target = Math.min(3.2, 1 + (delta / elapsed) * 0.65)
+      last.lastAt = now
+      last.scrollY = window.scrollY
+    }
+    const onVisibilityChange = () => {
+      pageVisible = !document.hidden
+      if (pageVisible) startAnimation()
+      else stopAnimation()
+    }
+
+    scrollBoostRef.current.lastAt = performance.now()
+    scrollBoostRef.current.scrollY = window.scrollY
+    window.addEventListener('scroll', onScroll, { passive: true })
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    return () => {
+      stopAnimation()
+      observer.disconnect()
+      window.removeEventListener('scroll', onScroll)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!selectedImage) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelectedImage(null)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [selectedImage])
+
+  useEffect(() => {
+    const onPointerMove = (event: PointerEvent) => {
+      const drag = dragRef.current
+      if (!drag) return
+      const distance = event.clientX - drag.startX
+      if (Math.abs(distance) > 4) drag.moved = true
+      if (!drag.moved) return
+
+      const width = rowWidths.current[drag.row]
+      if (!width) return
+      const offset = drag.startOffset - distance
+      const wrappedOffset = ((offset % width) + width) % width
+      rowOffsets.current[drag.row] = wrappedOffset
+      const track = trackRefs.current[drag.row]
+      if (track) track.style.transform = `translate3d(${-wrappedOffset}px, 0, 0)`
+    }
+
+    const onPointerUp = () => {
+      const drag = dragRef.current
+      if (!drag) return
+      if (drag.moved) {
+        suppressClickRef.current = true
+        window.setTimeout(() => { suppressClickRef.current = false }, 100)
+      }
+      dragRef.current = null
+    }
+
+    window.addEventListener('pointermove', onPointerMove)
+    window.addEventListener('pointerup', onPointerUp)
+    window.addEventListener('pointercancel', onPointerUp)
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove)
+      window.removeEventListener('pointerup', onPointerUp)
+      window.removeEventListener('pointercancel', onPointerUp)
+    }
+  }, [])
+
+  const startDrag = (event: React.PointerEvent<HTMLDivElement>, row: number) => {
+    if (event.button !== 0) return
+    dragRef.current = {
+      row,
+      startX: event.clientX,
+      startOffset: rowOffsets.current[row],
+      moved: false,
+    }
+  }
+
+  const openImage = (event: React.MouseEvent<HTMLButtonElement>, src: string) => {
+    if (suppressClickRef.current) {
+      event.preventDefault()
+      return
+    }
+    setSelectedImage(src)
+  }
+
   return (
-    <div
+    <section
       id="glimpses"
+      ref={sectionRef}
       className="relative z-30 w-full flex flex-col justify-start pt-12 sm:pt-20 pb-16 sm:pb-24 pointer-events-auto"
     >
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-14 pb-8 sm:pb-12 text-left">
@@ -66,47 +237,66 @@ export function GlimpsesSection() {
         </h2>
         <p
           className="mt-2 text-base sm:text-lg md:text-xl tracking-tight max-w-xl text-[rgba(54,54,48,0.6)] dark:text-neutral-400 transition-colors duration-200"
-          style={{
-            fontFamily: '"tiktok", sans-serif',
-          }}
+          style={{ fontFamily: '"tiktok", sans-serif' }}
         >
           Highlights from our past editions
         </p>
       </div>
 
-      <div className="w-full h-[360px] sm:h-[460px] md:h-[540px] lg:h-[620px] pointer-events-auto">
-        <LiquidGlassCarousel
-          items={carouselItems}
-          background={carouselBackground}
-          sizeMode="image"
-          cardWidth={620}
-          cardHeight={440}
-          gap={60}
-          lens={{
-            shape: 'rectangle',
-            width: 0.82,
-            height: 0.55,
-            round: 0.06,
-            rotation: 0,
-            dispersion: 6,
-            ringColor: '#1e60ff',
-          }}
-          motion={{
-            sensitivity: 4,
-            glide: 4,
-            snap: true,
-          }}
-          entry={{
-            enabled: false,
-          }}
-          interaction={{
-            wheel: true,
-            drag: true,
-            clickToFocus: true,
-            focusTransition: { type: 'spring', bounce: 0.2, duration: 0.7 },
-          }}
-        />
+      <div className={styles.gallery} role="group" aria-label="Highlights from past editions">
+        {rows.map((row, rowIndex) => (
+          <div
+            className={styles.row}
+            key={`row-${rowIndex}`}
+            onPointerDown={(event) => startDrag(event, rowIndex)}
+          >
+            <div className={styles.track} ref={(node) => { trackRefs.current[rowIndex] = node }}>
+              {[...row, ...row].map((src, index) => (
+                <button
+                  className={styles.card}
+                  type="button"
+                  key={`${rowIndex}-${src}-${index}`}
+                  onClick={(event) => openImage(event, src)}
+                  aria-label={`Open glimpse ${index % row.length + 1} full screen`}
+                >
+                  <Image
+                    src={src}
+                    alt={`LNMHacks past edition highlight ${index % row.length + 1}`}
+                    fill
+                    sizes="(max-width: 640px) 78vw, (max-width: 1200px) 42vw, 32vw"
+                    loading="lazy"
+                    className={styles.image}
+                    draggable={false}
+                  />
+                  <span className={styles.openHint}>View image <span aria-hidden="true">↗</span></span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
-    </div>
+
+      {selectedImage && (
+        <div
+          className={styles.lightbox}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Expanded glimpse"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button
+            className={styles.closeButton}
+            type="button"
+            aria-label="Close image"
+            onClick={() => setSelectedImage(null)}
+          >
+            ×
+          </button>
+          <div className={styles.lightboxImage} onClick={(event) => event.stopPropagation()}>
+            <Image src={selectedImage} alt="LNMHacks past edition" fill sizes="96vw" priority />
+          </div>
+        </div>
+      )}
+    </section>
   )
 }

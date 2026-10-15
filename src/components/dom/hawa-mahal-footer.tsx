@@ -4,46 +4,43 @@ import Image from 'next/image'
 import { triggerPageTransition } from '@/lib/page-transition-bus'
 import styles from './hawa-mahal-footer.module.css'
 
-const linkClass = 'text-neutral-600 transition-colors hover:text-black dark:text-neutral-300 dark:hover:text-white'
+const linkClass = 'text-white/80 transition-colors hover:text-white'
 
 export function HawaMahalFooter() {
   return (
     <footer
       id="hawa-mahal-footer"
-      className="relative z-40 mt-auto w-full bg-background text-foreground transition-colors duration-500 ease-in-out"
+      className="relative z-40 mt-auto w-full text-white"
     >
       <div className={styles.stage}>
         <Image
-          src="/hawa-mahal-facade.webp"
-          alt="Hawa Mahal facade"
-          width={4200}
-          height={1515}
+          src="/hawa-mahal-footer-scene.png"
+          alt="Hawa Mahal illuminated against the night sky"
+          width={1672}
+          height={941}
           sizes="100vw"
-          unoptimized
           className={styles.facade}
         />
         <svg
           className={styles.fairyLights}
-          viewBox="0 0 2103 759"
-          preserveAspectRatio="none"
+          viewBox="0 0 1672 941"
+          preserveAspectRatio="xMidYMid slice"
           aria-hidden="true"
         >
           <path
             className={styles.lightCable}
-            d="M0 646 L60 485 L108 513 L156 428 L204 402 L252 443 L300 342 L348 332 L396 336 L444 257 L492 248 L540 215 L588 172 L636 183 L684 136 L732 112 L780 117 L828 120 L876 109 L924 109 L972 82 L1020 52 L1068 49 L1116 68 L1164 81 L1212 101 L1260 112 L1308 123 L1356 99 L1404 122 L1452 160 L1500 172 L1548 212 L1596 258 L1644 247 L1692 296 L1740 339 L1788 339 L1836 389 L1884 414 L1932 411 L1980 515 L2028 487 L2103 646"
+            d="M0 392 L54 366 L112 326 L166 293 L224 270 L282 238 L336 195 L391 149 L441 116 L488 106 L530 118 L570 91 L618 80 L664 82 L709 56 L755 41 L802 28 L836 20 L870 28 L917 41 L963 56 L1008 82 L1054 80 L1102 91 L1142 118 L1184 106 L1231 116 L1281 149 L1336 195 L1390 238 L1448 270 L1506 293 L1560 326 L1618 366 L1672 392"
           />
           <path
             className={styles.bulbGlow}
-            d="M0 646 L60 485 L108 513 L156 428 L204 402 L252 443 L300 342 L348 332 L396 336 L444 257 L492 248 L540 215 L588 172 L636 183 L684 136 L732 112 L780 117 L828 120 L876 109 L924 109 L972 82 L1020 52 L1068 49 L1116 68 L1164 81 L1212 101 L1260 112 L1308 123 L1356 99 L1404 122 L1452 160 L1500 172 L1548 212 L1596 258 L1644 247 L1692 296 L1740 339 L1788 339 L1836 389 L1884 414 L1932 411 L1980 515 L2028 487 L2103 646"
+            d="M0 392 L54 366 L112 326 L166 293 L224 270 L282 238 L336 195 L391 149 L441 116 L488 106 L530 118 L570 91 L618 80 L664 82 L709 56 L755 41 L802 28 L836 20 L870 28 L917 41 L963 56 L1008 82 L1054 80 L1102 91 L1142 118 L1184 106 L1231 116 L1281 149 L1336 195 L1390 238 L1448 270 L1506 293 L1560 326 L1618 366 L1672 392"
           />
           <path
             className={styles.bulbs}
-            d="M0 646 L60 485 L108 513 L156 428 L204 402 L252 443 L300 342 L348 332 L396 336 L444 257 L492 248 L540 215 L588 172 L636 183 L684 136 L732 112 L780 117 L828 120 L876 109 L924 109 L972 82 L1020 52 L1068 49 L1116 68 L1164 81 L1212 101 L1260 112 L1308 123 L1356 99 L1404 122 L1452 160 L1500 172 L1548 212 L1596 258 L1644 247 L1692 296 L1740 339 L1788 339 L1836 389 L1884 414 L1932 411 L1980 515 L2028 487 L2103 646"
+            d="M0 392 L54 366 L112 326 L166 293 L224 270 L282 238 L336 195 L391 149 L441 116 L488 106 L530 118 L570 91 L618 80 L664 82 L709 56 L755 41 L802 28 L836 20 L870 28 L917 41 L963 56 L1008 82 L1054 80 L1102 91 L1142 118 L1184 106 L1231 116 L1281 149 L1336 195 L1390 238 L1448 270 L1506 293 L1560 326 L1618 366 L1672 392"
           />
         </svg>
-      </div>
-
-      <div className="relative z-10 w-full bg-background px-4 pb-8 pt-6 text-foreground sm:px-8 sm:pb-10 sm:pt-8 lg:px-14">
+      <div className={`${styles.footerContent} relative z-10 w-full px-4 pb-8 pt-6 text-white sm:px-8 sm:pb-10 sm:pt-8 lg:px-14`}>
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-12">
           <div className="flex flex-col items-start pr-0 lg:col-span-5 lg:pr-6">
             <h2
@@ -59,7 +56,7 @@ export function HawaMahalFooter() {
               <span className="text-[#1e60ff]">M</span>
               <span className="text-[#fb3377]">HACKS 9.0</span>
             </h2>
-            <p className="mb-4 max-w-md text-xs leading-relaxed text-neutral-600 dark:text-neutral-400 sm:text-sm" style={{ fontFamily: '"tiktok", sans-serif' }}>
+            <p className="mb-4 max-w-md text-xs leading-relaxed text-white/75 sm:text-sm" style={{ fontFamily: '"tiktok", sans-serif' }}>
               The largest student-run hackathon in India. 72 hours of pure innovation, workshops, and developer culture.
             </p>
           </div>
@@ -113,10 +110,11 @@ export function HawaMahalFooter() {
           </div>
         </div>
 
-        <div className="mx-auto mt-6 flex max-w-7xl flex-wrap items-center justify-between gap-4 border-t border-neutral-300 pt-4 text-xs text-neutral-600 dark:border-neutral-800 dark:text-neutral-400">
+        <div className="mx-auto mt-6 flex max-w-7xl flex-wrap items-center justify-between gap-4 border-t border-white/20 pt-4 text-xs text-white/75">
           <span>&copy; {new Date().getFullYear()} LNMHACKS 9.0™</span>
-          <span className="text-[11px] text-neutral-500 dark:text-neutral-500">Jaipur, Rajasthan, India · Reach out via Discord, X &amp; Instagram</span>
+          <span className="text-[10px] text-white/65 sm:text-[11px]">Jaipur, Rajasthan, India · Reach out via Discord, X &amp; Instagram</span>
         </div>
+      </div>
       </div>
     </footer>
   )
