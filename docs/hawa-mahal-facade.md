@@ -176,7 +176,7 @@ information band continues the building without a seam.
   its own twinkle period; a moon at the top right that opens at tonight's real
   lunar phase (synodic calculation from the 2000-01-06 new moon, evaluated at
   UTC noon so server and client render identically) and then cycles through
-  the phases every 48 s. The wordmark **LNMHACKS 9.0** sits top-left in the sky.
+  the phases every 48 s, placed on the left above the left tower.
 - **Light show** – after the opening sweep (each window on its own delay by
   floor and distance from the axis) a 29 s loop plays through `playTimeline`:
   *pillars* (large bays, floor by floor, centre outwards) → *lattice* (small

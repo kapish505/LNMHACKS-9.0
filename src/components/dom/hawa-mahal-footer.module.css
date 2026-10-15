@@ -85,7 +85,7 @@
   filter: drop-shadow(0 0 14px rgba(255, 240, 190, 0.35));
 }
 
-/* the moon: left side of the sky, under the wordmark, above the left tower */
+/* the moon: left side of the sky, above the left tower */
 .moonBox {
   position: absolute;
   z-index: 5;
@@ -96,44 +96,6 @@
   overflow: visible;
   opacity: var(--reveal);
   pointer-events: none;
-}
-
-/* header: wordmark top-left, in open sky above the left tower */
-.header {
-  position: absolute;
-  z-index: 6;
-  left: clamp(1rem, 5vw, 4.5rem);
-  top: 21%;
-  opacity: var(--reveal);
-  transform: translateY(calc((1 - var(--reveal)) * 1.5rem));
-  transition: transform 160ms linear;
-  pointer-events: none;
-}
-
-.wordmark {
-  display: flex;
-  gap: 0.2em;
-  margin: 0;
-  font-size: clamp(1.7rem, 4vw, 3.6rem);
-  line-height: 1;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
-}
-
-.wordmarkA {
-  color: #ffd27a;
-}
-
-.wordmarkB {
-  color: #f4dcb6;
-}
-
-.tagline {
-  margin: 0.6em 0 0;
-  font-size: clamp(0.55rem, 0.85vw, 0.8rem);
-  letter-spacing: 0.18em;
-  color: rgba(244, 220, 182, 0.72);
 }
 
 .footerContent {
@@ -153,11 +115,7 @@
     width: 175%;
   }
 
-  .header {
-    top: 15%;
-  }
-
-  /* no room on the left of a phone: the moon takes the top-right instead */
+  /* the moon takes the top-right on phones, clear of the navbar */
   .moonBox {
     left: auto;
     right: 6%;
@@ -176,8 +134,7 @@
     animation: none;
   }
 
-  .building,
-  .header {
+  .building {
     transition: none;
   }
 }

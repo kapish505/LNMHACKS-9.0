@@ -309,21 +309,7 @@ export function HawaMahalFooter() {
         <div className={styles.sky} aria-hidden="true" />
         <div className={styles.horizon} aria-hidden="true" />
 
-        {/* header: the wordmark sits top-left in the sky */}
-        <div className={styles.header}>
-          <p
-            className={styles.wordmark}
-            style={{ fontFamily: '"tiktok", sans-serif', fontVariationSettings: '"wght" 850, "wdth" 110' }}
-          >
-            <span className={styles.wordmarkA}>LNM</span>
-            <span className={styles.wordmarkB}>HACKS 9.0</span>
-          </p>
-          <p className={styles.tagline} style={{ fontFamily: '"tronica-mono", "Courier New", monospace' }}>
-            THE LARGEST STUDENT-RUN HACKATHON IN INDIA · JAIPUR
-          </p>
-        </div>
-
-        {/* the moon hangs on the left, between the wordmark and the left tower */}
+        {/* the moon hangs on the left, above the left tower */}
         <svg className={styles.moonBox} viewBox="-112 -112 224 224">
           <defs>
             <radialGradient id="hmf-moon-halo">
