@@ -180,9 +180,10 @@ information band continues the building without a seam.
 - **Light show** – after the opening sweep (each window on its own delay by
   floor and distance from the axis) a 29 s loop plays through `playTimeline`:
   *pillars* (large bays, floor by floor, centre outwards) → *lattice* (small
-  bays fill in) → *letters* (the whole facade goes dark — outer bays, ground
-  niches and tower arches included — and L N M H A C K S are spelled one at a
-  time, 1 s on / 0.32 s dark, on a 3-row × 7-column field: floors 2 and 3
+  bays fill in) → *letters* (the whole facade lights up and L N M H A C K S are
+  cut out of the light one at a time — the letter's windows go dark for 1 s,
+  then everything is lit for 0.32 s before the next — on a 3-row × 7-column
+  field: floors 2 and 3
   columns 4–10, floor 4 columns 4–6 and 8–10, the apex window as the top-row
   centre; pane fades drop to 160 ms for crisp frames via the timeline's
   `transitionMs`) → *wave* (a bright crest left → right, column
