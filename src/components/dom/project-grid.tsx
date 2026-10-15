@@ -471,7 +471,7 @@ export function ProjectGrid() {
   }, [])
 
   return (
-    <div className="relative w-full bg-[#F0EDE8] dark:bg-[#090d16] transition-colors duration-500 ease-in-out">
+    <div className="relative w-full bg-background transition-colors duration-500 ease-in-out">
       {/* ── Intro / About Section ── */}
       <div
         ref={aboutRef}

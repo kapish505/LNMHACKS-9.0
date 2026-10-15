@@ -11,7 +11,6 @@ import { EventTimeline } from '@/components/dom/event-timeline'
 import { Navbar } from '@/components/dom/navbar'
 import { WebsiteLoader } from '@/components/dom/website-loader'
 import { CloudSky } from '@/components/canvas/cloud-sky'
-import { FixedFooter } from '@/components/dom/fixed-footer'
 import ScanGridButton from '@/components/ui/scan-grid-button'
 import { MouseCubeTrail } from '@/components/dom/mouse-cube-trail'
 import { ScrollCircleTransition } from '@/components/canvas/scroll-circle-transition'
@@ -237,13 +236,12 @@ export default function Home() {
   const mainCanvasActive = useMainCanvasActive()
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden">
+    <main className="relative min-h-screen overflow-x-hidden bg-background">
       <WebsiteLoader />
       <Navbar />
-      <FixedFooter />
 
       {/* R3F Canvas — cursor + project meshes */}
-      <div className="fixed inset-0 z-[10] pointer-events-none">
+      <div className="fixed inset-0 z-[10] pointer-events-none bg-transparent">
         <Canvas
           frameloop={mainCanvasActive ? 'always' : 'never'}
           camera={{ position: [0, 0, 5], fov: 45 }}

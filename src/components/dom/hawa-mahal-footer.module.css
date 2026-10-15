@@ -1,0 +1,108 @@
+.stage {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  width: 100%;
+  background-color: var(--background);
+  transition: background-color 500ms ease;
+}
+
+.facade {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: saturate(0.88) contrast(1.025);
+  animation: facade-arrive 1.4s cubic-bezier(0.2, 0.72, 0.18, 1) both, facade-breathe 9s ease-in-out 1.4s infinite;
+  transform-origin: 50% 100%;
+}
+
+.fairyLights {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.lightCable,
+.bulbGlow,
+.bulbs {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lightCable {
+  stroke: rgba(126, 85, 44, 0.72);
+  stroke-width: 1.8;
+}
+
+.bulbGlow {
+  stroke: rgba(238, 173, 91, 0.52);
+  stroke-width: 13;
+  stroke-dasharray: 0.6 26;
+  filter: drop-shadow(0 0 5px rgba(234, 160, 70, 0.5));
+  animation: fairy-twinkle 3.8s ease-in-out infinite alternate;
+}
+
+.bulbs {
+  stroke: #fff0c4;
+  stroke-width: 7;
+  stroke-dasharray: 0.75 26;
+  filter: drop-shadow(0 0 3px rgba(194, 125, 53, 0.74));
+  animation: fairy-flow 22s linear infinite, fairy-twinkle 4.7s ease-in-out infinite alternate;
+}
+
+:global(.dark) .facade {
+  filter: saturate(0.82) brightness(0.88) contrast(1.08);
+}
+
+:global(.dark) .lightCable {
+  stroke: rgba(255, 206, 127, 0.82);
+  stroke-width: 2.2;
+  filter: drop-shadow(0 0 3px rgba(255, 172, 86, 0.5));
+}
+
+:global(.dark) .bulbGlow {
+  stroke: rgba(255, 164, 74, 0.88);
+  stroke-width: 17;
+  filter: drop-shadow(0 0 8px rgba(255, 153, 59, 0.74));
+}
+
+:global(.dark) .bulbs {
+  stroke: #ffe2a0;
+  stroke-width: 8;
+  filter: drop-shadow(0 0 5px rgba(255, 170, 75, 0.95));
+}
+
+@keyframes facade-arrive {
+  from { opacity: 0; transform: translateY(22px) scale(1.015); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes facade-breathe {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes fairy-twinkle {
+  0%, 100% { opacity: 0.58; }
+  44% { opacity: 1; }
+  72% { opacity: 0.7; }
+}
+
+@keyframes fairy-flow {
+  to { stroke-dashoffset: -26.75; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .facade,
+  .bulbGlow,
+  .bulbs {
+    animation: none;
+  }
+}

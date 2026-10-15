@@ -27,7 +27,7 @@ const DEFAULT_ITEMS: string[] = [
 export function GlimpsesSection() {
   const [carouselItems, setCarouselItems] = useState<string[]>(DEFAULT_ITEMS)
   const { theme } = useTheme()
-  const isDark = theme === 'dark'
+  const carouselBackground = theme === 'dark' ? '#090d16' : '#F0EDE8'
 
   useEffect(() => {
     fetch('/api/glimpses')
@@ -45,7 +45,7 @@ export function GlimpsesSection() {
   return (
     <div
       id="glimpses"
-      className="relative z-30 w-full flex flex-col justify-start pt-12 sm:pt-20 pb-16 sm:pb-24 bg-[#F0EDE8] dark:bg-[#090d16] transition-colors duration-500 ease-in-out pointer-events-auto"
+      className="relative z-30 w-full flex flex-col justify-start pt-12 sm:pt-20 pb-16 sm:pb-24 pointer-events-auto"
     >
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-14 pb-8 sm:pb-12 text-left">
         <span
@@ -77,7 +77,7 @@ export function GlimpsesSection() {
       <div className="w-full h-[360px] sm:h-[460px] md:h-[540px] lg:h-[620px] pointer-events-auto">
         <LiquidGlassCarousel
           items={carouselItems}
-          background={isDark ? "#090d16" : "#F0EDE8"}
+          background={carouselBackground}
           sizeMode="image"
           cardWidth={620}
           cardHeight={440}

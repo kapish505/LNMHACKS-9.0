@@ -243,6 +243,7 @@ const lensFragmentShader =  `
   precision highp float;
   varying vec2 vUv;
   uniform sampler2D uTex;
+  uniform vec3 uBackground;
   uniform vec2  uRes;
   uniform vec2  uCenter;
   uniform float uSizeX;
@@ -283,6 +284,11 @@ const lensFragmentShader =  `
   float sdRoundBox(vec2 p, vec2 b, float r){
     vec2 q = abs(p) - b + r;
     return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - r;
+  }
+
+  vec3 sampleBackdrop(vec2 uv) {
+    vec4 sampleColor = texture2D(uTex, clamp(uv, 0.0, 1.0));
+    return mix(uBackground, sampleColor.rgb, sampleColor.a);
   }
 
   vec3 discLens(vec2 center, float aspectCorrect, out float outA) {
@@ -332,14 +338,14 @@ const lensFragmentShader =  `
     vec3 col = vec3(0.0);
 
     if (uDispersion < 0.01) {
-      col = texture2D(uTex, baseUV).rgb;
+      col = sampleBackdrop(baseUV);
     } else {
       vec3 caW = vec3(0.0);
       for (int i = 0; i < MAX_SAMPLES; i++) {
         if (i >= N) break;
         float t = float(i) / float(N - 1);
         vec2 sUV = baseUV + dispDir * (t - 0.5);
-        vec3 s = texture2D(uTex, sUV).rgb;
+        vec3 s = sampleBackdrop(sUV);
         vec3 w = vec3(
           exp(-pow((t - 0.00) / 0.38, 2.0)),
           exp(-pow((t - 0.50) / 0.38, 2.0)),
@@ -360,7 +366,7 @@ const lensFragmentShader =  `
         for (float rr = 0.4; rr <= 1.001; rr += 0.3) {
           vec2 o = vec2(cos(a), sin(a)) * blurRad * rr;
           float w = 1.0 - rr * 0.38;
-          bcol += texture2D(uTex, baseUV + o).rgb * w;
+          bcol += sampleBackdrop(baseUV + o) * w;
           btw += w;
         }
       }
@@ -388,12 +394,15 @@ const lensFragmentShader =  `
     vec3 edgeCol = mix(vec3(1.0), uBlueColor, 0.55);
     col += edgeCol * (exp(-pow((dC - uRimLinePos) / max(uRimLineWidth, 0.0001), 2.0)) * uRimLine);
 
-    outA = smoothstep(1.0, 0.93, maskND);
+    // Keep the lens opaque through its face, then feather only the outer edge.
+    // smoothstep requires ascending bounds; reversed bounds are undefined in GLSL.
+    outA = 1.0 - smoothstep(0.93, 1.0, maskND);
     return col;
   }
 
   void main(){
-    vec3 base = texture2D(uTex, vUv).rgb;
+    vec4 backdrop = texture2D(uTex, vUv);
+    vec3 base = mix(uBackground, backdrop.rgb, backdrop.a);
     vec3 outc = base;
 
     float a = 0.0;
@@ -408,7 +417,7 @@ const lensFragmentShader =  `
       outc *= clamp(vig, 0.0, 1.0);
     }
 
-    gl_FragColor = vec4(outc, 1.0);
+    gl_FragColor = vec4(outc, max(backdrop.a, a));
   }
 `
 
@@ -741,14 +750,15 @@ function createEngine(mount: HTMLElement, getParams: () => Params) {
     const clearColor = new THREE.Color()
     let clearKey = ""
     function applyClear() {
-        if (pp.background === clearKey) return
-        clearKey = pp.background
-        try {
-            clearColor.set(pp.background)
-        } catch {
-            clearColor.set("#F0EDE8")
-        }
-        renderer.setClearColor(clearColor, 1)
+      const background = pp.background ?? "#F0EDE8"
+      if (background === clearKey) return
+      clearKey = background
+      try {
+        clearColor.set(background)
+      } catch {
+        clearColor.set("#F0EDE8")
+      }
+      renderer.setClearColor(clearColor, 0)
     }
     applyClear()
 
@@ -907,6 +917,7 @@ function createEngine(mount: HTMLElement, getParams: () => Params) {
     const lensCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
     const lensU = {
         uTex: { value: rt.texture as THREE.Texture },
+        uBackground: { value: new THREE.Color(pp.background ?? "#F0EDE8") },
         uRes: { value: new THREE.Vector2(W * dpr, H * dpr) },
         uCenter: { value: new THREE.Vector2(0.5, 0.5) },
         uSizeX: { value: 0.565 },
@@ -946,6 +957,10 @@ function createEngine(mount: HTMLElement, getParams: () => Params) {
         uniforms: lensU,
         vertexShader: lensVertexShader,
         fragmentShader: lensFragmentShader,
+        // The quad covers the full viewport, so pixels outside the lens must
+        // blend through to the page instead of painting the render target clear color.
+        transparent: true,
+        depthWrite: false,
     })
     const lensQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), lensMat)
     lensScene.add(lensQuad)
@@ -958,6 +973,7 @@ function createEngine(mount: HTMLElement, getParams: () => Params) {
     function syncLens(now: number) {
         const L = pp.lens
         const rad = (a: number) => (a * Math.PI) / 180
+        lensU.uBackground.value.set(pp.background ?? "#F0EDE8")
         lensU.uCenter.value.set(L.posX, L.posY)
         lensU.uAspect.value = W / H
         lensU.uTime.value = now * 0.001
@@ -2016,7 +2032,7 @@ export default function LiquidGlassCarousel(props: LiquidGlassCarouselProps) {
                 overflow: "hidden",
 
                 touchAction: "none",
-                background: paramsRef.current.background,
+                background: "transparent",
                 transition: "background-color 0.5s ease-in-out",
                 ...props.style,
             }}
