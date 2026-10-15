@@ -180,9 +180,12 @@ information band continues the building without a seam.
 - **Light show** – after the opening sweep (each window on its own delay by
   floor and distance from the axis) a 29 s loop plays through `playTimeline`:
   *pillars* (large bays, floor by floor, centre outwards) → *lattice* (small
-  bays fill in) → *letters* (L N M H A C K S spelled on a 3-row × 7-column
-  field: floors 2 and 3 columns 4–10, floor 4 columns 4–6 and 8–10, the apex
-  window as the top-row centre) → *wave* (a bright crest left → right, column
+  bays fill in) → *letters* (the whole facade goes dark — outer bays, ground
+  niches and tower arches included — and L N M H A C K S are spelled one at a
+  time, 1 s on / 0.32 s dark, on a 3-row × 7-column field: floors 2 and 3
+  columns 4–10, floor 4 columns 4–6 and 8–10, the apex window as the top-row
+  centre; pane fades drop to 160 ms for crisp frames via the timeline's
+  `transitionMs`) → *wave* (a bright crest left → right, column
   by column) → *crown pulses* and a centre-out ripple. The resting look is a
   size hierarchy: large bays `active`, small bays `soft`, niches and tower
   arches faint. `prefers-reduced-motion` gets the resting look only.

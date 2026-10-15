@@ -153,12 +153,17 @@ const restingState = (w: WindowInfo): LightState => (w.kind === 'large' ? 'activ
  * Builds one loop of the show as a per-window timeline (ms):
  *   0–3.0 s   pillars: the large bays light, floor by floor, centre outwards
  *   3.2–6.2 s lattice: the small bays fill in between
- *   6.4–19 s  letters: L N M H A C K S spelled on the window field
- *   19.6 s    wave: a bright crest sweeps left → right, column by column
- *   24 s      crown: the apex and stepped storey pulse, then a centre-out ripple
- *   29 s      loop
+ *   6.4–18 s  letters: the whole facade goes dark (outer bays, niches and
+ *             tower arches included) and L N M H A C K S are spelled one at a
+ *             time on the window field with a dark gap between letters
+ *   18.6 s    wave: a bright crest sweeps left → right, column by column
+ *   23 s      crown: the apex and stepped storey pulse, then a centre-out ripple
+ *   28 s      loop
+ *
+ * `ambientIds` are the openings outside the jharokhas (ground niches, tower
+ * and turret arches) that glow softly the rest of the time.
  */
-function buildShow(): WindowTimeline {
+function buildShow(ambientIds: string[]): WindowTimeline {
   const windows = HAWA_MAHAL_INVENTORY.windows as readonly WindowInfo[]
   const floor2 = windows.filter((w) => w.floor === 2).slice().sort((a, b) => a.cx - b.cx)
   const colOf = (w: WindowInfo) => {
@@ -176,7 +181,8 @@ function buildShow(): WindowTimeline {
   }
   const cols = new Map(windows.map((w) => [w.id, colOf(w)]))
   const tl: WindowTimeline = {}
-  const at = (id: string, t: number, state: LightState) => (tl[id] ??= []).push({ at: Math.round(t), state })
+  const at = (id: string, t: number, state: LightState, transitionMs?: number) =>
+    (tl[id] ??= []).push(transitionMs === undefined ? { at: Math.round(t), state } : { at: Math.round(t), state, transitionMs })
   const byDist = (list: WindowInfo[]) => list.slice().sort((a, b) => Math.abs(a.cx - 1004) - Math.abs(b.cx - 1004))
 
   // pillars
@@ -207,21 +213,26 @@ function buildShow(): WindowTimeline {
     return c >= 4 && c <= 10 && (w.floor !== 4 || c !== 7)
   })
   const rowOf = (w: WindowInfo) => (w.floor === 2 ? 2 : w.floor === 3 ? 1 : 0)
-  const fringe = windows.filter((w) => !field.includes(w))
   const lettersStart = 6400
-  for (const w of fringe) at(w.id, lettersStart, 'soft')
-  for (const w of field) at(w.id, lettersStart, 'off')
-  const frameMs = 1450
+  const LETTER_ON = 1000 // a letter stays lit this long …
+  const LETTER_GAP = 320 // … then everything is dark before the next one
+  // blackout: every opening on the facade goes dark and panes switch fast, so
+  // each letter reads as a crisp frame rather than a cross-fade
+  windows.forEach((w, i) => at(w.id, lettersStart, 'off', i === 0 ? 160 : undefined))
+  for (const id of ambientIds) at(id, lettersStart, 'off')
   WORD.split('').forEach((ch, i) => {
     const glyph = GLYPHS[ch]
-    const t0 = lettersStart + 500 + i * frameMs
+    const t0 = lettersStart + 700 + i * (LETTER_ON + LETTER_GAP)
     for (const w of field) {
-      const lit = glyph[rowOf(w)][cols.get(w.id)! - 4] === 1
-      at(w.id, t0, lit ? 'accent' : 'off')
+      if (glyph[rowOf(w)][cols.get(w.id)! - 4] !== 1) continue
+      at(w.id, t0, 'accent')
+      at(w.id, t0 + LETTER_ON, 'off')
     }
   })
-  const lettersEnd = lettersStart + 500 + WORD.length * frameMs
-  for (const w of windows) at(w.id, lettersEnd, restingState(w))
+  const lettersEnd = lettersStart + 700 + WORD.length * (LETTER_ON + LETTER_GAP) + 300
+  // back to the resting look with the normal, soft fade
+  windows.forEach((w, i) => at(w.id, lettersEnd, restingState(w), i === 0 ? 650 : undefined))
+  for (const id of ambientIds) at(id, lettersEnd, 'soft')
   // wave left → right
   const waveStart = lettersEnd + 600
   for (const w of windows) {
@@ -265,7 +276,11 @@ export function HawaMahalFooter() {
       resting()
       return
     }
-    showRef.current = lights.playTimeline(buildShow(), { loop: true })
+    const ambient = [
+      ...lights.nicheIds(),
+      ...lights.openingIds().filter((id) => id.startsWith('tower-') || id.startsWith('turret-')),
+    ]
+    showRef.current = lights.playTimeline(buildShow(ambient), { loop: true })
   }, [])
 
   const onReady = useCallback((lights: HawaMahalLights) => {

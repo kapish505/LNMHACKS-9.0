@@ -37,6 +37,12 @@ export interface TimelineEvent {
   /** Milliseconds from the start of the timeline. */
   at: number
   state: LightState
+  /**
+   * Optionally change how fast panes fade from this event on (sets the SVG's
+   * `--hm-transition`). Use a short value for crisp pattern frames and restore
+   * the default (650) afterwards.
+   */
+  transitionMs?: number
 }
 
 /** Per-window schedule: each window (or opening) gets its own list of events. */
@@ -209,6 +215,12 @@ export class HawaMahalLights {
     this.playback = null
   }
 
+  /** How long panes take to change colour, in ms (the SVG's `--hm-transition`). */
+  setTransition(ms: number): void {
+    const style = (this.root as HTMLElement | SVGElement).style
+    if (style) style.setProperty('--hm-transition', `${Math.max(0, ms)}ms`)
+  }
+
   /**
    * Play a per-window timeline. Each key is any addressable id; each value is
    * that window's own list of `{ at, state }` events in ms. Events are applied
@@ -217,12 +229,12 @@ export class HawaMahalLights {
    */
   playTimeline(timeline: WindowTimeline, options: { loop?: boolean; onDone?: () => void } = {}): PlaybackController {
     this.stop()
-    const events: Array<{ at: number; id: string; state: LightState }> = []
+    const events: Array<{ at: number; id: string; state: LightState; transitionMs?: number }> = []
     let duration = 0
     for (const [id, list] of Object.entries(timeline)) {
       for (const e of list) {
         if (!isLightState(e.state)) throw new Error(`Unknown light state "${e.state}" for ${id}`)
-        events.push({ at: Math.max(0, e.at), id, state: e.state })
+        events.push({ at: Math.max(0, e.at), id, state: e.state, transitionMs: e.transitionMs })
         duration = Math.max(duration, e.at)
       }
     }
@@ -241,6 +253,7 @@ export class HawaMahalLights {
       const t = now - start
       while (cursor < events.length && events[cursor].at <= t) {
         const e = events[cursor++]
+        if (e.transitionMs !== undefined) this.setTransition(e.transitionMs)
         this.setWindowLight(e.id, e.state)
       }
       if (cursor < events.length) {
