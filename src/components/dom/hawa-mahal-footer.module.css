@@ -1,109 +1,162 @@
+/*
+ * Footer stage: the page colour dusks into a night sky with stars and the
+ * moon, and the vector Hawa Mahal rises into place as the footer scrolls into
+ * view. The information band below uses the facade's plinth colour
+ * (--footer-base, set by the component) so the building runs straight into it.
+ *
+ * --reveal (0 → 1) is driven by an IntersectionObserver in the component.
+ */
 .stage {
+  --reveal: 1;
   position: relative;
   isolation: isolate;
   overflow: hidden;
   width: 100%;
-  min-height: calc(100vw * 0.563);
+  /* facade is 2022:778 (38.5vw tall); the rest is sky */
+  height: clamp(18rem, 48vw, 60rem);
+  background: var(--footer-base);
 }
 
-.facade {
+/* page colour → dusk violet → night: no hard edge in either theme */
+.sky {
   position: absolute;
   z-index: 1;
   inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
+  background: linear-gradient(
+    180deg,
+    var(--background, #090d16) 0%,
+    color-mix(in srgb, var(--background, #090d16) 55%, #2a1d4e) 12%,
+    #1a1748 26%,
+    #0b1444 48%,
+    #04061a 100%
+  );
 }
 
-.fairyLights {
+/* warm floodlight haze rising from the building into the sky */
+.horizon {
   position: absolute;
   z-index: 3;
   inset: 0;
+  background: radial-gradient(110% 70% at 50% 100%, rgba(255, 128, 40, 0.42) 0%, rgba(255, 96, 24, 0.14) 32%, rgba(20, 16, 50, 0) 60%);
+  opacity: var(--reveal);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* the facade and the sky layer share one box so their coordinates coincide */
+.building {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: 0;
   width: 100%;
   height: 100%;
+  transform: translate(-50%, calc((1 - var(--reveal)) * 9%));
+  transition: transform 160ms linear;
+  will-change: transform;
+}
+
+.skyLayer,
+.facade {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.skyLayer {
   overflow: visible;
   pointer-events: none;
 }
 
-.lightCable,
-.bulbGlow,
-.bulbs {
-  fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.facade :global(svg) {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
-.lightCable {
-  stroke: rgba(126, 85, 44, 0.72);
-  stroke-width: 1.8;
+.star {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: star-twinkle 3s ease-in-out infinite alternate;
 }
 
-.bulbGlow {
-  stroke: rgba(238, 173, 91, 0.52);
-  stroke-width: 13;
-  stroke-dasharray: 0.6 26;
-  filter: drop-shadow(0 0 5px rgba(234, 160, 70, 0.5));
-  animation: fairy-twinkle 3.8s ease-in-out infinite alternate;
+.moon {
+  filter: drop-shadow(0 0 14px rgba(255, 240, 190, 0.35));
 }
 
-.bulbs {
-  stroke: #fff0c4;
-  stroke-width: 7;
-  stroke-dasharray: 0.75 26;
-  filter: drop-shadow(0 0 3px rgba(194, 125, 53, 0.74));
-  animation: fairy-flow 22s linear infinite, fairy-twinkle 4.7s ease-in-out infinite alternate;
+/* header: wordmark top-left, in open sky above the left tower */
+.header {
+  position: absolute;
+  z-index: 6;
+  left: clamp(1rem, 5vw, 4.5rem);
+  top: 21%;
+  opacity: var(--reveal);
+  transform: translateY(calc((1 - var(--reveal)) * 1.5rem));
+  transition: transform 160ms linear;
+  pointer-events: none;
+}
+
+.wordmark {
+  display: flex;
+  gap: 0.2em;
+  margin: 0;
+  font-size: clamp(1.7rem, 4vw, 3.6rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+}
+
+.wordmarkA {
+  color: #ffd27a;
+}
+
+.wordmarkB {
+  color: #f4dcb6;
+}
+
+.tagline {
+  margin: 0.6em 0 0;
+  font-size: clamp(0.55rem, 0.85vw, 0.8rem);
+  letter-spacing: 0.18em;
+  color: rgba(244, 220, 182, 0.72);
 }
 
 .footerContent {
-  position: absolute;
-  z-index: 5;
-  inset-inline: 0;
-  bottom: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(3, 6, 13, 0) 0%,
-    rgba(3, 6, 13, 0.12) 18%,
-    rgba(3, 6, 13, 0.34) 68%,
-    rgba(3, 6, 13, 0.46) 100%
-  );
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
+  background: var(--footer-base);
+  color: #f4dcb6;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
 }
 
 @media (max-width: 767px) {
   .stage {
-    min-height: clamp(42rem, 80svh, 58rem);
+    height: clamp(24rem, 96vw, 38rem);
   }
 
-  .facade {
-    object-position: center;
+  /* wider than the viewport so the central bays stay legible; the plinth
+     still spans the full width because the sides are the same colour */
+  .building {
+    width: 175%;
   }
 
-  .footerContent {
-    background: linear-gradient(
-      180deg,
-      rgba(3, 6, 13, 0.12) 0%,
-      rgba(3, 6, 13, 0.24) 24%,
-      rgba(3, 6, 13, 0.46) 64%,
-      rgba(3, 6, 13, 0.56) 100%
-    );
+  .header {
+    top: 15%;
   }
 }
 
-@keyframes fairy-twinkle {
-  0%, 100% { opacity: 0.58; }
-  44% { opacity: 1; }
-  72% { opacity: 0.7; }
-}
-
-@keyframes fairy-flow {
-  to { stroke-dashoffset: -26.75; }
+@keyframes star-twinkle {
+  from { opacity: 0.35; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1.1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bulbGlow,
-  .bulbs {
+  .star {
     animation: none;
+  }
+
+  .building,
+  .header {
+    transition: none;
   }
 }
