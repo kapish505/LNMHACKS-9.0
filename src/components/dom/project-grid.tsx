@@ -3,6 +3,7 @@
 import { useRef, useCallback, useEffect } from 'react'
 import { AboutRingLogo, type RingPointerState } from '@/components/dom/about-ring-logo'
 import { domRegistry } from '@/lib/dom-registry'
+import { SponsorLogoGrid } from '@/components/dom/sponsor-logo-grid'
 
 interface ProjectItem {
   id: string
@@ -21,11 +22,6 @@ const PROJECTS: ProjectItem[] = [
   { id: 'protocol-labs', title: 'PROTOCOL LABS', meta: '', badge: ' SPONSOR', img1: '/projects/proj-3-base.png', img2: '/projects/proj-3-hover.svg', useWebgl: true },
   { id: 'cyrene-ai', title: 'CYRENE AI', meta: '', badge: 'POWERED SPONSOR', img1: '/projects/proj-4-base.png', img2: '/projects/proj-4-hover.svg', useWebgl: true },
   { id: 'noah-ai', title: 'NOAH AI', meta: ' ', badge: 'POWERED SPONSOR', img1: '/projects/proj-5-base.png', img2: '/projects/proj-5-hover.svg', useWebgl: true },
-  { id: 'proj-6', title: 'ADRIVE 阿里云盘', meta: '2020-2022', badge: 'CODING PROJECT', img1: '/projects/proj-6-base.svg', img2: '/projects/proj-6-hover.svg', useWebgl: true },
-  { id: 'proj-7', title: 'SHORE ICON', meta: '2022', badge: 'CODING PROJECT', img1: '/projects/proj-7-base.svg', img2: '/projects/proj-7-hover.svg', useWebgl: true },
-  { id: 'proj-8', title: 'TEAMBITION', meta: '2018-2020', badge: 'CODING PROJECT', img1: '/projects/proj-8-base.svg', img2: '/projects/proj-8-hover.svg', useWebgl: true },
-  { id: 'proj-9', title: 'FOF: SEE HEAR TOUCH', meta: '2022 EVENT ↗', badge: 'CODING PROJECT', img1: '/projects/proj-9-base.svg', img2: '/projects/proj-9-hover.svg', useWebgl: true },
-  { id: 'proj-10', title: 'FOF: DESIGN SYSTEM', meta: '2021 EVENT ↗', badge: 'CODING PROJECT', img1: '/projects/proj-10-base.svg', img2: '/projects/proj-10-hover.svg', useWebgl: true },
 ]
 
 // ─── Reusable Card Shell ─────────────────────────────────────────────
@@ -224,212 +220,6 @@ function CardDarkside() {
     </div>
   )
 }
-
-// ─── 6. Card ADRIVE 阿里云盘 (Smartphone mockup) ──────────────────────
-function CardAdrive() {
-  return (
-    <div className="relative w-full aspect-[3/4] bg-[#ECE9F4] flex items-end justify-center px-4 overflow-hidden">
-      <div className="w-[84%] max-w-[240px] bg-black rounded-t-[38px] border-[5px] border-b-0 border-neutral-800 shadow-2xl pt-3 px-3.5 pb-6">
-        {/* Dynamic Island */}
-        <div className="w-14 h-3.5 bg-neutral-900 rounded-full mx-auto mb-2.5" />
-        {/* Status Bar */}
-        <div className="flex justify-between text-white text-[9px] font-bold px-1 mb-3.5 font-mono">
-          <span>9:41</span>
-          <span>5G 100%</span>
-        </div>
-        {/* 2x2 App Grid */}
-        <div className="grid grid-cols-2 gap-2.5 text-center">
-          {/* Adrive */}
-          <div className="flex flex-col items-center">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-400 flex items-center justify-center shadow-md">
-              <div className="w-5 h-5 rounded-full border-4 border-white" />
-            </div>
-            <span className="text-[8px] text-white/90 mt-1 font-sans">阿里云盘</span>
-          </div>
-          {/* Calendar */}
-          <div className="flex flex-col items-center">
-            <div className="w-11 h-11 rounded-2xl bg-white flex flex-col items-center justify-center shadow-md">
-              <span className="text-[7px] font-bold text-red-500 uppercase tracking-tighter">Tue</span>
-              <span className="text-xs font-black text-black leading-none">1</span>
-            </div>
-            <span className="text-[8px] text-white/90 mt-1 font-sans">Calendar</span>
-          </div>
-          {/* Notes */}
-          <div className="flex flex-col items-center">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-b from-yellow-300 to-yellow-400 flex flex-col justify-center px-2 shadow-md">
-              <div className="w-full h-0.5 bg-yellow-600/40 my-0.5" />
-              <div className="w-3/4 h-0.5 bg-yellow-600/40 my-0.5" />
-            </div>
-            <span className="text-[8px] text-white/90 mt-1 font-sans">Notes</span>
-          </div>
-          {/* Mail */}
-          <div className="flex flex-col items-center">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-400 to-blue-600 flex items-center justify-center shadow-md text-white text-xs">
-              ✉
-            </div>
-            <span className="text-[8px] text-white/90 mt-1 font-sans">Mail</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── 7. Card Shore Icon (3x4 icon grid) ──────────────────────────────
-function CardShoreIcon() {
-  const glyphs = [
-    // 1. Smiley
-    <svg key="1" viewBox="0 0 24 24" className="w-5 h-5 stroke-white fill-none stroke-[1.75] stroke-linecap-round stroke-linejoin-round"><circle cx="12" cy="12" r="9" /><path d="M 8 13 C 8 16 16 16 16 13" /><circle cx="9" cy="9.5" r="1" fill="white" stroke="none" /><circle cx="15" cy="9.5" r="1" fill="white" stroke="none" /></svg>,
-    // 2. Lightbulb
-    <svg key="2" viewBox="0 0 24 24" className="w-5 h-5 stroke-white fill-none stroke-[1.75] stroke-linecap-round stroke-linejoin-round"><path d="M 9 18 H 15 M 10 21 H 14 M 12 2 A 6 6 0 0 0 6 8 C 6 11 9 13 9 15 H 15 C 15 13 18 11 18 8 A 6 6 0 0 0 12 2 Z" /></svg>,
-    // 3. Copy
-    <svg key="3" viewBox="0 0 24 24" className="w-5 h-5 stroke-white fill-none stroke-[1.75] stroke-linecap-round stroke-linejoin-round"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M 5 15 H 4 A 2 2 0 0 1 2 13 V 4 A 2 2 0 0 1 4 2 H 13 A 2 2 0 0 1 15 4 V 5" /></svg>,
-    // 4. Video Camera
-    <svg key="4" viewBox="0 0 24 24" className="w-5 h-5 stroke-white fill-none stroke-[1.75] stroke-linecap-round stroke-linejoin-round"><path d="M 15 10 L 21 6 V 18 L 15 14 Z" /><rect x="3" y="6" width="12" height="12" rx="2" /></svg>,
-    // 5. Home
-    <svg key="5" viewBox="0 0 24 24" className="w-5 h-5 stroke-white fill-none stroke-[1.75] stroke-linecap-round stroke-linejoin-round"><path d="M 3 10 L 12 3 L 21 10 V 20 A 1 1 0 0 1 20 21 H 4 A 1 1 0 0 1 3 20 Z" /><path d="M 9 21 V 13 H 15 V 21" /></svg>,
-    // 6. Link
-    <svg key="6" viewBox="0 0 24 24" className="w-5 h-5 stroke-white fill-none stroke-[1.75] stroke-linecap-round stroke-linejoin-round"><path d="M 10 13 A 5 5 0 0 0 17 13 L 20 10 A 5 5 0 0 0 13 3 L 11 5" /><path d="M 14 11 A 5 5 0 0 0 7 11 L 4 14 A 5 5 0 0 0 11 21 L 13 19" /></svg>,
-    // 7. Check
-    <svg key="7" viewBox="0 0 24 24" className="w-5 h-5 stroke-white fill-none stroke-[1.75] stroke-linecap-round stroke-linejoin-round"><circle cx="12" cy="12" r="9" /><path d="M 8 12 L 11 15 L 16 9" /></svg>,
-    // 8. Users
-    <svg key="8" viewBox="0 0 24 24" className="w-5 h-5 stroke-white fill-none stroke-[1.75] stroke-linecap-round stroke-linejoin-round"><circle cx="9" cy="7" r="3.5" /><path d="M 2 19 A 7 7 0 0 1 16 19" /><circle cx="17" cy="8" r="2.5" /><path d="M 16 14 A 5 5 0 0 1 22 18" /></svg>,
-    // 9. Search
-    <svg key="9" viewBox="0 0 24 24" className="w-5 h-5 stroke-white fill-none stroke-[1.75] stroke-linecap-round stroke-linejoin-round"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M 15.5 15.5 L 21 21" /></svg>,
-    // 10. Speaker
-    <svg key="10" viewBox="0 0 24 24" className="w-5 h-5 stroke-white fill-none stroke-[1.75] stroke-linecap-round stroke-linejoin-round"><polygon points="4,9 8,9 13,5 13,19 8,15 4,15" fill="white" /><path d="M 16 9 A 4 4 0 0 1 16 15 M 19 6 A 8 8 0 0 1 19 18" /></svg>,
-    // 11. Download
-    <svg key="11" viewBox="0 0 24 24" className="w-5 h-5 stroke-white fill-none stroke-[1.75] stroke-linecap-round stroke-linejoin-round"><path d="M 12 3 V 15 M 7 10 L 12 15 L 17 10" /><path d="M 4 19 H 20" /></svg>,
-    // 12. Music
-    <svg key="12" viewBox="0 0 24 24" className="w-5 h-5 stroke-white fill-none stroke-[1.75] stroke-linecap-round stroke-linejoin-round"><path d="M 9 18 A 3 3 0 1 1 6 15 A 3 3 0 0 1 9 18 Z V 6 L 19 3 V 15 A 3 3 0 1 1 16 12 A 3 3 0 0 1 19 15 Z" /></svg>,
-    // 13. Pencil
-    <svg key="13" viewBox="0 0 24 24" className="w-5 h-5 stroke-white fill-none stroke-[1.75] stroke-linecap-round stroke-linejoin-round"><path d="M 17 3 A 2 2 0 0 1 20 6 L 7 19 L 3 20 L 4 16 Z" /></svg>,
-    // 14. EyeSlash
-    <svg key="14" viewBox="0 0 24 24" className="w-5 h-5 stroke-white fill-none stroke-[1.75] stroke-linecap-round stroke-linejoin-round"><path d="M 2 2 L 22 22 M 9.8 9.8 A 3 3 0 0 0 14.2 14.2 M 2 12 A 13 13 0 0 0 22 12" /></svg>,
-    // 15. Undo
-    <svg key="15" viewBox="0 0 24 24" className="w-5 h-5 stroke-white fill-none stroke-[1.75] stroke-linecap-round stroke-linejoin-round"><path d="M 3 8 H 15 A 6 6 0 1 1 9 19" /><path d="M 7 4 L 3 8 L 7 12" /></svg>,
-    // 16. Mic
-    <svg key="16" viewBox="0 0 24 24" className="w-5 h-5 stroke-white fill-none stroke-[1.75] stroke-linecap-round stroke-linejoin-round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M 5 10 A 7 7 0 0 0 19 10 M 12 17 V 21 M 8 21 H 16" /></svg>,
-  ]
-
-  return (
-    <div className="relative w-full aspect-square bg-[#0B0B0C] flex items-center justify-center p-6 sm:p-8 overflow-hidden">
-      <div className="grid grid-cols-4 gap-4 sm:gap-6 text-white w-full max-w-[240px]">
-        {glyphs}
-      </div>
-    </div>
-  )
-}
-
-// ─── 8. Card Teambition (3D Ribbon T + Sphere) ────────────────────────
-function CardTeambition() {
-  return (
-    <div className="relative w-full aspect-square bg-gradient-to-br from-[#2F80ED] to-[#3B82F6] flex items-center justify-center p-6 overflow-hidden">
-      <div className="relative w-36 h-36 flex items-center justify-center">
-        <svg viewBox="0 0 160 160" className="w-full h-full drop-shadow-xl">
-          <defs>
-            <linearGradient id="ribbonGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#FFFFFF" />
-              <stop offset="100%" stopColor="#99C2FF" />
-            </linearGradient>
-            <linearGradient id="ribbonGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#2563EB" />
-              <stop offset="100%" stopColor="#1D4ED8" />
-            </linearGradient>
-            <radialGradient id="sphereGrad" cx="35%" cy="35%" r="65%">
-              <stop offset="0%" stopColor="#60A5FA" />
-              <stop offset="60%" stopColor="#1E40AF" />
-              <stop offset="100%" stopColor="#0F172A" />
-            </radialGradient>
-          </defs>
-          {/* Horizontal loop of T */}
-          <path
-            d="M 25,50 C 25,32 135,32 135,50 C 135,68 25,68 25,50 Z"
-            fill="url(#ribbonGrad1)"
-          />
-          {/* Vertical stem of T */}
-          <path
-            d="M 68,50 L 92,50 L 92,125 C 92,128 68,128 68,125 Z"
-            fill="url(#ribbonGrad2)"
-          />
-          {/* 3D sphere */}
-          <circle cx="112" cy="50" r="16" fill="url(#sphereGrad)" />
-        </svg>
-      </div>
-    </div>
-  )
-}
-
-// ─── 9. Card FOF: SEE HEAR TOUCH ─────────────────────────────────────
-function CardFofSeeHearTouch() {
-  return (
-    <div className="relative w-full aspect-square bg-[#E87661] flex items-center justify-center p-6 overflow-hidden">
-      <div className="flex flex-col gap-3 w-full max-w-[240px]">
-        {/* Frame 1: SEE */}
-        <div className="relative h-12 bg-black border-2 border-neutral-900 shadow-md flex items-center justify-between px-3 overflow-hidden">
-          <div className="w-16 h-8 bg-neutral-800 rounded flex items-center justify-center text-neutral-400 text-xs">
-            👁
-          </div>
-          <span className="font-sans font-black text-lg text-white tracking-wider">SEE</span>
-        </div>
-        {/* Frame 2: HEAR */}
-        <div className="relative h-12 bg-black border-2 border-neutral-900 shadow-md flex items-center justify-between px-3 overflow-hidden">
-          <div className="w-16 h-8 bg-neutral-800 rounded flex items-center justify-center text-neutral-400 text-xs">
-            👂
-          </div>
-          <span className="font-sans font-black text-lg text-white tracking-wider">HEAR</span>
-        </div>
-        {/* Frame 3: TOUCH */}
-        <div className="relative h-12 bg-black border-2 border-neutral-900 shadow-md flex items-center justify-between px-3 overflow-hidden">
-          <div className="w-16 h-8 bg-neutral-800 rounded flex items-center justify-center text-neutral-400 text-xs">
-            ✋
-          </div>
-          <span className="font-sans font-black text-lg text-white tracking-wider">TOUCH</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── 10. Card FOF: DESIGN SYSTEM (3D Isometric Blocks) ────────────────
-function CardFofDesignSystem() {
-  return (
-    <div className="relative w-full aspect-square bg-[#C6C8F5] flex items-center justify-center p-6 overflow-hidden">
-      <div className="relative w-44 h-44 flex flex-col items-center justify-center">
-        <svg viewBox="0 0 160 160" className="w-full h-full drop-shadow-md">
-          <g transform="translate(10, 10)">
-            {/* init */}
-            <path d="M 20,40 L 35,32 L 35,65 L 20,73 Z" fill="#FFFFFF" stroke="#94A3B8" strokeWidth="1" />
-            <path d="M 20,40 L 35,32 L 45,38 L 30,46 Z" fill="#F8FAFC" stroke="#94A3B8" strokeWidth="1" />
-            <path d="M 50,30 L 65,22 L 65,65 L 50,73 Z" fill="#FFFFFF" stroke="#94A3B8" strokeWidth="1" />
-            <path d="M 80,40 L 95,32 L 95,65 L 80,73 Z" fill="#FFFFFF" stroke="#94A3B8" strokeWidth="1" />
-            <path d="M 110,25 L 125,17 L 125,65 L 110,73 Z" fill="#FFFFFF" stroke="#94A3B8" strokeWidth="1" />
-            {/* Accent colored isometric cubes */}
-            <polygon points="35,20 45,14 55,20 45,26" fill="#F87171" />
-            <polygon points="35,20 45,26 45,36 35,30" fill="#EF4444" />
-            <polygon points="55,20 45,26 45,36 55,30" fill="#DC2626" />
-
-            <polygon points="120,40 130,34 140,40 130,46" fill="#60A5FA" />
-            <polygon points="120,40 130,46 130,56 120,50" fill="#3B82F6" />
-            <polygon points="140,40 130,46 130,56 140,50" fill="#2563EB" />
-
-            {/* 系统 isometric grid */}
-            <path d="M 25,85 L 60,65 L 75,74 L 40,94 Z" fill="#FFFFFF" stroke="#94A3B8" strokeWidth="1" />
-            <path d="M 35,92 L 50,83 L 50,125 L 35,134 Z" fill="#F1F5F9" stroke="#94A3B8" strokeWidth="1" />
-            <path d="M 65,85 L 115,56 L 130,65 L 80,94 Z" fill="#FFFFFF" stroke="#94A3B8" strokeWidth="1" />
-            <path d="M 85,92 L 100,83 L 100,125 L 85,134 Z" fill="#F1F5F9" stroke="#94A3B8" strokeWidth="1" />
-
-            <polygon points="25,120 35,114 45,120 35,126" fill="#4ADE80" />
-            <polygon points="25,120 35,126 35,136 25,130" fill="#22C55E" />
-            <polygon points="45,120 35,126 35,136 45,130" fill="#16A34A" />
-          </g>
-        </svg>
-      </div>
-    </div>
-  )
-}
-
-// ─── Main ProjectGrid Component ──────────────────────────────────────
 export function ProjectGrid() {
   const aboutRef = useRef<HTMLDivElement>(null)
   const logoRef = useRef<HTMLDivElement>(null)
@@ -641,74 +431,8 @@ export function ProjectGrid() {
             </div>
           </div>
 
-          {/* ── ROW 4: Card 6 (ADRIVE) | Card 7 (Shore Icon) | Card 8 (Teambition) ── */}
-          <div className="relative grid grid-cols-1 md:grid-cols-3 items-stretch">
-            {/* Col 1: Card 6 (ADRIVE Phone Mockup) */}
-            <div className="p-4 sm:p-6 lg:p-8">
-              <CardWrapper
-                projectId={PROJECTS[5].id}
-                title={PROJECTS[5].title}
-                meta={PROJECTS[5].meta}
-                badge={PROJECTS[5].badge}
-              >
-                <CardAdrive />
-              </CardWrapper>
-            </div>
-
-            {/* Col 2: Card 7 (Shore Icon Grid) */}
-            <div className="p-4 sm:p-6 lg:p-8">
-              <CardWrapper
-                projectId={PROJECTS[6].id}
-                title={PROJECTS[6].title}
-                meta={PROJECTS[6].meta}
-                badge={PROJECTS[6].badge}
-              >
-                <CardShoreIcon />
-              </CardWrapper>
-            </div>
-
-            {/* Col 3: Card 8 (Teambition) */}
-            <div className="p-4 sm:p-6 lg:p-8">
-              <CardWrapper
-                projectId={PROJECTS[7].id}
-                title={PROJECTS[7].title}
-                meta={PROJECTS[7].meta}
-                badge={PROJECTS[7].badge}
-              >
-                <CardTeambition />
-              </CardWrapper>
-            </div>
-          </div>
-
-          {/* ── ROW 5: Empty Col 1 | Card 9 (FOF: SEE HEAR TOUCH) | Card 10 (FOF: DESIGN SYSTEM) ── */}
-          <div className="relative grid grid-cols-1 md:grid-cols-3 items-stretch">
-            {/* Col 1: Empty Cell */}
-            <div className="hidden md:flex" />
-
-            {/* Col 2: Card 9 (FOF: SEE HEAR TOUCH) */}
-            <div className="p-4 sm:p-6 lg:p-8">
-              <CardWrapper
-                projectId={PROJECTS[8].id}
-                title={PROJECTS[8].title}
-                meta={PROJECTS[8].meta}
-                badge={PROJECTS[8].badge}
-              >
-                <CardFofSeeHearTouch />
-              </CardWrapper>
-            </div>
-
-            {/* Col 3: Card 10 (FOF: DESIGN SYSTEM) */}
-            <div className="p-4 sm:p-6 lg:p-8">
-              <CardWrapper
-                projectId={PROJECTS[9].id}
-                title={PROJECTS[9].title}
-                meta={PROJECTS[9].meta}
-                badge={PROJECTS[9].badge}
-              >
-                <CardFofDesignSystem />
-              </CardWrapper>
-            </div>
-          </div>
+          {/* ── Industry partners: logo cards with a review on hover ── */}
+          <SponsorLogoGrid />
         </div>
       </div>
     </div>
