@@ -380,9 +380,16 @@ export function HawaMahalFooter() {
       <div className={`${styles.footerContent} relative z-10 w-full px-4 pb-10 pt-8 sm:px-8 sm:pb-12 sm:pt-10 lg:px-14`}>
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-12">
           <div className="flex flex-col items-start pr-0 lg:col-span-5 lg:pr-6">
-            <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-[#ffd27a]" style={{ fontFamily: '"tronica-mono", "Courier New", monospace' }}>
-              LNMHACKS 9.0 · The LNM Institute of Information Technology
-            </p>
+            {/* same face as the navbar logo */}
+            <h2
+              className="mb-3 select-none text-2xl uppercase leading-none tracking-wide text-[#f4dcb6] sm:text-3xl"
+              style={{
+                fontFamily: '"Rogient Block", "rogient-block", sans-serif',
+                filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.28))',
+              }}
+            >
+              LNMHACKS 9.0
+            </h2>
             <p className="mb-4 max-w-md text-xs leading-relaxed text-[#f4dcb6]/80 sm:text-sm" style={{ fontFamily: '"tiktok", sans-serif' }}>
               The largest student-run hackathon in India. 72 hours of pure innovation, workshops, and developer culture.
             </p>

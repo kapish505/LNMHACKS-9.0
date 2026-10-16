@@ -330,7 +330,7 @@ export function Navbar() {
             }}
           >
             <ScrambleWord
-              text="LNMHACKS"
+              text="LNMHACKS 9.0"
               trigger={showNav}
             />
           </span>

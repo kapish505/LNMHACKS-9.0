@@ -19,6 +19,7 @@ import { HeroTopBanner } from '@/components/ui/hero-top-banner'
 import { FallingStickers } from '@/components/canvas/glass/stickers'
 import { HawaMahalFooter } from '@/components/dom/hawa-mahal-footer'
 import { GlimpsesSection } from '@/components/dom/glimpses-section'
+import { SponsorSection } from '@/components/dom/sponsor-section'
 import { GlobalGridOverlay } from '@/components/ui/global-grid-overlay'
 import { triggerPageTransition } from '@/lib/page-transition-bus'
 import { useTheme } from '@/lib/theme-context'
@@ -348,6 +349,8 @@ export default function Home() {
       <div id="arrow-section" className="w-full" style={{ height: '937.5vh' }} />
 
       <GlimpsesSection />
+
+      <SponsorSection />
 
       <HawaMahalFooter />
     </main>
