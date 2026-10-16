@@ -5,6 +5,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import { subscribeWebsiteLoaded, isWebsiteLoaded } from '@/lib/loader-bus'
 import { triggerPageTransition } from '@/lib/page-transition-bus'
 import { useTheme } from '@/lib/theme-context'
+import { getArrowSectionVH } from '@/lib/arrow-section-progress'
+import { subscribeLenisScroll } from '@/lib/scroll-bus'
 
 // Characters to cycle through while scrambling
 const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&!'
@@ -20,7 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'TIMELINE', target: 'arrow-section' },
 ]
 
-function ThemeToggle({ className = '' }: { className?: string }) {
+function ThemeToggle({ className = '', isLightNav = true }: { className?: string; isLightNav?: boolean }) {
   const { theme, toggleTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
@@ -36,11 +38,12 @@ function ThemeToggle({ className = '' }: { className?: string }) {
       onClick={toggleTheme}
       suppressHydrationWarning
       aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
-      className={`relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full border transition-all duration-300 cursor-pointer select-none pointer-events-auto ${
-        isDark
-          ? 'bg-white/10 hover:bg-white/20 border-white/25 text-yellow-300 shadow-[0_0_12px_rgba(253,224,71,0.25)]'
-          : 'bg-black/5 hover:bg-black/10 border-black/15 text-slate-800'
-      } ${className}`}
+      className={`relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full border transition-all duration-300 cursor-pointer select-none pointer-events-auto ${isDark
+        ? 'bg-white/10 hover:bg-white/20 border-white/25 text-yellow-300 shadow-[0_0_12px_rgba(253,224,71,0.25)]'
+        : isLightNav
+          ? 'bg-black/5 hover:bg-black/10 border-black/15 text-slate-800'
+          : 'bg-white/10 hover:bg-white/20 border-white/25 text-white/90 shadow-[0_0_12px_rgba(255,255,255,0.15)]'
+        } ${className}`}
     >
       {isDark ? (
         <svg
@@ -224,10 +227,10 @@ export function Navbar() {
   const [showNav, setShowNav] = useState(() => isWebsiteLoaded())
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isPastHero, setIsPastHero] = useState(false)
-  const [isRadialSection, setIsRadialSection] = useState(false)
+  const [isTimelineDarkSection, setIsTimelineDarkSection] = useState(false)
   const { theme } = useTheme()
   const isDark = theme === 'dark'
-  const isLightNav = !isRadialSection && !isDark
+  const isLightNav = !isTimelineDarkSection && !isDark
 
   useEffect(() => {
     const unsub = subscribeWebsiteLoaded((loaded) => {
@@ -238,23 +241,18 @@ export function Navbar() {
 
   useEffect(() => {
     let ticking = false
-    let arrowEl: HTMLElement | null = null
 
     const checkScroll = () => {
       ticking = false
       const vh = window.innerHeight || 800
       setIsPastHero(window.scrollY > vh * 0.55)
 
-      if (!arrowEl) arrowEl = document.getElementById('arrow-section')
-      if (arrowEl) {
-        const aVH = -arrowEl.getBoundingClientRect().top / vh
-        // Upper bound follows the timeline window (2.0→7.0). If this stayed at
-        // 6.0 the nav would flip to black text while the dark timeline field
-        // is still on screen.
-        setIsRadialSection(aVH >= 2.0 && aVH <= 7.0)
-      } else {
-        setIsRadialSection(false)
-      }
+      const aVH = getArrowSectionVH()
+      // The timeline section has a deep black backdrop and runs through 6 milestones
+      // (TIMELINE_START 2.6 -> TIMELINE_END 15.2 -> TIMELINE_EXIT 15.9), surrounded by
+      // cursor-arrow black glass coverage from 2.0 through reverse-arrow shrink at ~16.8.
+      // In light mode, the navbar text MUST remain white during this entire window.
+      setIsTimelineDarkSection(aVH >= 2.0 && aVH <= 16.8)
     }
 
     const onScroll = () => {
@@ -265,8 +263,14 @@ export function Navbar() {
     }
 
     checkScroll()
+    const unsubLenis = subscribeLenisScroll(checkScroll)
     window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+    window.addEventListener('resize', onScroll, { passive: true })
+    return () => {
+      unsubLenis()
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+    }
   }, [])
 
   const scrollToSection = (targetId: string) => {
@@ -322,11 +326,11 @@ export function Navbar() {
           }}
         >
           <span
-            className={`font-normal uppercase text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] leading-none tracking-wide flex items-center transition-colors duration-200 ${
-              isLightNav ? 'text-black' : 'text-white'
-            }`}
+            className={`font-normal uppercase text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] leading-none tracking-wide flex items-center transition-colors duration-200 ${isLightNav ? 'text-black' : 'text-white'
+              }`}
             style={{
-              fontFamily: '"Rogient Block", "rogient-block", sans-serif',
+              fontFamily: '"tiktok", sans-serif',
+              fontVariationSettings: '"wght" 700, "wdth" 100',
             }}
           >
             <ScrambleWord
@@ -343,11 +347,10 @@ export function Navbar() {
               key={item.label}
               type="button"
               onClick={() => scrollToSection(item.target)}
-              className={`relative p-2 uppercase cursor-pointer transition-colors duration-200 select-none text-xs sm:text-sm font-bold tracking-wider before:content-[''] before:absolute before:inset-0 before:border-2 before:border-dotted before:border-transparent before:pointer-events-none before:transition-colors before:duration-200 ${
-                isLightNav
-                  ? 'text-black hover:text-black/70 lg:hover:before:border-black'
-                  : 'text-white hover:text-white/80 lg:hover:before:border-white'
-              }`}
+              className={`relative p-2 uppercase cursor-pointer transition-colors duration-200 select-none text-xs sm:text-sm font-bold tracking-wider before:content-[''] before:absolute before:inset-0 before:border-2 before:border-dotted before:border-transparent before:pointer-events-none before:transition-colors before:duration-200 ${isLightNav
+                ? 'text-black hover:text-black/70 lg:hover:before:border-black'
+                : 'text-white hover:text-white/80 lg:hover:before:border-white'
+                }`}
               style={{
                 fontFamily: '"tiktok", sans-serif',
                 fontVariationSettings: '"wght" 700, "wdth" 110',
@@ -358,15 +361,14 @@ export function Navbar() {
           ))}
 
           {/* Theme Toggle Button */}
-          <ThemeToggle />
+          <ThemeToggle isLightNav={isLightNav} />
 
           {/* Seamless Register button: invisible on hero, appears seamlessly when scrolled, scrolls back to hero */}
           <div
-            className={`transition-all duration-300 ease-out flex items-center ${
-              isPastHero
-                ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto ml-1'
-                : 'opacity-0 -translate-y-2 scale-90 pointer-events-none w-0 overflow-hidden ml-0'
-            }`}
+            className={`transition-all duration-300 ease-out flex items-center ${isPastHero
+              ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto ml-1'
+              : 'opacity-0 -translate-y-2 scale-90 pointer-events-none w-0 overflow-hidden ml-0'
+              }`}
           >
             <button
               type="button"
@@ -386,15 +388,14 @@ export function Navbar() {
         {/* Mobile Menu Action Buttons */}
         <div className="md:hidden flex items-center gap-2 pointer-events-auto">
           {/* Mobile Theme Toggle */}
-          <ThemeToggle />
+          <ThemeToggle isLightNav={isLightNav} />
 
           {/* Seamless Mobile Register button */}
           <div
-            className={`transition-all duration-300 ease-out ${
-              isPastHero
-                ? 'opacity-100 scale-100 pointer-events-auto'
-                : 'opacity-0 scale-90 pointer-events-none w-0 overflow-hidden'
-            }`}
+            className={`transition-all duration-300 ease-out ${isPastHero
+              ? 'opacity-100 scale-100 pointer-events-auto'
+              : 'opacity-0 scale-90 pointer-events-none w-0 overflow-hidden'
+              }`}
           >
             <button
               type="button"
@@ -409,26 +410,22 @@ export function Navbar() {
             type="button"
             aria-label="Toggle Navigation Menu"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
-            className={`p-2 rounded-xl backdrop-blur-md border flex flex-col justify-center items-center w-10 h-10 gap-1.5 active:scale-90 transition-transform ${
-              isLightNav
-                ? 'bg-black/10 border-black/15 text-black'
-                : 'bg-white/10 border-white/20 text-white'
-            }`}
+            className={`p-2 rounded-xl backdrop-blur-md border flex flex-col justify-center items-center w-10 h-10 gap-1.5 active:scale-90 transition-transform ${isLightNav
+              ? 'bg-black/10 border-black/15 text-black'
+              : 'bg-white/10 border-white/20 text-white'
+              }`}
           >
             <span
-              className={`block w-5 h-0.5 transition-transform duration-300 ${
-                isLightNav ? 'bg-black' : 'bg-white'
-              } ${mobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`}
+              className={`block w-5 h-0.5 transition-transform duration-300 ${isLightNav ? 'bg-black' : 'bg-white'
+                } ${mobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`}
             />
             <span
-              className={`block w-5 h-0.5 transition-opacity duration-200 ${
-                isLightNav ? 'bg-black' : 'bg-white'
-              } ${mobileMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+              className={`block w-5 h-0.5 transition-opacity duration-200 ${isLightNav ? 'bg-black' : 'bg-white'
+                } ${mobileMenuOpen ? 'opacity-0' : 'opacity-100'}`}
             />
             <span
-              className={`block w-5 h-0.5 transition-transform duration-300 ${
-                isLightNav ? 'bg-black' : 'bg-white'
-              } ${mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}
+              className={`block w-5 h-0.5 transition-transform duration-300 ${isLightNav ? 'bg-black' : 'bg-white'
+                } ${mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}
             />
           </button>
         </div>

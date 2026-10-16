@@ -13,15 +13,14 @@ const APPEAR_END_VH = -0.3
 const FADE_START_VH = 2.0
 const FADE_END_VH = 2.5
 
-// ─── Reverse Scroll Ranges (Finishes and fades completely by 7.8 VH) ───
-// Shifted +1.0 VH from the original 5.6–6.8 because the timeline section was
-// lengthened by 25% (its window is now 2.0→7.0). The backward arrow still
-// cross-fades in exactly as the timeline fades out, so this has to move with
-// it or the two would overlap on screen.
-const REV_FADE_IN_START = 6.6
-const REV_FADE_IN_END = 7.0
-const REV_FADE_OUT_START = 7.4
-const REV_FADE_OUT_END = 7.8
+// ─── Reverse Scroll Ranges (after the complete six-event timeline) ─────────
+// The timeline now uses a longer, deliberate scroll window through 15.9 VH.
+// Keeping this transition after that exit prevents the fullscreen pointer from
+// cutting across event cards or the walking figure.
+const REV_FADE_IN_START = 16.05
+const REV_FADE_IN_END = 16.42
+const REV_FADE_OUT_START = 16.84
+const REV_FADE_OUT_END = 17.22
 
 const BASE_SCALE = 0.85
 
@@ -195,9 +194,8 @@ export function CursorArrow() {
     let scale = BASE_SCALE
     let rotY = 0
 
-    // Forward/backward split sits in the middle of the (now longer) timeline
-    // window, where the arrow is fully transparent either way.
-    if (aVH < 5.5) {
+    // The two arrow phases sit before and after the timeline window.
+    if (aVH < 15.5) {
       // ── Forward Arrow Phase Timeline ──
       // 1. Initial phase (aVH: -0.2 to 0.4): increase size by 10% normally with 0 rotation
       // 2. Main phase (aVH: 0.4 to 1.8): complete full 180° rotation while growing to 90% screen coverage
@@ -220,28 +218,26 @@ export function CursorArrow() {
       }
     } else {
       // ── Backward Arrow Phase Timeline (Exact Mirror Reverse) ──
-      // Same pacing as before, shifted +1.0 VH to sit after the lengthened
-      // timeline section. Finishes cleanly by 7.8 VH.
-      // 1. Enters at 100% coverage at 180°, shrinks to 90% (aVH: 6.6 to 7.0)
-      // 2. Shrinks from 90% to stage 1 while rotating 180° back to 0° (7.0 to 7.4)
-      // 3. Settles to base scale, then shrinks away (7.4 to 7.8)
-      if (aVH <= 6.6) {
+      // 1. Enters at 100% coverage at 180°, shrinks to 90%.
+      // 2. Shrinks from 90% to stage 1 while rotating back to 0°.
+      // 3. Settles to base scale, then shrinks away.
+      if (aVH <= REV_FADE_IN_START) {
         scale = SCALE_100
         rotY = Math.PI
-      } else if (aVH < 7.0) {
-        const p3 = easeInOutCubic(smoothstep(6.6, 7.0, aVH))
+      } else if (aVH < REV_FADE_IN_END) {
+        const p3 = easeInOutCubic(smoothstep(REV_FADE_IN_START, REV_FADE_IN_END, aVH))
         scale = SCALE_100 - p3 * (SCALE_100 - SCALE_90)
         rotY = Math.PI
-      } else if (aVH < 7.4) {
-        const p2 = easeInOutCubic(smoothstep(7.0, 7.4, aVH))
+      } else if (aVH < REV_FADE_OUT_START) {
+        const p2 = easeInOutCubic(smoothstep(REV_FADE_IN_END, REV_FADE_OUT_START, aVH))
         scale = SCALE_90 - p2 * (SCALE_90 - STAGE1_SCALE)
         rotY = (1.0 - p2) * Math.PI
-      } else if (aVH < 7.6) {
-        const p1 = easeInOutCubic(smoothstep(7.4, 7.6, aVH))
+      } else if (aVH < 17.02) {
+        const p1 = easeInOutCubic(smoothstep(REV_FADE_OUT_START, 17.02, aVH))
         scale = STAGE1_SCALE - p1 * (STAGE1_SCALE - BASE_SCALE)
         rotY = 0
       } else {
-        const pShrink = easeInOutCubic(smoothstep(7.6, 7.8, aVH))
+        const pShrink = easeInOutCubic(smoothstep(17.02, REV_FADE_OUT_END, aVH))
         scale = Math.max(0, BASE_SCALE * (1.0 - pShrink))
         rotY = 0
       }

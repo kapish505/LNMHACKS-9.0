@@ -1,13 +1,16 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { setWebsiteLoaded, isWebsiteLoaded } from '@/lib/loader-bus'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { setWebsiteLoaded, isWebsiteLoaded, subscribeWebsiteLoaded } from '@/lib/loader-bus'
 
 const MIN_DURATION = 1400 // 1.4s smooth load — unchanged, now a floor not a timer
 const HARD_CAP = 5000 // never hold the page hostage if a font request stalls
 
 export function WebsiteLoader() {
-  const [alreadyLoaded] = useState(() => isWebsiteLoaded())
+  // Keep the server snapshot deterministic. Reading the module-level loaded
+  // flag during render can differ between a persistent dev server and a fresh
+  // browser tab, which makes the loader itself a source of hydration warnings.
+  const alreadyLoaded = useSyncExternalStore(subscribeWebsiteLoaded, isWebsiteLoaded, () => false)
   const [isDone, setIsDone] = useState(false)
   const [isHidden, setIsHidden] = useState(false)
 

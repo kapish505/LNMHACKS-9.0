@@ -6,7 +6,9 @@ import { ProjectMeshes } from '@/components/canvas/grid/project-meshes'
 import { ProjectGrid } from '@/components/dom/project-grid'
 import { CursorArrow } from '@/components/canvas/glass/cursor-arrow'
 import { VaporCountdown } from '@/components/ui/countdown-vapor-digits'
-import { HorizontalTimeline } from '@/components/dom/horizontal-timeline'
+import { EventTimeline } from '@/components/canvas/event-timeline'
+import { EventTimelineDOM } from '@/components/dom/event-timeline'
+
 import { Navbar } from '@/components/dom/navbar'
 import { WebsiteLoader } from '@/components/dom/website-loader'
 import { CloudSky } from '@/components/canvas/cloud-sky'
@@ -28,12 +30,11 @@ import { subscribeLenisScroll } from '@/lib/scroll-bus'
 import { Mascot } from 'page-mascot'
 
 /**
- * The main canvas only has something to draw inside a known scroll window:
- * CursorArrow lives in aVH [-0.8, 2.5] and [6.6, 7.8], and ProjectMeshes while
- * the sponsors grid is near the viewport.
- * Everywhere else — notably the entire hero, which is the heaviest part of the
- * page — it was still clearing and compositing a full-viewport transparent
- * buffer and running twelve useFrame callbacks every frame.
+ * CursorArrow lives before the timeline and after its exit, the 3D timeline
+ * occupies [2.4, 15.9], and ProjectMeshes runs while the sponsors grid is
+ * near the viewport.
+ * Everywhere else — notably the entire hero — the transparent full-screen
+ * buffer and its animation callbacks stay paused.
  *
  * The window is padded past each child's fade-out so at least one frame always
  * renders with everything already invisible; the frozen buffer is therefore
@@ -50,10 +51,9 @@ function useMainCanvasActive(): boolean {
     const evaluate = () => {
       ticking = false
       const aVH = getArrowSectionVH()
-      // Upper bound tracks the backward arrow's new end (7.8) plus padding.
-      // It was 7.3, which would now freeze the canvas part-way through that
-      // animation.
-      const next = sponsorsNear || (aVH > -1.3 && aVH < 8.1)
+      // Keep the shared canvas alive through the deliberately longer six-card
+      // timeline and the reverse arrow transition that follows it.
+      const next = sponsorsNear || (aVH > -1.3 && aVH < 17.2)
       if (next !== activeRef.current) {
         activeRef.current = next
         setActive(next)
@@ -246,12 +246,18 @@ export default function Home() {
         <Canvas
           frameloop={mainCanvasActive ? 'always' : 'never'}
           camera={{ position: [0, 0, 5], fov: 45 }}
-          gl={{ alpha: true, powerPreference: 'high-performance' }}
-          dpr={typeof window !== 'undefined' && window.innerWidth < 768 ? [1, 1] : [1, 1.25]}
+          gl={{
+            alpha: true,
+            powerPreference: 'high-performance',
+            antialias: typeof window !== 'undefined' && window.innerWidth >= 768,
+            logarithmicDepthBuffer: false,
+          }}
+          dpr={typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, window.innerWidth < 768 ? 1.5 : 2) : 1}
           style={{ background: 'transparent' }}
         >
           <Suspense fallback={null}>
             <CursorArrow />
+            <EventTimeline />
             <ProjectMeshes />
           </Suspense>
         </Canvas>
@@ -263,8 +269,9 @@ export default function Home() {
       {/* Mouse pointer cube trail in sections after hero */}
       <MouseCubeTrail />
 
-      {/* Pinned horizontal timeline, scrubbed by the radial speed lines section's scroll */}
-      <HorizontalTimeline />
+      {/* Horizontal pipeline event timeline overlay in arrow section */}
+      <EventTimelineDOM />
+
 
       {/* ── Hero section — CloudSky + headline + countdown + scroll circle dissolve ── */}
       <div id="hero" className="relative min-h-[100dvh] w-full flex items-center justify-center overflow-hidden py-16 sm:py-0">
@@ -332,19 +339,19 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="pointer-events-auto absolute bottom-5 right-5 z-30 scale-75 origin-bottom-right sm:bottom-8 sm:right-8 sm:scale-100">
+        <div className="pointer-events-auto absolute bottom-4 right-4 z-30 sm:bottom-8 sm:right-8 md:bottom-10 md:right-12 transition-transform duration-300">
           <Mascot
-            directions="/mascots/kamran-directions.webp"
-            reactions="/mascots/kamran-reactions.webp"
-            size={140}
-            label="Kamran"
+            directions="/mascots/chibi-directions.webp"
+            reactions="/mascots/chibi-reactions.webp"
+            size={185}
+            label="Chibi Mascot"
           />
         </div>
       </div>
 
       <ProjectGrid />
 
-      <div id="arrow-section" className="w-full" style={{ height: '937.5vh' }} />
+      <div id="arrow-section" className="w-full" style={{ height: '1900vh' }} />
 
       <GlimpsesSection />
 

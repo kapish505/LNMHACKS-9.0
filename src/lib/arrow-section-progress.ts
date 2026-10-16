@@ -5,8 +5,7 @@
  * Returns a large negative number if the element doesn't exist,
  * so all scroll-range checks naturally evaluate to "not yet".
  *
- * The value is cached per scroll event. Three independent consumers read this
- * every frame (RadialSpeedLines, CursorArrow, HorizontalTimeline); measuring once
+ * every frame (CursorArrow and EventTimeline); measuring once
  * instead of three times removes two forced layouts per frame. The element
  * reference is cached too, so the common path touches neither
  * getElementById nor getBoundingClientRect.
