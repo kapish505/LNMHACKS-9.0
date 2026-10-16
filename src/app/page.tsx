@@ -6,8 +6,7 @@ import { ProjectMeshes } from '@/components/canvas/grid/project-meshes'
 import { ProjectGrid } from '@/components/dom/project-grid'
 import { CursorArrow } from '@/components/canvas/glass/cursor-arrow'
 import { VaporCountdown } from '@/components/ui/countdown-vapor-digits'
-import { RadialSpeedLines } from '@/components/canvas/radial-speed-lines'
-import { EventTimeline } from '@/components/dom/event-timeline'
+import { HorizontalTimeline } from '@/components/dom/horizontal-timeline'
 import { Navbar } from '@/components/dom/navbar'
 import { WebsiteLoader } from '@/components/dom/website-loader'
 import { CloudSky } from '@/components/canvas/cloud-sky'
@@ -30,8 +29,8 @@ import { Mascot } from 'page-mascot'
 
 /**
  * The main canvas only has something to draw inside a known scroll window:
- * CursorArrow lives in aVH [-0.8, 2.5] and [6.6, 7.8], RadialSpeedLines in
- * [2.0, 7.0], and ProjectMeshes while the sponsors grid is near the viewport.
+ * CursorArrow lives in aVH [-0.8, 2.5] and [6.6, 7.8], and ProjectMeshes while
+ * the sponsors grid is near the viewport.
  * Everywhere else — notably the entire hero, which is the heaviest part of the
  * page — it was still clearing and compositing a full-viewport transparent
  * buffer and running twelve useFrame callbacks every frame.
@@ -252,7 +251,6 @@ export default function Home() {
           style={{ background: 'transparent' }}
         >
           <Suspense fallback={null}>
-            <RadialSpeedLines />
             <CursorArrow />
             <ProjectMeshes />
           </Suspense>
@@ -265,8 +263,8 @@ export default function Home() {
       {/* Mouse pointer cube trail in sections after hero */}
       <MouseCubeTrail />
 
-      {/* Animated scroll-driven vector art event timeline in the radial speed lines section */}
-      <EventTimeline />
+      {/* Pinned horizontal timeline, scrubbed by the radial speed lines section's scroll */}
+      <HorizontalTimeline />
 
       {/* ── Hero section — CloudSky + headline + countdown + scroll circle dissolve ── */}
       <div id="hero" className="relative min-h-[100dvh] w-full flex items-center justify-center overflow-hidden py-16 sm:py-0">

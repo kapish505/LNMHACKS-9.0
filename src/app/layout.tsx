@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import { ScrollShell } from "@/components/canvas/scroll-shell";
 import { PageCircleReveal } from "@/components/canvas/page-circle-reveal";
@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/lib/theme-context";
 import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"] });
+const manrope = Manrope({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-manrope" });
 
 export const metadata: Metadata = {
   title: "LNMHACKS",
@@ -30,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="antialiased" suppressHydrationWarning>
       <head />
-      <body className={inter.className}>
+      <body className={`${inter.className} ${manrope.variable}`}>
         <Script
           id="theme-script"
           strategy="beforeInteractive"

@@ -287,10 +287,21 @@ export default function ScanGridButton(props: Props) {
             armFor(IDLE_BRACKET, dim.w, dim.h)
         );
         const filter = `drop-shadow(0px 0px 0px ${scanColor})`;
-        animate(".bracket-tl", { d: idlePaths.tl, filter }, { duration: 0 });
-        animate(".bracket-tr", { d: idlePaths.tr, filter }, { duration: 0 });
-        animate(".bracket-br", { d: idlePaths.br, filter }, { duration: 0 });
-        animate(".bracket-bl", { d: idlePaths.bl, filter }, { duration: 0 });
+        // A zero-duration tween of an SVG path string writes "undefined" to `d`
+        // for a frame (motion can only interpolate numbers), which the browser
+        // reports as a path error on every mount. Set the idle paths directly
+        // and tween only the filter.
+        const scopeEl = scope.current as HTMLElement | null;
+        (["tl", "tr", "br", "bl"] as const).forEach((corner) => {
+            scopeEl
+                ?.querySelector<SVGPathElement>(`.bracket-${corner}`)
+                ?.setAttribute("d", idlePaths[corner]);
+        });
+        animate(
+            ".bracket-tl, .bracket-tr, .bracket-br, .bracket-bl",
+            { filter },
+            { duration: 0 }
+        );
 
         animate(".scanline", { y: SCAN_FROM, opacity: 0 }, { duration: 0 });
         if (showText)

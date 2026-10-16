@@ -19,7 +19,7 @@ const LNM_LAYOUT: TicketLayout = {
   watermarkColor: '#c0fe04',
   watermarkOpacity: 0.5,
   labelFont: '"tronica-mono", "Courier New", monospace',
-  nameFont: '"tiktok", sans-serif',
+  nameFont: '"Rogient Block", "rogient-block", sans-serif',
 }
 
 const MAX_TICKET = 741
@@ -78,21 +78,18 @@ export function SponsorSection() {
   return (
     <section id="sponsor-us" className="relative z-30 w-full pt-10 pb-24 sm:pt-16 sm:pb-32 pointer-events-auto" aria-labelledby="sponsor-us-title">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-8 lg:px-14">
-        <div className="text-left">
-          <span className="mb-2 block text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400" style={{ fontFamily: '"tronica-mono", monospace' }}>
-            [ SPONSOR US ]
-          </span>
+        <div className="flex flex-col items-center gap-4 text-center">
+          <p className="text-xs uppercase tracking-[0.3em] text-neutral-500 dark:text-neutral-400" style={{ fontFamily: '"tronica-mono", monospace' }}>
+            Sponsor us
+          </p>
           <h2
             id="sponsor-us-title"
-            className="text-3xl font-black uppercase tracking-tight text-black transition-colors duration-200 sm:text-5xl md:text-6xl dark:text-white"
-            style={{ fontFamily: '"tiktok", sans-serif', fontVariationSettings: '"wght" 850, "wdth" 110', letterSpacing: '-0.03em' }}
+            className="max-w-[18ch] text-3xl uppercase leading-[1.05] tracking-tight text-black transition-colors duration-200 sm:text-5xl md:text-6xl dark:text-white"
+            style={{ fontFamily: '"Rogient Block", "rogient-block", sans-serif' }}
           >
             We&rsquo;d love to host you as a sponsor
           </h2>
-          <p
-            className="mt-2 max-w-xl text-base tracking-tight text-[rgba(54,54,48,0.6)] transition-colors duration-200 sm:text-lg md:text-xl dark:text-neutral-400"
-            style={{ fontFamily: '"tiktok", sans-serif' }}
-          >
+          <p className="max-w-md text-sm leading-relaxed text-neutral-500 dark:text-neutral-400 sm:text-base" style={{ fontFamily: 'var(--font-manrope), "Manrope", sans-serif' }}>
             Put your name on the ticket, leave your email, and our partnerships team will send the sponsor deck.
           </p>
         </div>

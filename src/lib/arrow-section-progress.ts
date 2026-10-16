@@ -6,7 +6,7 @@
  * so all scroll-range checks naturally evaluate to "not yet".
  *
  * The value is cached per scroll event. Three independent consumers read this
- * every frame (RadialSpeedLines, CursorArrow, EventTimeline); measuring once
+ * every frame (RadialSpeedLines, CursorArrow, HorizontalTimeline); measuring once
  * instead of three times removes two forced layouts per frame. The element
  * reference is cached too, so the common path touches neither
  * getElementById nor getBoundingClientRect.

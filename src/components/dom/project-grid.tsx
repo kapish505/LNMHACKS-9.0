@@ -3,7 +3,6 @@
 import { useRef, useCallback, useEffect } from 'react'
 import { AboutRingLogo, type RingPointerState } from '@/components/dom/about-ring-logo'
 import { domRegistry } from '@/lib/dom-registry'
-import { SponsorLogoGrid } from '@/components/dom/sponsor-logo-grid'
 
 interface ProjectItem {
   id: string
@@ -431,8 +430,6 @@ export function ProjectGrid() {
             </div>
           </div>
 
-          {/* ── Industry partners: logo cards with a review on hover ── */}
-          <SponsorLogoGrid />
         </div>
       </div>
     </div>

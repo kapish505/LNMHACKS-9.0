@@ -9,7 +9,7 @@ import { getArrowSectionVH } from '@/lib/arrow-section-progress'
 const FADE_IN_START = 2.0
 const FADE_IN_END = 2.4
 // Window widened from 2.0→6.0 to 2.0→7.0 (+25% scroll), matching
-// EventTimeline's fade and the backward CursorArrow's shifted entry.
+// HorizontalTimeline's fade and the backward CursorArrow's shifted entry.
 const FADE_OUT_START = 6.6
 const FADE_OUT_END = 7.0
 

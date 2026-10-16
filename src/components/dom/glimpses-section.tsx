@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
+import { useLenis } from 'lenis/react'
 import styles from './glimpses-section.module.css'
 
 const DEFAULT_ITEMS = [
@@ -148,14 +149,38 @@ export function GlimpsesSection() {
     }
   }, [])
 
+  // ─── lightbox: keyboard, prev/next, scroll lock ───
+  const lenis = useLenis()
+  const selectedIndex = selectedImage ? uniqueItems.indexOf(selectedImage) : -1
+  const stepImage = useCallback(
+    (delta: number) => {
+      setSelectedImage((current) => {
+        if (!current || uniqueItems.length === 0) return current
+        const i = uniqueItems.indexOf(current)
+        return uniqueItems[(i + delta + uniqueItems.length) % uniqueItems.length]
+      })
+    },
+    [uniqueItems],
+  )
+
   useEffect(() => {
     if (!selectedImage) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setSelectedImage(null)
+      else if (event.key === 'ArrowRight') stepImage(1)
+      else if (event.key === 'ArrowLeft') stepImage(-1)
     }
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selectedImage])
+    // freeze the page behind the viewer (Lenis drives the scroll, so stop it too)
+    lenis?.stop()
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      lenis?.start()
+      document.body.style.overflow = previousOverflow
+    }
+  }, [selectedImage, stepImage, lenis])
 
   useEffect(() => {
     const onPointerMove = (event: PointerEvent) => {
@@ -292,9 +317,46 @@ export function GlimpsesSection() {
           >
             ×
           </button>
-          <div className={styles.lightboxImage} onClick={(event) => event.stopPropagation()}>
-            <Image src={selectedImage} alt="LNMHacks past edition" fill sizes="96vw" priority />
-          </div>
+
+          {uniqueItems.length > 1 && (
+            <>
+              <button
+                className={`${styles.navButton} ${styles.navPrev}`}
+                type="button"
+                aria-label="Previous image"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  stepImage(-1)
+                }}
+              >
+                ←
+              </button>
+              <button
+                className={`${styles.navButton} ${styles.navNext}`}
+                type="button"
+                aria-label="Next image"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  stepImage(1)
+                }}
+              >
+                →
+              </button>
+            </>
+          )}
+
+          <figure className={styles.lightboxFigure} onClick={(event) => event.stopPropagation()}>
+            <div className={styles.lightboxImage} key={selectedImage}>
+              <Image src={selectedImage} alt={`LNMHacks past edition, image ${selectedIndex + 1} of ${uniqueItems.length}`} fill sizes="96vw" priority />
+            </div>
+            <figcaption className={styles.lightboxCaption}>
+              <span>Glimpses</span>
+              <span>
+                {String(selectedIndex + 1).padStart(2, '0')} / {String(uniqueItems.length).padStart(2, '0')}
+              </span>
+              <span className={styles.lightboxHint}>← → to browse · Esc to close</span>
+            </figcaption>
+          </figure>
         </div>
       )}
     </section>
