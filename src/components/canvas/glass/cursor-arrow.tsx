@@ -151,7 +151,7 @@ export function CursorArrow() {
   const meshRef = useRef<THREE.Mesh>(null)
   const materialRef = useRef<THREE.ShaderMaterial>(null)
   const ringFollower = useMemo(() => createRingLightFollower(), [])
-  const { camera } = useThree()
+  const { camera, viewport } = useThree()
 
   const geometry = useMemo(() => createCursorGeometry(), [])
 
@@ -171,12 +171,31 @@ export function CursorArrow() {
 
     const aVH = getArrowSectionVH()
 
-    const fadeIn1 = smoothstep(APPEAR_VH, APPEAR_END_VH, aVH)
-    const fadeOut1 = 1.0 - smoothstep(FADE_START_VH, FADE_END_VH, aVH)
+    // Dynamic responsive sizing based on actual 3D viewport dimensions
+    const isMobile = viewport.width < 4.8
+    const currentBaseScale = isMobile ? Math.min(0.55, viewport.width * 0.25) : BASE_SCALE
+    const STAGE1_SCALE = currentBaseScale * 1.10
+    const screenDiagonal = Math.hypot(viewport.width, viewport.height)
+    const SCALE_100 = screenDiagonal * 1.45
+    const SCALE_90 = SCALE_100 * 0.78
+
+    // Responsive scroll ranges
+    const appearStart = isMobile ? -0.5 : APPEAR_VH
+    const appearEnd = isMobile ? -0.1 : APPEAR_END_VH
+    const fadeStart1 = isMobile ? 0.35 : FADE_START_VH
+    const fadeEnd1 = isMobile ? 0.55 : FADE_END_VH
+
+    const revFadeInStart = isMobile ? 2.55 : REV_FADE_IN_START
+    const revFadeInEnd = isMobile ? 2.75 : REV_FADE_IN_END
+    const revFadeOutStart = isMobile ? 3.10 : REV_FADE_OUT_START
+    const revFadeOutEnd = isMobile ? 3.35 : REV_FADE_OUT_END
+
+    const fadeIn1 = smoothstep(appearStart, appearEnd, aVH)
+    const fadeOut1 = 1.0 - smoothstep(fadeStart1, fadeEnd1, aVH)
     const opacity1 = fadeIn1 * fadeOut1
 
-    const fadeIn2 = smoothstep(REV_FADE_IN_START, REV_FADE_IN_END, aVH)
-    const fadeOut2 = 1.0 - smoothstep(REV_FADE_OUT_START, REV_FADE_OUT_END, aVH)
+    const fadeIn2 = smoothstep(revFadeInStart, revFadeInEnd, aVH)
+    const fadeOut2 = 1.0 - smoothstep(revFadeOutStart, revFadeOutEnd, aVH)
     const opacity2 = fadeIn2 * fadeOut2
 
     const opacity = Math.max(opacity1, opacity2)
@@ -187,59 +206,93 @@ export function CursorArrow() {
     }
     meshRef.current.visible = true
 
-    const STAGE1_SCALE = BASE_SCALE * 1.10 // Initial 10% size increase
-    const SCALE_90 = 10.5                  // 90% screen coverage
-    const SCALE_100 = 13.5                 // 100% full screen coverage
-
-    let scale = BASE_SCALE
+    let scale = currentBaseScale
     let rotY = 0
 
     // The two arrow phases sit before and after the timeline window.
-    if (aVH < 15.5) {
-      // ── Forward Arrow Phase Timeline ──
-      // 1. Initial phase (aVH: -0.2 to 0.4): increase size by 10% normally with 0 rotation
-      // 2. Main phase (aVH: 0.4 to 1.8): complete full 180° rotation while growing to 90% screen coverage
-      // 3. Final phase (aVH: 1.8 to 2.3): gradually increase from 90% to 100% screen coverage (holding 180°)
-      if (aVH <= -0.2) {
-        scale = BASE_SCALE
-        rotY = 0
-      } else if (aVH < 0.4) {
-        const p1 = easeInOutCubic(smoothstep(-0.2, 0.4, aVH))
-        scale = BASE_SCALE + p1 * (STAGE1_SCALE - BASE_SCALE)
-        rotY = 0
-      } else if (aVH < 1.8) {
-        const p2 = easeInOutCubic(smoothstep(0.4, 1.8, aVH))
-        scale = STAGE1_SCALE + p2 * (SCALE_90 - STAGE1_SCALE)
-        rotY = p2 * Math.PI // Total rotation = 180 degrees (half turn)
+    const forwardPhaseEnd = isMobile ? 2.4 : 15.5
+    if (aVH < forwardPhaseEnd) {
+      if (isMobile) {
+        if (aVH <= -0.15) {
+          scale = currentBaseScale
+          rotY = 0
+        } else if (aVH < 0.08) {
+          const p1 = easeInOutCubic(smoothstep(-0.15, 0.08, aVH))
+          scale = currentBaseScale + p1 * (STAGE1_SCALE - currentBaseScale)
+          rotY = 0
+        } else if (aVH < 0.35) {
+          const p2 = easeInOutCubic(smoothstep(0.08, 0.35, aVH))
+          scale = STAGE1_SCALE + p2 * (SCALE_90 - STAGE1_SCALE)
+          rotY = p2 * Math.PI
+        } else {
+          const p3 = easeInOutCubic(smoothstep(0.35, 0.5, aVH))
+          scale = SCALE_90 + p3 * (SCALE_100 - SCALE_90)
+          rotY = Math.PI
+        }
       } else {
-        const p3 = easeInOutCubic(smoothstep(1.8, 2.3, aVH))
-        scale = SCALE_90 + p3 * (SCALE_100 - SCALE_90)
-        rotY = Math.PI // Holds at 180 degrees
+        // Desktop Forward Arrow Phase Timeline
+        if (aVH <= -0.2) {
+          scale = currentBaseScale
+          rotY = 0
+        } else if (aVH < 0.4) {
+          const p1 = easeInOutCubic(smoothstep(-0.2, 0.4, aVH))
+          scale = currentBaseScale + p1 * (STAGE1_SCALE - currentBaseScale)
+          rotY = 0
+        } else if (aVH < 1.8) {
+          const p2 = easeInOutCubic(smoothstep(0.4, 1.8, aVH))
+          scale = STAGE1_SCALE + p2 * (SCALE_90 - STAGE1_SCALE)
+          rotY = p2 * Math.PI // Total rotation = 180 degrees (half turn)
+        } else {
+          const p3 = easeInOutCubic(smoothstep(1.8, 2.3, aVH))
+          scale = SCALE_90 + p3 * (SCALE_100 - SCALE_90)
+          rotY = Math.PI // Holds at 180 degrees
+        }
       }
     } else {
-      // ── Backward Arrow Phase Timeline (Exact Mirror Reverse) ──
-      // 1. Enters at 100% coverage at 180°, shrinks to 90%.
-      // 2. Shrinks from 90% to stage 1 while rotating back to 0°.
-      // 3. Settles to base scale, then shrinks away.
-      if (aVH <= REV_FADE_IN_START) {
-        scale = SCALE_100
-        rotY = Math.PI
-      } else if (aVH < REV_FADE_IN_END) {
-        const p3 = easeInOutCubic(smoothstep(REV_FADE_IN_START, REV_FADE_IN_END, aVH))
-        scale = SCALE_100 - p3 * (SCALE_100 - SCALE_90)
-        rotY = Math.PI
-      } else if (aVH < REV_FADE_OUT_START) {
-        const p2 = easeInOutCubic(smoothstep(REV_FADE_IN_END, REV_FADE_OUT_START, aVH))
-        scale = SCALE_90 - p2 * (SCALE_90 - STAGE1_SCALE)
-        rotY = (1.0 - p2) * Math.PI
-      } else if (aVH < 17.02) {
-        const p1 = easeInOutCubic(smoothstep(REV_FADE_OUT_START, 17.02, aVH))
-        scale = STAGE1_SCALE - p1 * (STAGE1_SCALE - BASE_SCALE)
-        rotY = 0
+      if (isMobile) {
+        // Mobile Backward Arrow Phase Timeline
+        if (aVH <= revFadeInStart) {
+          scale = SCALE_100
+          rotY = Math.PI
+        } else if (aVH < revFadeInEnd) {
+          const p3 = easeInOutCubic(smoothstep(revFadeInStart, revFadeInEnd, aVH))
+          scale = SCALE_100 - p3 * (SCALE_100 - SCALE_90)
+          rotY = Math.PI
+        } else if (aVH < revFadeOutStart) {
+          const p2 = easeInOutCubic(smoothstep(revFadeInEnd, revFadeOutStart, aVH))
+          scale = SCALE_90 - p2 * (SCALE_90 - STAGE1_SCALE)
+          rotY = (1.0 - p2) * Math.PI
+        } else if (aVH < 3.25) {
+          const p1 = easeInOutCubic(smoothstep(revFadeOutStart, 3.25, aVH))
+          scale = STAGE1_SCALE - p1 * (STAGE1_SCALE - currentBaseScale)
+          rotY = 0
+        } else {
+          const p3 = easeInOutCubic(smoothstep(3.25, revFadeOutEnd, aVH))
+          scale = Math.max(0, currentBaseScale * (1.0 - p3))
+          rotY = 0
+        }
       } else {
-        const pShrink = easeInOutCubic(smoothstep(17.02, REV_FADE_OUT_END, aVH))
-        scale = Math.max(0, BASE_SCALE * (1.0 - pShrink))
-        rotY = 0
+        // Desktop Backward Arrow Phase Timeline (Exact Mirror Reverse)
+        if (aVH <= REV_FADE_IN_START) {
+          scale = SCALE_100
+          rotY = Math.PI
+        } else if (aVH < REV_FADE_IN_END) {
+          const p3 = easeInOutCubic(smoothstep(REV_FADE_IN_START, REV_FADE_IN_END, aVH))
+          scale = SCALE_100 - p3 * (SCALE_100 - SCALE_90)
+          rotY = Math.PI
+        } else if (aVH < REV_FADE_OUT_START) {
+          const p2 = easeInOutCubic(smoothstep(REV_FADE_IN_END, REV_FADE_OUT_START, aVH))
+          scale = SCALE_90 - p2 * (SCALE_90 - STAGE1_SCALE)
+          rotY = (1.0 - p2) * Math.PI
+        } else if (aVH < 17.02) {
+          const p1 = easeInOutCubic(smoothstep(REV_FADE_OUT_START, 17.02, aVH))
+          scale = STAGE1_SCALE - p1 * (STAGE1_SCALE - currentBaseScale)
+          rotY = 0
+        } else {
+          const p3 = easeInOutCubic(smoothstep(17.02, REV_FADE_OUT_END, aVH))
+          scale = Math.max(0, currentBaseScale * (1.0 - p3))
+          rotY = 0
+        }
       }
     }
 
@@ -251,8 +304,13 @@ export function CursorArrow() {
     groupRef.current.rotation.z = INITIAL_TILT_Z * tiltFade
     groupRef.current.rotation.x = INITIAL_TILT_X * tiltFade
 
+    // Centering compensation: at initial tilt, the arrow's right edge is vertical and body extends left.
+    // Shift right proportionally so bounding box is visually balanced and centered across all viewports.
+    const centerOffset = 0.18 * scale * tiltFade
+    groupRef.current.position.x = centerOffset
+
     const t = state.clock.elapsedTime
-    const floatAmp = scale > BASE_SCALE * 1.5 ? 0 : 0.05
+    const floatAmp = scale > currentBaseScale * 1.5 ? 0 : 0.05
     groupRef.current.position.y = Math.sin(t * 1.5) * floatAmp
 
     const pointer = getPointerUV()

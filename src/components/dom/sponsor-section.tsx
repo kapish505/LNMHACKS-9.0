@@ -43,7 +43,7 @@ export function SponsorSection() {
     const el = wrapRef.current
     if (!el) return
     const ro = new ResizeObserver(([entry]) => {
-      setTicketWidth(Math.max(280, Math.min(MAX_TICKET, Math.floor(entry.contentRect.width))))
+      setTicketWidth(Math.max(240, Math.min(MAX_TICKET, Math.floor(entry.contentRect.width))))
     })
     ro.observe(el)
     return () => ro.disconnect()

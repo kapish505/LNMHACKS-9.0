@@ -181,14 +181,19 @@ export function RadialSpeedLines() {
     if (!materialRef.current || !meshRef.current) return
 
     const aVH = getArrowSectionVH()
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+    const fadeInStart = isMobile ? 0.35 : FADE_IN_START
+    const fadeInEnd = isMobile ? 0.55 : FADE_IN_END
+    const fadeOutStart = isMobile ? 1.6 : FADE_OUT_START
+    const fadeOutEnd = isMobile ? 2.0 : FADE_OUT_END
 
-    if (aVH < FADE_IN_START || aVH > FADE_OUT_END) {
+    if (aVH < fadeInStart || aVH > fadeOutEnd) {
       meshRef.current.visible = false
       return
     }
 
-    const fadeIn = Math.max(0, Math.min(1, (aVH - FADE_IN_START) / (FADE_IN_END - FADE_IN_START)))
-    const fadeOut = 1.0 - Math.max(0, Math.min(1, (aVH - FADE_OUT_START) / (FADE_OUT_END - FADE_OUT_START)))
+    const fadeIn = Math.max(0, Math.min(1, (aVH - fadeInStart) / (fadeInEnd - fadeInStart)))
+    const fadeOut = 1.0 - Math.max(0, Math.min(1, (aVH - fadeOutStart) / (fadeOutEnd - fadeOutStart)))
     const opacity = fadeIn * fadeOut
 
     if (opacity < 0.001) {
@@ -197,14 +202,15 @@ export function RadialSpeedLines() {
     }
     meshRef.current.visible = true
 
-    // Density ramps from 0 → 1 over 4vh
-    const density = Math.max(0, Math.min(1, (aVH - FADE_IN_END) / 4.0))
+    // Density ramps from 0 → 1
+    const rampDist = isMobile ? 1.0 : 4.0
+    const density = Math.max(0, Math.min(1, (aVH - fadeInEnd) / rampDist))
 
     materialRef.current.uniforms.uTime.value = state.clock.elapsedTime
-    materialRef.current.uniforms.uScroll.value = Math.max(0, aVH - FADE_IN_START)
+    materialRef.current.uniforms.uScroll.value = Math.max(0, aVH - fadeInStart)
     materialRef.current.uniforms.uOpacity.value = opacity
     materialRef.current.uniforms.uDensity.value = density
-    materialRef.current.uniforms.uIsMobile.value = window.innerWidth < 768 ? 1.0 : 0.0
+    materialRef.current.uniforms.uIsMobile.value = isMobile ? 1.0 : 0.0
     materialRef.current.uniforms.uResolution.value.set(size.width, size.height)
   })
 

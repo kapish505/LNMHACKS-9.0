@@ -11,7 +11,7 @@ export function ScrollShell({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <ReactLenis root options={{ autoRaf: false, lerp: 0.1, smoothWheel: true, syncTouch: true }}>
+    <ReactLenis root options={{ autoRaf: false, lerp: 0.1, smoothWheel: true, syncTouch: true, touchMultiplier: 1.6 }}>
       <LenisScrollEnvBridge />
       {children}
     </ReactLenis>

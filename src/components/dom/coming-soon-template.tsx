@@ -30,7 +30,7 @@ export function ComingSoonTemplate({
   const isDark = mounted ? theme === 'dark' : false
 
   return (
-    <main className="relative min-h-screen w-full flex flex-col justify-between items-center px-6 py-8 bg-[#F0EDE8] dark:bg-[#090d16] text-black dark:text-white transition-colors duration-300 select-none overflow-hidden">
+    <main className="relative min-h-screen w-full flex flex-col justify-between items-center px-4 sm:px-6 py-6 sm:py-8 bg-[#F0EDE8] dark:bg-[#090d16] text-black dark:text-white transition-colors duration-300 select-none overflow-hidden">
       {/* Top Header: Brand + Theme Toggle */}
       <header className="relative z-10 w-full max-w-6xl mx-auto flex items-center justify-between">
         <button
@@ -117,7 +117,7 @@ export function ComingSoonTemplate({
         </span>
 
         <h1
-          className="text-5xl sm:text-7xl md:text-8xl font-black uppercase tracking-tight text-black dark:text-white transition-colors duration-300"
+          className="text-3xl xs:text-5xl sm:text-7xl md:text-8xl font-black uppercase tracking-tight text-black dark:text-white transition-colors duration-300"
           style={{
             fontFamily: '"tiktok", sans-serif',
             fontVariationSettings: '"wght" 850, "wdth" 110',

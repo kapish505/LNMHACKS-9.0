@@ -289,7 +289,8 @@ export function Navbar() {
       if (el) {
         const vh = window.innerHeight || 800
         const arrowTop = el.getBoundingClientRect().top + window.scrollY
-        const targetScroll = arrowTop + 2.4 * vh // Lands directly at Phase 01 of Timeline
+        const isMob = window.innerWidth < 768
+        const targetScroll = arrowTop + (isMob ? 0.55 : 2.4) * vh // Lands directly at Phase 01 of Timeline
         if (lenis) {
           lenis.scrollTo(targetScroll, { duration: 1.4 })
         } else {
@@ -311,7 +312,7 @@ export function Navbar() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 pointer-events-none transition-colors duration-300">
-      <div className="flex justify-between items-center px-4 sm:px-8 lg:px-14 py-3 sm:py-4 lg:py-6">
+      <div className="flex justify-between items-center px-3 sm:px-8 lg:px-14 py-2.5 sm:py-4 lg:py-6">
         {/* Left Brand: LNMHACKS with logo colors on L (Pink), N (Cyan), M (Royal Blue) */}
         <a
           href="#"
@@ -326,7 +327,7 @@ export function Navbar() {
           }}
         >
           <span
-            className={`font-normal uppercase text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] leading-none tracking-wide flex items-center transition-colors duration-200 ${isLightNav ? 'text-black' : 'text-white'
+            className={`font-normal uppercase text-lg xs:text-xl sm:text-3xl md:text-4xl lg:text-[2.75rem] leading-none tracking-wide flex items-center transition-colors duration-200 ${isLightNav ? 'text-black' : 'text-white'
               }`}
             style={{
               fontFamily: '"tiktok", sans-serif',
@@ -386,7 +387,7 @@ export function Navbar() {
         </nav>
 
         {/* Mobile Menu Action Buttons */}
-        <div className="md:hidden flex items-center gap-2 pointer-events-auto">
+        <div className="md:hidden flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
           {/* Mobile Theme Toggle */}
           <ThemeToggle isLightNav={isLightNav} />
 
@@ -400,7 +401,7 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => triggerPageTransition('/register')}
-              className="px-3 py-1.5 text-xs font-bold uppercase rounded-full bg-[#1e60ff] text-white border border-blue-400/40 shadow-sm active:scale-95 transition-transform"
+              className="px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-bold uppercase rounded-full bg-[#1e60ff] text-white border border-blue-400/40 shadow-sm active:scale-95 transition-transform"
             >
               Register →
             </button>

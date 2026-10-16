@@ -53,7 +53,9 @@ function useMainCanvasActive(): boolean {
       const aVH = getArrowSectionVH()
       // Keep the shared canvas alive through the deliberately longer six-card
       // timeline and the reverse arrow transition that follows it.
-      const next = sponsorsNear || (aVH > -1.3 && aVH < 17.2)
+      const isMob = typeof window !== 'undefined' && window.innerWidth < 768
+      const maxVH = isMob ? 3.8 : 17.2
+      const next = sponsorsNear || (aVH > -1.3 && aVH < maxVH)
       if (next !== activeRef.current) {
         activeRef.current = next
         setActive(next)
@@ -233,8 +235,53 @@ function ParallaxSky() {
   )
 }
 
+function useResponsiveMascotSize() {
+  const [size, setSize] = useState(185)
+
+  useEffect(() => {
+    const updateSize = () => {
+      const w = window.innerWidth
+      const h = window.innerHeight
+      if (w < 480 || h < 520) setSize(110)
+      else if (w < 768 || h < 680) setSize(130)
+      else if (w < 1024) setSize(155)
+      else setSize(185)
+    }
+    updateSize()
+    window.addEventListener('resize', updateSize, { passive: true })
+    window.addEventListener('orientationchange', updateSize, { passive: true })
+    return () => {
+      window.removeEventListener('resize', updateSize)
+      window.removeEventListener('orientationchange', updateSize)
+    }
+  }, [])
+
+  return size
+}
+
+function useResponsiveArrowHeight() {
+  const [height, setHeight] = useState('1900vh')
+
+  useEffect(() => {
+    const update = () => {
+      setHeight(window.innerWidth < 768 ? '340vh' : '1900vh')
+    }
+    update()
+    window.addEventListener('resize', update, { passive: true })
+    window.addEventListener('orientationchange', update, { passive: true })
+    return () => {
+      window.removeEventListener('resize', update)
+      window.removeEventListener('orientationchange', update)
+    }
+  }, [])
+
+  return height
+}
+
 export default function Home() {
   const mainCanvasActive = useMainCanvasActive()
+  const mascotSize = useResponsiveMascotSize()
+  const arrowHeight = useResponsiveArrowHeight()
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-background">
@@ -339,11 +386,11 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="pointer-events-auto absolute bottom-4 right-4 z-30 sm:bottom-8 sm:right-8 md:bottom-10 md:right-12 transition-transform duration-300">
+        <div className="pointer-events-auto absolute bottom-3 right-3 sm:bottom-6 sm:right-6 md:bottom-10 md:right-12 z-30 transition-all duration-300">
           <Mascot
             directions="/mascots/chibi-directions.webp"
             reactions="/mascots/chibi-reactions.webp"
-            size={185}
+            size={mascotSize}
             label="Chibi Mascot"
           />
         </div>
@@ -351,7 +398,11 @@ export default function Home() {
 
       <ProjectGrid />
 
-      <div id="arrow-section" className="w-full" style={{ height: '1900vh' }} />
+      <div
+        id="arrow-section"
+        className="w-full h-[340vh] md:h-[1900vh]"
+        style={{ height: arrowHeight }}
+      />
 
       <GlimpsesSection />
 

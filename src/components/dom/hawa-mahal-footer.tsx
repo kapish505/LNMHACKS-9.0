@@ -395,7 +395,7 @@ export function HawaMahalFooter() {
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-6 pt-1 sm:gap-8 lg:col-span-7">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 pt-1 sm:gap-8 lg:col-span-7">
             <nav aria-label="Navigation">
               <h3 className="mb-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] text-[#ffd27a]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#ffd27a]" /> Navigation
@@ -412,7 +412,8 @@ export function HawaMahalFooter() {
                       const el = document.getElementById('arrow-section')
                       if (!el) return
                       const top = el.getBoundingClientRect().top + window.scrollY
-                      window.scrollTo({ top: top + 2.4 * window.innerHeight, behavior: 'smooth' })
+                      const isMob = window.innerWidth < 768
+                      window.scrollTo({ top: top + (isMob ? 0.55 : 2.4) * window.innerHeight, behavior: 'smooth' })
                     }}
                     className={`${linkClass} cursor-pointer text-left`}
                   >Timeline</button>

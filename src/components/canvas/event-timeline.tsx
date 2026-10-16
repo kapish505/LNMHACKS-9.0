@@ -664,6 +664,13 @@ export function EventTimeline() {
   const totalPan = spacing * (MILESTONE_COUNT - 1)
 
   useFrame((_, delta) => {
+    // Skip 3D horizontal timeline on mobile phones (where mobile vertical timeline is active)
+    if (viewport.width < 4.8) {
+      fadeRef.current = 0
+      if (sceneRef.current?.visible) sceneRef.current.visible = false
+      return
+    }
+
     const aVH = getArrowSectionVH()
 
     // Fast visibility check — skip all work when nowhere near the timeline
