@@ -291,7 +291,7 @@ export function Navbar() {
         const vh = window.innerHeight || 800
         const arrowTop = el.getBoundingClientRect().top + window.scrollY
         const isMob = window.innerWidth < 768
-        const targetScroll = arrowTop + (isMob ? 0.55 : 2.4) * vh // Lands directly at Phase 01 of Timeline
+        const targetScroll = arrowTop + (isMob ? 1.75 : 2.4) * vh // Lands directly at Phase 01 of Timeline
         if (lenis) {
           lenis.scrollTo(targetScroll, { duration: 1.4 })
         } else {

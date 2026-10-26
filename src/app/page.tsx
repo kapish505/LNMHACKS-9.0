@@ -19,6 +19,7 @@ import { HeroHeadline } from '@/components/ui/hero-headline'
 import { HeroTopBanner } from '@/components/ui/hero-top-banner'
 import { FallingStickers } from '@/components/canvas/glass/stickers'
 import { HawaMahalFooter } from '@/components/dom/hawa-mahal-footer'
+import { PastSponsorsSection } from '@/components/dom/past-sponsors-section'
 import { GlimpsesSection } from '@/components/dom/glimpses-section'
 import { SponsorSection } from '@/components/dom/sponsor-section'
 import { GlobalGridOverlay } from '@/components/ui/global-grid-overlay'
@@ -54,7 +55,7 @@ function useMainCanvasActive(): boolean {
       // Keep the shared canvas alive through the deliberately longer six-card
       // timeline and the reverse arrow transition that follows it.
       const isMob = typeof window !== 'undefined' && window.innerWidth < 768
-      const maxVH = isMob ? 3.8 : 17.2
+      const maxVH = isMob ? 6.5 : 17.4
       const next = sponsorsNear || (aVH > -1.3 && aVH < maxVH)
       if (next !== activeRef.current) {
         activeRef.current = next
@@ -264,7 +265,7 @@ function useResponsiveArrowHeight() {
 
   useEffect(() => {
     const update = () => {
-      setHeight(window.innerWidth < 768 ? '340vh' : '1900vh')
+      setHeight(window.innerWidth < 768 ? '630vh' : '1730vh')
     }
     update()
     window.addEventListener('resize', update, { passive: true })
@@ -402,9 +403,12 @@ export default function Home() {
       {/* Timeline Section (Forward Arrow -> Event Timeline -> Backward Arrow) */}
       <div
         id="arrow-section"
-        className="w-full h-[340vh] md:h-[1900vh]"
+        className="w-full h-[630vh] md:h-[1730vh]"
         style={{ height: arrowHeight }}
       />
+
+      {/* Past Sponsors Section (Interactive Grid) */}
+      <PastSponsorsSection />
 
       <GlimpsesSection />
 

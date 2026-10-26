@@ -65,7 +65,7 @@ const BASE_STEPS: PipelineStep[] = [
   {
     id: 6,
     stepNumber: '06',
-    title: 'Grand Finale & $9,000+ Award Ceremony',
+    title: 'Grand Finale & Award Ceremony',
     date: 'JAN 24 · 05:00 PM IST',
     accent: '#fb3377',
     description: 'Top finalist squads pitch live on the main stage to our panel of judges. Category awards, sponsor track bounties, venture funding invitations, and closing celebrations.',
@@ -103,8 +103,8 @@ export function EventTimelineDOM() {
     const el = document.getElementById('arrow-section')
     if (!el) return
     const isMob = window.innerWidth < 768
-    const start = isMob ? 0.45 : TIMELINE_START
-    const end = isMob ? 2.3 : TIMELINE_END
+    const start = isMob ? 1.65 : TIMELINE_START
+    const end = isMob ? 4.85 : TIMELINE_END
     const rect = el.getBoundingClientRect()
     const sectionTop = window.scrollY + rect.top
     const stepFraction = (stepId - 0.5) / BASE_STEPS.length
@@ -117,12 +117,12 @@ export function EventTimelineDOM() {
     const handleScroll = () => {
       const aVH = getArrowSectionVH()
       const isMob = window.innerWidth < 768
-      const start = isMob ? 0.45 : TIMELINE_START
-      const end = isMob ? 2.3 : TIMELINE_END
-      const exit = isMob ? 2.55 : TIMELINE_EXIT
+      const start = isMob ? 1.65 : TIMELINE_START
+      const end = isMob ? 4.85 : TIMELINE_END
+      const exit = isMob ? 5.05 : TIMELINE_EXIT
 
-      const fadeIn = smoothstep(start - 0.15, start + 0.15, aVH)
-      const fadeOut = 1 - smoothstep(end + 0.1, exit, aVH)
+      const fadeIn = smoothstep(start - 0.12, start + 0.08, aVH)
+      const fadeOut = 1 - smoothstep(end + 0.05, exit, aVH)
       const curOpacity = fadeIn * fadeOut
 
       setOpacity(curOpacity)
@@ -336,127 +336,127 @@ export function EventTimelineDOM() {
       >
         {/* Horizontal Pipeline Track Container */}
         <div className="w-full overflow-hidden pointer-events-auto py-2">
-        <div
-          ref={trackRef}
-          className="flex items-start transition-transform duration-200 ease-out will-change-transform"
-          style={{
-            transform: `translate3d(${horizontalTranslateX}px, 0, 0)`,
-          }}
-        >
-          {BASE_STEPS.map((step, idx) => {
-            const isCompleted = step.id < activeStepId
-            const isActive = step.id === activeStepId
-            const status: 'completed' | 'active' | 'pending' = isCompleted
-              ? 'completed'
-              : isActive
-                ? 'active'
-                : 'pending'
-            const isLast = idx === BASE_STEPS.length - 1
+          <div
+            ref={trackRef}
+            className="flex items-start transition-transform duration-200 ease-out will-change-transform"
+            style={{
+              transform: `translate3d(${horizontalTranslateX}px, 0, 0)`,
+            }}
+          >
+            {BASE_STEPS.map((step, idx) => {
+              const isCompleted = step.id < activeStepId
+              const isActive = step.id === activeStepId
+              const status: 'completed' | 'active' | 'pending' = isCompleted
+                ? 'completed'
+                : isActive
+                  ? 'active'
+                  : 'pending'
+              const isLast = idx === BASE_STEPS.length - 1
 
-            return (
-              <div
-                key={step.id}
-                onClick={() => handleScrollToStep(step.id)}
-                className="shrink-0 flex flex-col cursor-pointer select-none group/step transition-all duration-300"
-                style={{
-                  width: `${cardWidth}px`,
-                  marginRight: `${cardGap}px`,
-                }}
-              >
-                {/* Minimalist Timeline Axis & Precision Node */}
-                <div className="relative flex items-center h-6 mb-4">
-                  {/* Continuous hairline axis spanning to next milestone */}
-                  <div className="relative flex items-center w-full">
-                    {/* Precision Node */}
-                    <div className="relative flex items-center justify-center shrink-0">
-                      {isActive ? (
-                        <div className="relative flex items-center justify-center">
-                          <span className="absolute size-4 rounded-full bg-white/15 animate-ping" />
-                          <span className="size-2.5 rounded-full bg-white ring-4 ring-white/20 shadow-[0_0_10px_rgba(255,255,255,0.6)]" />
+              return (
+                <div
+                  key={step.id}
+                  onClick={() => handleScrollToStep(step.id)}
+                  className="shrink-0 flex flex-col cursor-pointer select-none group/step transition-all duration-300"
+                  style={{
+                    width: `${cardWidth}px`,
+                    marginRight: `${cardGap}px`,
+                  }}
+                >
+                  {/* Minimalist Timeline Axis & Precision Node */}
+                  <div className="relative flex items-center h-6 mb-4">
+                    {/* Continuous hairline axis spanning to next milestone */}
+                    <div className="relative flex items-center w-full">
+                      {/* Precision Node */}
+                      <div className="relative flex items-center justify-center shrink-0">
+                        {isActive ? (
+                          <div className="relative flex items-center justify-center">
+                            <span className="absolute size-4 rounded-full bg-white/15 animate-ping" />
+                            <span className="size-2.5 rounded-full bg-white ring-4 ring-white/20 shadow-[0_0_10px_rgba(255,255,255,0.6)]" />
+                          </div>
+                        ) : isCompleted ? (
+                          <span className="size-2 rounded-full bg-[#63c4fd] shadow-[0_0_6px_rgba(99,196,253,0.5)]" />
+                        ) : (
+                          <span className="size-1.5 rounded-full bg-white/20 group-hover/step:bg-white/50 transition-colors" />
+                        )}
+                      </div>
+
+                      {/* Connecting hairline bar */}
+                      {!isLast && (
+                        <div
+                          className="grow h-px ml-3 bg-white/10 overflow-hidden"
+                          style={{ marginRight: `-${cardGap}px` }}
+                        >
+                          <div
+                            className={cn(
+                              'h-full w-full transition-all duration-500',
+                              isCompleted
+                                ? 'bg-gradient-to-r from-[#63c4fd] to-white/60'
+                                : 'bg-transparent'
+                            )}
+                          />
                         </div>
-                      ) : isCompleted ? (
-                        <span className="size-2 rounded-full bg-[#63c4fd] shadow-[0_0_6px_rgba(99,196,253,0.5)]" />
-                      ) : (
-                        <span className="size-1.5 rounded-full bg-white/20 group-hover/step:bg-white/50 transition-colors" />
                       )}
                     </div>
+                  </div>
 
-                    {/* Connecting hairline bar */}
-                    {!isLast && (
-                      <div
-                        className="grow h-px ml-3 bg-white/10 overflow-hidden"
-                        style={{ marginRight: `-${cardGap}px` }}
+                  {/* Milestone Content */}
+                  <div className="flex flex-col gap-1.5">
+                    {/* Clean Technical Metadata Row — No Tacky Neon Pills */}
+                    <div className="flex items-center gap-2 text-xs tracking-wider uppercase font-mono">
+                      <span
+                        className={cn(
+                          'font-bold transition-colors',
+                          isActive ? 'text-[#fb3377]' : isCompleted ? 'text-[#63c4fd]' : 'text-white/30'
+                        )}
+                        style={{ fontFamily: '"tronica-mono", monospace' }}
                       >
-                        <div
-                          className={cn(
-                            'h-full w-full transition-all duration-500',
-                            isCompleted
-                              ? 'bg-gradient-to-r from-[#63c4fd] to-white/60'
-                              : 'bg-transparent'
-                          )}
-                        />
-                      </div>
-                    )}
+                        {step.stepNumber}
+                      </span>
+                      <span className="text-white/20 select-none">/</span>
+                      <span
+                        className={cn(
+                          'font-medium transition-colors tracking-tight',
+                          isActive ? 'text-white/80' : isCompleted ? 'text-white/50' : 'text-white/30'
+                        )}
+                        style={{ fontFamily: '"tronica-mono", monospace' }}
+                      >
+                        {step.date}
+                      </span>
+                    </div>
+
+                    {/* Milestone Title with TikTok Font */}
+                    <h3
+                      className={cn(
+                        'text-xl sm:text-2xl font-bold tracking-tight leading-snug transition-colors duration-200 mt-0.5',
+                        isActive ? 'text-white' : isCompleted ? 'text-white/80' : 'text-white/40 group-hover/step:text-white/70'
+                      )}
+                      style={{
+                        fontFamily: '"tiktok", sans-serif',
+                        fontVariationSettings: '"wght" 850',
+                        letterSpacing: '-0.02em',
+                      }}
+                    >
+                      {step.title}
+                    </h3>
+
+                    {/* Milestone Description with TikTok Font */}
+                    <p
+                      className={cn(
+                        'text-sm leading-relaxed transition-colors duration-200 text-neutral-400 max-w-sm sm:max-w-md',
+                        isActive ? 'text-neutral-300' : isCompleted ? 'text-neutral-400/80' : 'text-neutral-500/60'
+                      )}
+                      style={{ fontFamily: '"tiktok", sans-serif' }}
+                    >
+                      {step.description}
+                    </p>
                   </div>
                 </div>
-
-                {/* Milestone Content */}
-                <div className="flex flex-col gap-1.5">
-                  {/* Clean Technical Metadata Row — No Tacky Neon Pills */}
-                  <div className="flex items-center gap-2 text-xs tracking-wider uppercase font-mono">
-                    <span
-                      className={cn(
-                        'font-bold transition-colors',
-                        isActive ? 'text-[#fb3377]' : isCompleted ? 'text-[#63c4fd]' : 'text-white/30'
-                      )}
-                      style={{ fontFamily: '"tronica-mono", monospace' }}
-                    >
-                      {step.stepNumber}
-                    </span>
-                    <span className="text-white/20 select-none">/</span>
-                    <span
-                      className={cn(
-                        'font-medium transition-colors tracking-tight',
-                        isActive ? 'text-white/80' : isCompleted ? 'text-white/50' : 'text-white/30'
-                      )}
-                      style={{ fontFamily: '"tronica-mono", monospace' }}
-                    >
-                      {step.date}
-                    </span>
-                  </div>
-
-                  {/* Milestone Title with TikTok Font */}
-                  <h3
-                    className={cn(
-                      'text-xl sm:text-2xl font-bold tracking-tight leading-snug transition-colors duration-200 mt-0.5',
-                      isActive ? 'text-white' : isCompleted ? 'text-white/80' : 'text-white/40 group-hover/step:text-white/70'
-                    )}
-                    style={{
-                      fontFamily: '"tiktok", sans-serif',
-                      fontVariationSettings: '"wght" 850',
-                      letterSpacing: '-0.02em',
-                    }}
-                  >
-                    {step.title}
-                  </h3>
-
-                  {/* Milestone Description with TikTok Font */}
-                  <p
-                    className={cn(
-                      'text-sm leading-relaxed transition-colors duration-200 text-neutral-400 max-w-sm sm:max-w-md',
-                      isActive ? 'text-neutral-300' : isCompleted ? 'text-neutral-400/80' : 'text-neutral-500/60'
-                    )}
-                    style={{ fontFamily: '"tiktok", sans-serif' }}
-                  >
-                    {step.description}
-                  </p>
-                </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
       </div>
-    </div>
     </>
   )
 }

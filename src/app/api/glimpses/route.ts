@@ -45,16 +45,26 @@ function readGlimpses(): string[] {
   return images
 }
 
+const FALLBACK_GLIMPSES = [
+  '/glimpses/glimpse-1.jpg',
+  '/glimpses/glimpse-2.jpg',
+  '/glimpses/glimpse-3.jpg',
+  '/glimpses/glimpse-4.jpg',
+]
+
 export async function GET() {
   try {
-    if (cachedItems === null) cachedItems = readGlimpses()
+    if (cachedItems === null || cachedItems.length === 0) {
+      const items = readGlimpses()
+      cachedItems = items.length > 0 ? items : FALLBACK_GLIMPSES
+    }
     return NextResponse.json(
       { items: cachedItems },
       { headers: { 'Cache-Control': 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400' } },
     )
   } catch (error) {
     console.error('Error reading glimpses directory:', error)
-    return NextResponse.json({ items: [] }, { status: 500 })
+    return NextResponse.json({ items: FALLBACK_GLIMPSES })
   }
 }
 

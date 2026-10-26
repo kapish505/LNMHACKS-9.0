@@ -47,7 +47,38 @@ export default function RootLayout({
           id="theme-script"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('lnmhacks_theme');var isDark=t==='dark'||(!t&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(isDark){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){}})();`,
+            __html: `(function(){
+              try {
+                var t = localStorage.getItem('lnmhacks_theme');
+                var isDark = t === 'dark' || (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (isDark) {
+                  document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                }
+              } catch(e) {}
+
+              // Suppress harmless Three.js v185+ Clock deprecation warning caused by upstream R3F
+              if (typeof console !== 'undefined' && console.warn) {
+                var origWarn = console.warn;
+                console.warn = function() {
+                  if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].indexOf('THREE.Clock: This module has been deprecated') !== -1) {
+                    return;
+                  }
+                  origWarn.apply(console, arguments);
+                };
+              }
+
+              // Suppress unhandled rejections injected by browser crypto wallet extensions (e.g. MetaMask / Coinbase collision)
+              if (typeof window !== 'undefined') {
+                window.addEventListener('unhandledrejection', function(event) {
+                  var reason = event && event.reason;
+                  if (reason && (reason.code === 4900 || (typeof reason.message === 'string' && reason.message.indexOf('disconnected from all chains') !== -1))) {
+                    event.preventDefault();
+                  }
+                });
+              }
+            })();`,
           }}
         />
         <ThemeProvider>

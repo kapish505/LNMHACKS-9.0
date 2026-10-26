@@ -180,15 +180,24 @@ export function CursorArrow() {
     const SCALE_90 = SCALE_100 * 0.78
 
     // Responsive scroll ranges
-    const appearStart = isMobile ? -0.5 : APPEAR_VH
-    const appearEnd = isMobile ? -0.1 : APPEAR_END_VH
-    const fadeStart1 = isMobile ? 0.35 : FADE_START_VH
-    const fadeEnd1 = isMobile ? 0.55 : FADE_END_VH
+    // On mobile, arrow starts when reaching arrow-section (0.0), gives smooth 1.4vh to view,
+    // and is 100% gone before the timeline appears at 1.55vh.
+    const appearStart = isMobile ? 0.0 : APPEAR_VH
+    const appearEnd = isMobile ? 0.35 : APPEAR_END_VH
+    const fadeStart1 = isMobile ? 1.20 : FADE_START_VH
+    const fadeEnd1 = isMobile ? 1.45 : FADE_END_VH
 
-    const revFadeInStart = isMobile ? 2.55 : REV_FADE_IN_START
-    const revFadeInEnd = isMobile ? 2.75 : REV_FADE_IN_END
-    const revFadeOutStart = isMobile ? 3.10 : REV_FADE_OUT_START
-    const revFadeOutEnd = isMobile ? 3.35 : REV_FADE_OUT_END
+    // Reverse arrow starts well after the timeline finishes and exits (timeline exit = 4.90)
+    const revFadeInStart = isMobile ? 5.05 : REV_FADE_IN_START
+    const revFadeInEnd = isMobile ? 5.30 : REV_FADE_IN_END
+    const revFadeOutStart = isMobile ? 5.95 : REV_FADE_OUT_START
+    const revFadeOutEnd = isMobile ? 6.25 : REV_FADE_OUT_END
+
+    // Hard zero-overlap guarantee on mobile: completely skip rendering during timeline window
+    if (isMobile && aVH >= fadeEnd1 && aVH <= revFadeInStart) {
+      meshRef.current.visible = false
+      return
+    }
 
     const fadeIn1 = smoothstep(appearStart, appearEnd, aVH)
     const fadeOut1 = 1.0 - smoothstep(fadeStart1, fadeEnd1, aVH)
@@ -210,22 +219,22 @@ export function CursorArrow() {
     let rotY = 0
 
     // The two arrow phases sit before and after the timeline window.
-    const forwardPhaseEnd = isMobile ? 2.4 : 15.5
+    const forwardPhaseEnd = isMobile ? 3.0 : 15.5
     if (aVH < forwardPhaseEnd) {
       if (isMobile) {
-        if (aVH <= -0.15) {
+        if (aVH <= 0.15) {
           scale = currentBaseScale
           rotY = 0
-        } else if (aVH < 0.08) {
-          const p1 = easeInOutCubic(smoothstep(-0.15, 0.08, aVH))
+        } else if (aVH < 0.50) {
+          const p1 = easeInOutCubic(smoothstep(0.15, 0.50, aVH))
           scale = currentBaseScale + p1 * (STAGE1_SCALE - currentBaseScale)
           rotY = 0
-        } else if (aVH < 0.35) {
-          const p2 = easeInOutCubic(smoothstep(0.08, 0.35, aVH))
+        } else if (aVH < 1.15) {
+          const p2 = easeInOutCubic(smoothstep(0.50, 1.15, aVH))
           scale = STAGE1_SCALE + p2 * (SCALE_90 - STAGE1_SCALE)
           rotY = p2 * Math.PI
         } else {
-          const p3 = easeInOutCubic(smoothstep(0.35, 0.5, aVH))
+          const p3 = easeInOutCubic(smoothstep(1.15, 1.42, aVH))
           scale = SCALE_90 + p3 * (SCALE_100 - SCALE_90)
           rotY = Math.PI
         }
@@ -250,7 +259,7 @@ export function CursorArrow() {
       }
     } else {
       if (isMobile) {
-        // Mobile Backward Arrow Phase Timeline
+        // Mobile Backward Arrow Phase Timeline — starts at 5.05 after timeline exits cleanly
         if (aVH <= revFadeInStart) {
           scale = SCALE_100
           rotY = Math.PI
@@ -262,12 +271,12 @@ export function CursorArrow() {
           const p2 = easeInOutCubic(smoothstep(revFadeInEnd, revFadeOutStart, aVH))
           scale = SCALE_90 - p2 * (SCALE_90 - STAGE1_SCALE)
           rotY = (1.0 - p2) * Math.PI
-        } else if (aVH < 3.25) {
-          const p1 = easeInOutCubic(smoothstep(revFadeOutStart, 3.25, aVH))
+        } else if (aVH < 6.15) {
+          const p1 = easeInOutCubic(smoothstep(revFadeOutStart, 6.15, aVH))
           scale = STAGE1_SCALE - p1 * (STAGE1_SCALE - currentBaseScale)
           rotY = 0
         } else {
-          const p3 = easeInOutCubic(smoothstep(3.25, revFadeOutEnd, aVH))
+          const p3 = easeInOutCubic(smoothstep(6.15, revFadeOutEnd, aVH))
           scale = Math.max(0, currentBaseScale * (1.0 - p3))
           rotY = 0
         }

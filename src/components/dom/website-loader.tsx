@@ -3,13 +3,56 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { setWebsiteLoaded, isWebsiteLoaded, subscribeWebsiteLoaded } from '@/lib/loader-bus'
 
-const MIN_DURATION = 1400 // 1.4s smooth load — unchanged, now a floor not a timer
-const HARD_CAP = 5000 // never hold the page hostage if a font request stalls
+// All mission-critical image assets that must be preloaded & cached before opening the site
+const CRITICAL_IMAGES: string[] = [
+  // Core branding & mascot
+  '/logo.png',
+  '/mascots/chibi-directions.webp',
+  '/mascots/chibi-reactions.webp',
+
+  // Glimpses (past editions highlights)
+  '/glimpses/glimpse-1.jpg',
+  '/glimpses/glimpse-2.jpg',
+  '/glimpses/glimpse-3.jpg',
+  '/glimpses/glimpse-4.jpg',
+
+  // Sponsors & partners (base + hover graphics)
+  '/projects/proj-1-base.png',
+  '/projects/proj-1-hover.png',
+  '/projects/proj-2-base.png',
+  '/projects/proj-2-hover.png',
+  '/projects/proj-3-base.png',
+  '/projects/proj-3-hover.svg',
+  '/projects/proj-4-base.png',
+  '/projects/proj-4-hover.svg',
+  '/projects/proj-5-base.png',
+  '/projects/proj-5-hover.svg',
+]
+
+const MIN_ANIMATION_MS = 1400 // Smooth aesthetic minimum duration
+const HARD_CAP_MS = 8000 // Failsafe timeout to prevent blocking on severed connections
+
+function preloadImage(src: string): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined') {
+      resolve()
+      return
+    }
+    const img = new Image()
+    const done = () => {
+      if ('decode' in img) {
+        img.decode().then(resolve).catch(resolve)
+      } else {
+        resolve()
+      }
+    }
+    img.onload = done
+    img.onerror = () => resolve() // Don't block loading if an individual asset fails
+    img.src = src
+  })
+}
 
 export function WebsiteLoader() {
-  // Keep the server snapshot deterministic. Reading the module-level loaded
-  // flag during render can differ between a persistent dev server and a fresh
-  // browser tab, which makes the loader itself a source of hydration warnings.
   const alreadyLoaded = useSyncExternalStore(subscribeWebsiteLoaded, isWebsiteLoaded, () => false)
   const [isDone, setIsDone] = useState(false)
   const [isHidden, setIsHidden] = useState(false)
@@ -21,15 +64,44 @@ export function WebsiteLoader() {
     if (alreadyLoaded) return
 
     const startTime = performance.now()
-
-    // Fonts are the one late-arriving resource that causes a visible reflow,
-    // and VaporCountdown rasterises its glyph atlas off document.fonts.ready —
-    // if the loader lifts first, the user lands on a page that is still
-    // relaying out. The 1.4s animation is now a minimum rather than the whole
-    // story, so in the normal case (fonts resolve well inside 1.4s) the loader
-    // behaves exactly as before.
-    let fontsReady = false
+    const totalAssets = CRITICAL_IMAGES.length + 1 // +1 for fonts
+    let loadedCount = 0
+    let fontsDone = false
+    let allAssetsLoaded = false
     let settled = false
+
+    const checkComplete = () => {
+      if (loadedCount >= totalAssets) {
+        allAssetsLoaded = true
+      }
+    }
+
+    // Preload all critical images in parallel
+    CRITICAL_IMAGES.forEach((url) => {
+      preloadImage(url).then(() => {
+        loadedCount += 1
+        checkComplete()
+      })
+    })
+
+    // Preload web fonts
+    if (typeof document !== 'undefined' && document.fonts?.ready) {
+      document.fonts.ready
+        .then(() => {
+          fontsDone = true
+          loadedCount += 1
+          checkComplete()
+        })
+        .catch(() => {
+          fontsDone = true
+          loadedCount += 1
+          checkComplete()
+        })
+    } else {
+      fontsDone = true
+      loadedCount += 1
+      checkComplete()
+    }
 
     const finish = () => {
       if (settled) return
@@ -41,44 +113,47 @@ export function WebsiteLoader() {
       window.setTimeout(() => setIsHidden(true), 500)
     }
 
-    if (typeof document !== 'undefined' && document.fonts?.ready) {
-      document.fonts.ready.then(() => { fontsReady = true }).catch(() => { fontsReady = true })
-    } else {
-      fontsReady = true
-    }
-
-    const capTimer = window.setTimeout(finish, HARD_CAP)
+    const failsafeTimer = window.setTimeout(finish, HARD_CAP_MS)
 
     let rafId = 0
-    // Written straight to the DOM. setProgress() used to run once per frame,
-    // so the loader alone cost ~84 React renders during the exact window when
-    // the WebGL contexts are compiling and the textures are decoding.
-    let lastPercent = -1
+    let currentDisplayPercent = 0
 
     const update = (now: number) => {
       const elapsed = now - startTime
-      const p = Math.min(1, elapsed / MIN_DURATION)
-      // Ease out cubic
-      const eased = 1 - Math.pow(1 - p, 3)
-      const currentPercent = Math.round(eased * 100)
+      const timeProgress = Math.min(1, elapsed / MIN_ANIMATION_MS)
+      const assetProgress = loadedCount / totalAssets
 
-      if (currentPercent !== lastPercent) {
-        lastPercent = currentPercent
-        if (barRef.current) barRef.current.style.width = `${currentPercent}%`
-        if (pctRef.current) pctRef.current.textContent = `${String(currentPercent).padStart(2, '0')}%`
+      // Real percentage cannot hit 100% until all critical images & fonts have actually finished loading
+      let targetPercent: number
+      if (allAssetsLoaded) {
+        targetPercent = 100
+      } else {
+        // Smoothly approach up to 92% based on actual downloaded assets and time
+        targetPercent = Math.min(92, Math.floor(assetProgress * 80 + timeProgress * 15))
       }
 
-      if (p < 1 || !fontsReady) {
-        rafId = requestAnimationFrame(update)
-      } else {
+      // Smooth step toward target percentage
+      if (currentDisplayPercent < targetPercent) {
+        const step = Math.max(1, Math.ceil((targetPercent - currentDisplayPercent) * 0.14))
+        currentDisplayPercent = Math.min(targetPercent, currentDisplayPercent + step)
+
+        if (barRef.current) barRef.current.style.width = `${currentDisplayPercent}%`
+        if (pctRef.current) pctRef.current.textContent = `${String(currentDisplayPercent).padStart(2, '0')}%`
+      }
+
+      // Complete only after 100% reached AND all assets have loaded AND minimum duration elapsed
+      if (allAssetsLoaded && currentDisplayPercent >= 100 && elapsed >= MIN_ANIMATION_MS) {
         finish()
+      } else {
+        rafId = requestAnimationFrame(update)
       }
     }
 
     rafId = requestAnimationFrame(update)
+
     return () => {
       cancelAnimationFrame(rafId)
-      window.clearTimeout(capTimer)
+      window.clearTimeout(failsafeTimer)
     }
   }, [alreadyLoaded])
 

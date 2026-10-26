@@ -10,6 +10,14 @@ const DEFAULT_ITEMS = [
   '/glimpses/glimpse-2.jpg',
   '/glimpses/glimpse-3.jpg',
   '/glimpses/glimpse-4.jpg',
+  '/glimpses/glimpse-1.jpg',
+  '/glimpses/glimpse-2.jpg',
+  '/glimpses/glimpse-3.jpg',
+  '/glimpses/glimpse-4.jpg',
+  '/glimpses/glimpse-1.jpg',
+  '/glimpses/glimpse-2.jpg',
+  '/glimpses/glimpse-3.jpg',
+  '/glimpses/glimpse-4.jpg',
 ]
 
 type DragState = {
@@ -289,7 +297,8 @@ export function GlimpsesSection() {
                     alt={`LNMHacks past edition highlight ${index % row.length + 1}`}
                     fill
                     sizes="(max-width: 640px) 78vw, (max-width: 1200px) 42vw, 32vw"
-                    loading="lazy"
+                    loading="eager"
+                    unoptimized
                     className={styles.image}
                     draggable={false}
                   />

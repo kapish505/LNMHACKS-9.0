@@ -102,39 +102,51 @@ function TetrisPavement({
   const { pavementTopY } = layout
   const baseY = pavementTopY - CUBE_SIZE * 0.5
 
-  // 2-segment beveled chamfers (reduced from 4 for massive vertex savings)
+  // 4-segment beveled chamfers for silky smooth, Apple-grade rounded edges
   const taperedBoxGeom = useMemo(
-    () => new RoundedBoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE, 2, TAPER_RADIUS),
+    () => new RoundedBoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE, 4, 0.026),
     []
   )
 
-  // Pre-create shared materials once
+  // Physically-based materials with lacquer clearcoat and rich specular reflections
   const materials = useMemo(() => ({
-    pink: new THREE.MeshStandardMaterial({
+    pink: new THREE.MeshPhysicalMaterial({
       color: '#fb3377',
       emissive: new THREE.Color('#fb3377'),
-      emissiveIntensity: 0.28,
-      roughness: 0.18,
-      metalness: 0.08,
+      emissiveIntensity: 0.22,
+      roughness: 0.12,
+      metalness: 0.06,
+      clearcoat: 0.94,
+      clearcoatRoughness: 0.06,
+      reflectivity: 0.85,
     }),
-    cyan: new THREE.MeshStandardMaterial({
+    cyan: new THREE.MeshPhysicalMaterial({
       color: '#38bdf8',
       emissive: new THREE.Color('#38bdf8'),
-      emissiveIntensity: 0.22,
-      roughness: 0.18,
-      metalness: 0.08,
+      emissiveIntensity: 0.20,
+      roughness: 0.12,
+      metalness: 0.06,
+      clearcoat: 0.94,
+      clearcoatRoughness: 0.06,
+      reflectivity: 0.85,
     }),
-    blue: new THREE.MeshStandardMaterial({
+    blue: new THREE.MeshPhysicalMaterial({
       color: '#1e60ff',
       emissive: new THREE.Color('#1e60ff'),
-      emissiveIntensity: 0.25,
-      roughness: 0.18,
-      metalness: 0.10,
+      emissiveIntensity: 0.22,
+      roughness: 0.14,
+      metalness: 0.08,
+      clearcoat: 0.94,
+      clearcoatRoughness: 0.06,
+      reflectivity: 0.85,
     }),
-    obsidian: new THREE.MeshStandardMaterial({
-      color: '#0d1525',
-      roughness: 0.22,
-      metalness: 0.35,
+    obsidian: new THREE.MeshPhysicalMaterial({
+      color: '#070b14',
+      roughness: 0.16,
+      metalness: 0.45,
+      clearcoat: 0.88,
+      clearcoatRoughness: 0.08,
+      reflectivity: 0.9,
     }),
   }), [])
 
@@ -401,16 +413,19 @@ function TetrisPavement({
         frustumCulled={false}
       />
 
-      {/* Floating Tetrominoes — single instanced draw call with per-instance color */}
+      {/* Floating Tetrominoes — single instanced draw call with physical lacquer clearcoat */}
       <instancedMesh
         ref={floatingMeshRef}
         args={[taperedBoxGeom, undefined, floatingData.matrices.length]}
         frustumCulled={false}
       >
-        <meshStandardMaterial
+        <meshPhysicalMaterial
           vertexColors
-          roughness={0.18}
-          metalness={0.08}
+          roughness={0.14}
+          metalness={0.10}
+          clearcoat={0.92}
+          clearcoatRoughness={0.08}
+          reflectivity={0.85}
         />
       </instancedMesh>
 
@@ -446,6 +461,7 @@ function RiggedMascot({
   const lastNormalizedRef = useRef(0)
   const walkPhaseRef = useRef(0)
   const walkWeightRef = useRef(0)
+  const runFactorRef = useRef(0)
 
   const currentLocalXRef = useRef(0)
   const isInitializedRef = useRef(false)
@@ -538,33 +554,42 @@ function RiggedMascot({
     }
     const weight = walkWeightRef.current
 
-    // Walk phase is strictly ground-distance locked: 1 unit of scroll = exact step angle
-    // (95.0 rad over full track = ~30 distinct steps matching the bedrock pavement)
-    walkPhaseRef.current += dNorm * 95.0
+    // Dynamically blend Walk (slow scrolling) vs Run (rapid scrolling / swipe)
+    // Speed is measured as normalized units per second
+    const speed = Math.abs(dNorm) / dt
+    const targetRun = clamp01((speed - 0.035) / 0.10)
+    runFactorRef.current = THREE.MathUtils.damp(runFactorRef.current, targetRun, 5.0, dt)
+    const run = runFactorRef.current
+
+    // Walk/run phase: cadence accelerates smoothly as character breaks into a run
+    walkPhaseRef.current += dNorm * (95.0 + run * 45.0)
     const phase = walkPhaseRef.current
 
-    // Springy vertical bob per step (two smooth crests per gait cycle)
-    const bob = (0.5 - 0.5 * Math.cos(phase * 2.0)) * 0.034 * weight
+    // Dynamic vertical bob: higher bounding spring in running locomotion
+    const bob = (0.5 - 0.5 * Math.cos(phase * 2.0)) * (0.034 + run * 0.032) * weight
 
-    // Full, clear stride amplitude
+    // Full stride amplitude with dynamic leg reach
     const stride = Math.sin(phase) * weight
 
-    // Pronounced knee flexion during swing phase to lift foot cleanly off ground (prevents gliding)
-    const leftKnee = Math.pow(Math.max(0, -stride), 1.1) * 0.72
-    const rightKnee = Math.pow(Math.max(0, stride), 1.1) * 0.72
+    // High knee drive during sprint swing phase
+    const kneeMultiplier = 1.0 + run * 0.55
+    const leftKnee = Math.pow(Math.max(0, -stride), 1.1) * (0.72 * kneeMultiplier)
+    const rightKnee = Math.pow(Math.max(0, stride), 1.1) * (0.72 * kneeMultiplier)
 
     // Natural ankle pitch (toes lift on swing, plant on step)
     const leftAnkle = -stride * 0.22 * weight
     const rightAnkle = stride * 0.22 * weight
 
-    // Energetic arm swings and elbow flex opposite to leg strides
-    const leftArm = -stride * 0.44
-    const rightArm = stride * 0.44
-    const leftElbow = Math.max(0, stride) * 0.28 * weight
-    const rightElbow = Math.max(0, -stride) * 0.28 * weight
+    // Energetic arm pumping: arms tuck tighter at elbow and swing with higher velocity during sprint
+    const armMultiplier = 1.0 + run * 0.65
+    const elbowTuck = 0.25 * run
+    const leftArm = -stride * 0.44 * armMultiplier
+    const rightArm = stride * 0.44 * armMultiplier
+    const leftElbow = (Math.max(0, stride) * 0.28 + elbowTuck) * weight
+    const rightElbow = (Math.max(0, -stride) * 0.28 + elbowTuck) * weight
 
-    // Cute chibi pelvis roll / waddle
-    const bodyRoll = Math.sin(phase) * 0.035 * weight
+    // Cute chibi pelvis roll / waddle with slight sprint dynamics
+    const bodyRoll = Math.sin(phase) * (0.035 + run * 0.02) * weight
 
     // Only traverse and update opacity when change is significant (>0.03 delta)
     const opacityDelta = Math.abs(fadeRef.current - lastOpacity.current)
@@ -585,12 +610,12 @@ function RiggedMascot({
       }
     }
 
-    // Pelvis roll
+    // Upright pelvis roll (no forward pitch)
     rotate('Hips', 0, 0, bodyRoll)
 
-    // Natural walk kinematics across the pavement
-    rotate(['LeftUpLeg', 'L_UpperLeg'], stride * 0.58, 0, -0.025)
-    rotate(['RightUpLeg', 'R_UpperLeg'], -stride * 0.58, 0, 0.025)
+    // Natural walk/run kinematics across the pavement
+    rotate(['LeftUpLeg', 'L_UpperLeg'], stride * (0.58 + run * 0.18), 0, -0.025)
+    rotate(['RightUpLeg', 'R_UpperLeg'], -stride * (0.58 + run * 0.18), 0, 0.025)
     rotate(['LeftLeg', 'L_LowerLeg'], leftKnee)
     rotate(['RightLeg', 'R_LowerLeg'], rightKnee)
     rotate(['LeftFoot', 'L_Foot'], leftAnkle)
@@ -601,13 +626,13 @@ function RiggedMascot({
     rotate(['LeftForeArm', 'L_LowerArm'], leftElbow)
     rotate(['RightForeArm', 'R_LowerArm'], rightElbow)
 
-    // Subtle idle breathing
+    // Subtle idle breathing with clean upright spine posture
     const idleTime = state.clock.getElapsedTime()
     const breath = Math.sin(idleTime * 2.2) * 0.012 * (1 - weight * 0.7)
     rotate('Spine', breath * 0.5, 0, -bodyRoll * 0.5)
     rotate(['Spine1', 'Spine2', 'Chest'], breath, 0, -bodyRoll * 0.35)
 
-    // Body faces right (direction of travel); head/neck counter-stabilizes to face camera
+    // Body faces right (direction of travel); head/neck counter-stabilizes to face camera with zero forward pitch
     rotate('Neck', 0, -0.86, bodyRoll * 0.25)
     rotate('Head', breath * 0.4, -0.16, -bodyRoll * 0.15)
 
