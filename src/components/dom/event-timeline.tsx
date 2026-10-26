@@ -328,9 +328,9 @@ export function EventTimelineDOM() {
         <StarfieldGalaxy
           active={opacity > 0.005}
           opacity={opacity}
-          stars={850}
-          speed={1.8}
-          spread={5.5}
+          stars={2200}
+          speed={1.6}
+          spread={6}
           focal={1.2}
           twinkle={0.35}
           trail={0.8}

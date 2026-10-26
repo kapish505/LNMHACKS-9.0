@@ -39,7 +39,7 @@ interface Star {
  * - Pauses rendering loop when inactive for zero overhead
  */
 export function StarfieldGalaxy({
-  stars = 750,
+  stars = 2000,
   speed = 1.8,
   spread = 5,
   focal = 1.2,
