@@ -1,8 +1,9 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
-import { motion, useSpring } from 'framer-motion'
+import { motion, useSpring, useAnimationFrame } from 'framer-motion'
 import { useTheme } from '@/lib/theme-context'
+import { emitSmoothCursor } from '@/lib/cursor-bus'
 
 // --- Default Smooth Cursor SVG (from Framer Smoothcursor) ---
 const DefaultCursorSVG = ({ invertColors }: { invertColors?: boolean }) => {
@@ -66,9 +67,9 @@ export interface SmoothCursorProps {
 
 export default function SmoothCursor({
   cursorSize = 38,
-  stiffness = 400,
-  damping = 45,
-  mass = 1,
+  stiffness = 520,
+  damping = 40,
+  mass = 0.75,
   hideSystemCursor = true,
   enableBlendMode = false,
   enableClickEffect = true,
@@ -79,8 +80,18 @@ export default function SmoothCursor({
 
   const cursorX = useSpring(-100, { stiffness, damping, mass })
   const cursorY = useSpring(-100, { stiffness, damping, mass })
-  const rotation = useSpring(0, { stiffness: 300, damping: 60 })
+  const rotation = useSpring(0, { stiffness: 320, damping: 55 })
   const scale = useSpring(1, { stiffness: 500, damping: 35 })
+
+  // Broadcast current spring coordinates each animation frame to coordinate with effects (e.g. MouseCubeTrail)
+  useAnimationFrame(() => {
+    if (!mounted || !isVisible) return
+    const x = cursorX.get()
+    const y = cursorY.get()
+    if (x > 0 || y > 0) {
+      emitSmoothCursor(x, y)
+    }
+  })
 
   const lastMousePos = useRef({ x: 0, y: 0 })
   const velocity = useRef({ x: 0, y: 0 })

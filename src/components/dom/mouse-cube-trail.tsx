@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from 'react'
 import { subscribeLenisScroll } from '@/lib/scroll-bus'
+import { subscribeSmoothCursor } from '@/lib/cursor-bus'
 
 interface CubeTrailItem {
   gx: number
@@ -135,12 +136,12 @@ export function MouseCubeTrail() {
       return cells
     }
 
-    // Mouse Move handler — reads cached boundaries without layout thrashing
-    const onMouseMove = (e: MouseEvent) => {
+    // Coordinate directly with smooth cursor coordinates when active, fallback to mousemove
+    const handleCoord = (clientX: number, clientY: number) => {
       const heroBottom = heroBottomRef.current
 
       // Strictly stop if cursor is anywhere inside or above the hero section
-      if (e.clientY <= heroBottom) {
+      if (clientY <= heroBottom) {
         lastPosRef.current = null
         return
       }
@@ -149,13 +150,13 @@ export function MouseCubeTrail() {
       const glimpsesTop = glimpsesTopRef.current
       const footerTop = footerTopRef.current
 
-      if (e.clientY >= glimpsesTop || e.clientY >= footerTop) {
+      if (clientY >= glimpsesTop || clientY >= footerTop) {
         lastPosRef.current = null
         return
       }
 
-      const gx = Math.floor(e.clientX / SQUARE_SIZE)
-      const gy = Math.floor(e.clientY / SQUARE_SIZE)
+      const gx = Math.floor(clientX / SQUARE_SIZE)
+      const gy = Math.floor(clientY / SQUARE_SIZE)
 
       const start = lastPosRef.current ? lastPosRef.current : { gx, gy }
       lastPosRef.current = { gx, gy }
@@ -188,6 +189,17 @@ export function MouseCubeTrail() {
         isLooping = true
         rafRef.current = requestAnimationFrame(draw)
       }
+    }
+
+    let hasSmoothCursor = false
+    const unsubscribeSmooth = subscribeSmoothCursor(({ x, y }) => {
+      hasSmoothCursor = true
+      handleCoord(x, y)
+    })
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (hasSmoothCursor) return
+      handleCoord(e.clientX, e.clientY)
     }
 
     const onMouseLeave = () => {
@@ -245,6 +257,7 @@ export function MouseCubeTrail() {
       window.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseleave', onMouseLeave)
       window.removeEventListener('scroll', scheduleScrollUpdate)
+      unsubscribeSmooth()
       unsubscribeScroll()
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
