@@ -111,9 +111,9 @@ export function HeroHeadline() {
           letterSpacing: '-0.025em',
         }}
       >
-        <ScrambleRow text="72 HOURS OF" trigger={loaded} delayMs={150} />
-        <ScrambleRow text="PURE" trigger={loaded} delayMs={500} />
-        <ScrambleRow text="INNOVATION" trigger={loaded} delayMs={800} />
+        <ScrambleRow text="BUILD BOLD." trigger={loaded} delayMs={150} />
+        <ScrambleRow text="BREAK LIMITS." trigger={loaded} delayMs={500} />
+        <ScrambleRow text="SHIP THE FUTURE." trigger={loaded} delayMs={800} />
       </h1>
     </div>
   )

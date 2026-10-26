@@ -405,7 +405,7 @@ export function HawaMahalFooter() {
                 <li><a href="#about" className={linkClass}>About</a></li>
                 <li><a href="#glimpses" className={linkClass}>Glimpses</a></li>
                 <li><a href="#sponsors" className={linkClass}>Sponsors</a></li>
-                <li>
+                {/* <li>
                   <button
                     type="button"
                     onClick={() => {
@@ -417,7 +417,7 @@ export function HawaMahalFooter() {
                     }}
                     className={`${linkClass} cursor-pointer text-left`}
                   >Timeline</button>
-                </li>
+                </li> */}
               </ul>
             </nav>
 

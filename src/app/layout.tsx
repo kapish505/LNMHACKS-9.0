@@ -6,6 +6,7 @@ import { PageCircleReveal } from "@/components/canvas/page-circle-reveal";
 import { ThemeProvider } from "@/lib/theme-context";
 
 import Script from "next/script";
+import { SmoothCursor } from "@/components/ui/smooth-cursor";
 
 const inter = Inter({ subsets: ["latin"] });
 const manrope = Manrope({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-manrope" });
@@ -41,7 +42,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="antialiased" suppressHydrationWarning>
       <head />
-      <body className={`${inter.className} ${manrope.variable}`}>
+      <body suppressHydrationWarning className={`${inter.className} ${manrope.variable}`}>
         <Script
           id="theme-script"
           strategy="beforeInteractive"
@@ -50,6 +51,7 @@ export default function RootLayout({
           }}
         />
         <ThemeProvider>
+          <SmoothCursor />
           <PageCircleReveal />
           <ScrollShell>
             {children}

@@ -18,8 +18,9 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'ABOUT', target: 'about' },
+  { label: 'CTF', target: 'ctf' },
   { label: 'SPONSORS', target: 'sponsors' },
-  { label: 'TIMELINE', target: 'arrow-section' },
+  // { label: 'TIMELINE', target: 'arrow-section' }, // Temporarily disabled with timeline section
 ]
 
 function ThemeToggle({ className = '', isLightNav = true }: { className?: string; isLightNav?: boolean }) {

@@ -3,6 +3,7 @@
 import { useRef, useCallback, useEffect } from 'react'
 import { AboutRingLogo, type RingPointerState } from '@/components/dom/about-ring-logo'
 import { domRegistry } from '@/lib/dom-registry'
+import { CTFSection } from '@/components/dom/ctf-section'
 
 interface ProjectItem {
   id: string
@@ -265,7 +266,7 @@ export function ProjectGrid() {
       <div
         ref={aboutRef}
         id="about"
-        className="relative z-10 w-full min-h-[90vh] lg:min-h-screen flex items-center justify-center px-4 sm:px-8 lg:px-14 py-16 sm:py-24 lg:py-32 pointer-events-none"
+        className="relative z-10 w-full min-h-screen flex items-center justify-center px-4 sm:px-8 lg:px-14 py-12 lg:py-16 pointer-events-none"
         onMouseMove={onSectionMouseMove}
         onMouseEnter={() => {
           pointerStateRef.current.tracking = true
@@ -276,29 +277,29 @@ export function ProjectGrid() {
         }}
         style={{ pointerEvents: 'auto' }}
       >
-        <div className="w-full max-w-7xl mx-auto">
-          <div className="grid grid-cols-12 gap-x-8 md:gap-x-14 lg:gap-x-20 xl:gap-x-24 gap-y-10 md:gap-y-0 w-full items-start">
-            {/* Left Column: Logo */}
+        <div className="w-full max-w-[1400px] 2xl:max-w-[1540px] mx-auto">
+          <div className="grid grid-cols-12 gap-x-8 md:gap-x-12 lg:gap-x-16 xl:gap-x-20 gap-y-10 md:gap-y-0 w-full items-center">
+            {/* Left Column: Logo — sized and aligned to match the vertical span of both paragraphs */}
             <div
               ref={logoRef}
-              className="relative col-span-12 md:col-span-4 flex items-start justify-center md:justify-start pt-1"
+              className="relative col-span-12 md:col-span-5 lg:col-span-4 xl:col-span-4 flex items-center justify-center md:justify-start"
             >
-              <div className="w-full max-w-[260px] sm:max-w-[300px] md:max-w-[340px]">
+              <div className="w-full max-w-[300px] sm:max-w-[360px] md:max-w-[420px] lg:max-w-[460px] xl:max-w-[480px]">
                 <AboutRingLogo pointerState={pointerStateRef} />
               </div>
             </div>
 
-            {/* Right Column: Editorial About Typography */}
-            <div className="flex flex-col justify-start items-start gap-8 sm:gap-10 md:gap-12 lg:gap-16 col-span-12 md:col-span-8 text-base lg:text-xl leading-none">
+            {/* Right Column: Editorial About Typography — widened to fill horizontal space */}
+            <div className="flex flex-col justify-center items-start gap-8 sm:gap-10 md:gap-12 lg:gap-14 col-span-12 md:col-span-7 lg:col-span-8 xl:col-span-8 text-base lg:text-xl leading-none">
               <p
-                className="w-full text-black dark:text-white md:text-[3.8vw] 2xl:text-[3.25rem] text-xl leading-[1.3] md:leading-[1.15] select-text tracking-tight transition-colors duration-200"
+                className="w-full text-black dark:text-white md:text-[3.4vw] lg:text-[2.7vw] xl:text-[2.75rem] 2xl:text-[3.1rem] text-xl leading-[1.28] md:leading-[1.16] select-text tracking-tight transition-colors duration-200"
                 style={{ fontFamily: '"tiktok", sans-serif' }}
               >
-                LNMHACKS is the largest student run hackathon all over India. It is a 72 Hour hackathon with interesting workshops and tech talks from industry biggies.
+                India's student-run Web3 hackathon & CTF. Bringing together ambitious developers, cybersecurity enthusiasts, and emerging founders for 72 hours of building, competition, and hands-on learning.
               </p>
 
               <p
-                className="w-full text-[rgba(54,54,48,0.6)] dark:text-neutral-400 md:text-[3.8vw] 2xl:text-[3.25rem] text-xl leading-[1.3] md:leading-[1.15] select-text tracking-tight transition-colors duration-200"
+                className="w-full text-[rgba(54,54,48,0.6)] dark:text-neutral-400 md:text-[3.4vw] lg:text-[2.7vw] xl:text-[2.75rem] 2xl:text-[3.1rem] text-xl leading-[1.28] md:leading-[1.16] select-text tracking-tight transition-colors duration-200"
                 style={{ fontFamily: '"tiktok", sans-serif' }}
               >
                 We raised over{' '}
@@ -322,6 +323,9 @@ export function ProjectGrid() {
         </div>
       </div>
 
+      {/* ── CTF Challenge Separator & Upcoming Details Section ── */}
+      <CTFSection />
+
       {/* ── Asymmetric Modular Canvas Grid (Sponsors Section) ── */}
       <div id="sponsors" className="relative z-10 w-full max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
         {/* Section Header */}
@@ -340,7 +344,7 @@ export function ProjectGrid() {
               letterSpacing: '-0.03em',
             }}
           >
-            OUR PAST SPONSORS
+            OUR  SPONSORS
           </h2>
           <p
             className="mt-2 text-base sm:text-lg md:text-xl tracking-tight max-w-xl text-neutral-600 dark:text-neutral-400 transition-colors duration-200"

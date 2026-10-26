@@ -72,12 +72,12 @@ function useMainCanvasActive(): boolean {
     const el = document.getElementById('sponsors')
     const io = el
       ? new IntersectionObserver(
-          ([entry]) => {
-            sponsorsNear = entry.isIntersecting
-            evaluate()
-          },
-          { rootMargin: '600px 0px' },
-        )
+        ([entry]) => {
+          sponsorsNear = entry.isIntersecting
+          evaluate()
+        },
+        { rootMargin: '600px 0px' },
+      )
       : null
     io?.observe(el!)
 
@@ -303,8 +303,9 @@ export default function Home() {
           style={{ background: 'transparent' }}
         >
           <Suspense fallback={null}>
-            <CursorArrow />
-            <EventTimeline />
+            {/* Timeline Section (Forward Arrow -> Event Timeline -> Backward Arrow) - Temporarily disabled */}
+            {/* <CursorArrow /> */}
+            {/* <EventTimeline /> */}
             <ProjectMeshes />
           </Suspense>
         </Canvas>
@@ -316,8 +317,8 @@ export default function Home() {
       {/* Mouse pointer cube trail in sections after hero */}
       <MouseCubeTrail />
 
-      {/* Horizontal pipeline event timeline overlay in arrow section */}
-      <EventTimelineDOM />
+      {/* Horizontal pipeline event timeline overlay in arrow section - Temporarily disabled */}
+      {/* <EventTimelineDOM /> */}
 
 
       {/* ── Hero section — CloudSky + headline + countdown + scroll circle dissolve ── */}
@@ -343,7 +344,7 @@ export default function Home() {
             <div className="mt-2.5 sm:mt-3.5 relative z-40 pointer-events-auto">
               <ScanGridButton
                 link="/register"
-                label="REGISTER"
+                label="Claim Your Spot"
                 onClick={(e?: React.MouseEvent) => {
                   e?.preventDefault?.()
                   triggerPageTransition('/register')
@@ -368,7 +369,7 @@ export default function Home() {
                   borderColor: 'rgba(255, 255, 255, 0.35)',
                 }}
                 scan={{
-                  color: '#ff3344',
+                  color: '#1e60ff',
                   speed: 60,
                 }}
                 glitchIntensity={2.5}
@@ -398,11 +399,12 @@ export default function Home() {
 
       <ProjectGrid />
 
-      <div
+      {/* Timeline Section (Forward Arrow -> Event Timeline -> Backward Arrow) - Temporarily disabled */}
+      {/* <div
         id="arrow-section"
         className="w-full h-[340vh] md:h-[1900vh]"
         style={{ height: arrowHeight }}
-      />
+      /> */}
 
       <GlimpsesSection />
 
