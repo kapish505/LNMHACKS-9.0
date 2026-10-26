@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { subscribeLenisScroll } from '@/lib/scroll-bus'
 import { getArrowSectionVH } from '@/lib/arrow-section-progress'
 import { useLenis } from 'lenis/react'
+import { StarfieldGalaxy } from '@/components/ui/starfield-galaxy'
 
 function cn(...classes: (string | boolean | undefined | null)[]) {
   return classes.filter(Boolean).join(' ')
@@ -316,15 +317,31 @@ export function EventTimelineDOM() {
   // ─── Desktop & Tablet View (>= 768px): Horizontal Pipeline Layout ─────────
   return (
     <>
-      {/* Black backdrop specifically for the timeline section (guarantees deep black background even in light mode) */}
+      {/* Deep space starfield galaxy backdrop - desktop only (behind text z-15, mascot & tetris z-10) */}
       <div
-        className="fixed inset-0 z-[8] pointer-events-none transition-opacity duration-300"
+        className="fixed inset-0 z-[8] pointer-events-none overflow-hidden transition-opacity duration-300"
         style={{
-          backgroundColor: '#03060d',
           opacity,
           visibility: opacity > 0.005 ? 'visible' : 'hidden',
         }}
-      />
+      >
+        <StarfieldGalaxy
+          active={opacity > 0.005}
+          opacity={opacity}
+          stars={850}
+          speed={1.8}
+          spread={5.5}
+          focal={1.2}
+          twinkle={0.35}
+          trail={0.8}
+          size={1.4}
+          fadeInRange={3.5}
+          reverseFly={false}
+          followCursor={true}
+          background="#03060d"
+          starColor="#ffffff"
+        />
+      </div>
 
       <div
         className="fixed inset-x-0 top-20 sm:top-24 md:top-28 z-[15] pointer-events-none flex flex-col justify-start items-center transition-opacity duration-200"
