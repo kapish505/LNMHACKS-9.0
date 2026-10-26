@@ -303,9 +303,9 @@ export default function Home() {
           style={{ background: 'transparent' }}
         >
           <Suspense fallback={null}>
-            {/* Timeline Section (Forward Arrow -> Event Timeline -> Backward Arrow) - Temporarily disabled */}
-            {/* <CursorArrow /> */}
-            {/* <EventTimeline /> */}
+            {/* Timeline Section (Forward Arrow -> Event Timeline -> Backward Arrow) */}
+            <CursorArrow />
+            <EventTimeline />
             <ProjectMeshes />
           </Suspense>
         </Canvas>
@@ -317,8 +317,8 @@ export default function Home() {
       {/* Mouse pointer cube trail in sections after hero */}
       <MouseCubeTrail />
 
-      {/* Horizontal pipeline event timeline overlay in arrow section - Temporarily disabled */}
-      {/* <EventTimelineDOM /> */}
+      {/* Horizontal pipeline event timeline overlay in arrow section */}
+      <EventTimelineDOM />
 
 
       {/* ── Hero section — CloudSky + headline + countdown + scroll circle dissolve ── */}
@@ -399,12 +399,12 @@ export default function Home() {
 
       <ProjectGrid />
 
-      {/* Timeline Section (Forward Arrow -> Event Timeline -> Backward Arrow) - Temporarily disabled */}
-      {/* <div
+      {/* Timeline Section (Forward Arrow -> Event Timeline -> Backward Arrow) */}
+      <div
         id="arrow-section"
         className="w-full h-[340vh] md:h-[1900vh]"
         style={{ height: arrowHeight }}
-      /> */}
+      />
 
       <GlimpsesSection />
 
