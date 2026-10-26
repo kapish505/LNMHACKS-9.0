@@ -237,10 +237,10 @@ function __OriginkitBase_AbacusWire(props: AbacusWireProps) {
       const n = Math.max(1, Math.round(num(s.rows, 4)))
 
       // Clean, bold, easily readable font sizing
-      const baseFont = parsePx(f.fontSize, 16)
+      const baseFont = parsePx(f.fontSize, 18)
       const fontPx = Math.max(
-        12,
-        Math.min(baseFont * sc, (H * 0.88) / (n * pitchK))
+        14,
+        Math.min(baseFont * sc, (H * 0.94) / (n * pitchK))
       )
       const fontStr = `${f.fontStyle || 'normal'} ${f.fontWeight || 700} ${fontPx.toFixed(2)}px ${familyStack(f.fontFamily || '"tiktok", "Poppins", sans-serif')}`
       const ls = parseLetterSpacing(f.letterSpacing ?? '0.03em', fontPx)

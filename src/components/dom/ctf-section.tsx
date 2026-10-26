@@ -43,10 +43,10 @@ export function CTFSection() {
   return (
     <section
       id="ctf"
-      className="relative z-10 w-full min-h-screen flex flex-col justify-between pt-10 sm:pt-12 md:pt-14 pb-8 sm:pb-12 overflow-hidden select-none"
+      className="relative z-10 w-full min-h-screen flex flex-col justify-between pt-4 sm:pt-6 md:pt-8 pb-8 sm:pb-12 overflow-hidden select-none"
     >
-      {/* ── Abacus Wire 4-Row Sleek Colorful Separator (Elevated, Compact) ── */}
-      <div className="relative w-full h-[60px] sm:h-[68px] md:h-[74px] overflow-hidden pointer-events-none mb-3 sm:mb-4">
+      {/* ── Abacus Wire 4-Row Sleek Colorful Separator (Elevated, Scaled Up Text) ── */}
+      <div className="relative w-full h-[76px] sm:h-[84px] md:h-[90px] overflow-hidden pointer-events-none mb-1 sm:mb-2">
         <AbacusWire
           rows={4}
           text="Capture The Flag 4.O"
@@ -55,14 +55,23 @@ export function CTFSection() {
           lineColor={wireLineColors}
           speed={30}
           stagger={12}
-          scale={100}
+          scale={115}
+          font={{
+            fontSize: 18,
+            fontWeight: 700,
+            fontFamily: '"tiktok", "Poppins", sans-serif',
+          }}
+          advanced={{
+            rowPitch: 120,
+            centerY: 50,
+          }}
         />
       </div>
 
-      {/* ── The Format Editorial Component (Full Screen, Balanced, Zero Dead Gap) ── */}
-      <div className="w-full max-w-[1440px] 2xl:max-w-[1640px] mx-auto px-4 sm:px-6 md:px-10 lg:px-14 flex flex-col justify-between flex-1">
+      {/* ── The Format Editorial Component (Full Screen, Balanced, Minimized Gap) ── */}
+      <div className="w-full max-w-[1440px] 2xl:max-w-[1640px] mx-auto px-4 sm:px-6 md:px-10 lg:px-14 flex flex-col justify-start flex-1 pt-1 sm:pt-2 gap-4 sm:gap-6 lg:gap-7">
         {/* Headline + Blurb Row: Exactly Aligned to 3-Column Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 xl:gap-16 items-end pb-8 sm:pb-10 lg:pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 xl:gap-16 items-end">
           {/* Col 1 & 2: Large Impactful Headline Spanning Across 2 Columns */}
           <div className="md:col-span-2">
             <h2
