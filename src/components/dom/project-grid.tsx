@@ -4,6 +4,7 @@ import { useRef, useCallback, useEffect } from 'react'
 import { AboutRingLogo, type RingPointerState } from '@/components/dom/about-ring-logo'
 import { domRegistry } from '@/lib/dom-registry'
 import { CTFSection } from '@/components/dom/ctf-section'
+import { AsciiPacmanGame } from '@/components/ui/ascii-pacman-game'
 
 interface ProjectItem {
   id: string
@@ -325,6 +326,9 @@ export function ProjectGrid() {
 
       {/* ── CTF Challenge Separator & Upcoming Details Section ── */}
       <CTFSection />
+
+      {/* ── ASCII Pac-Man Game Animation (fills dead space between CTF and sponsors) ── */}
+      <AsciiPacmanGame />
 
       {/* ── Asymmetric Modular Canvas Grid (Sponsors Section) ── */}
       <div id="sponsors" className="relative z-10 w-full max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
