@@ -115,6 +115,29 @@ body {
   to { opacity: 1; }
 }
 
+/* Hero Top Banner per-line fade reveal animation */
+@keyframes bannerLineFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.banner-line-hidden {
+  opacity: 0;
+  transform: translateY(16px);
+  will-change: opacity, transform;
+}
+
+.banner-line-animate {
+  animation: bannerLineFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform;
+}
+
 /* Rotating globe in footer */
 @keyframes globe-spin {
   from { transform: rotateY(0deg); }

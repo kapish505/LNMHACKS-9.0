@@ -22,20 +22,17 @@ const RIGHT_LINES = [
 
 interface FadeLineProps {
   text: string
-  loaded: boolean
+  shouldAnimate: boolean
   delayMs: number
   className?: string
 }
 
-function FadeLine({ text, loaded, delayMs, className = '' }: FadeLineProps) {
+function FadeLine({ text, shouldAnimate, delayMs, className = '' }: FadeLineProps) {
   return (
     <span
-      className={`block will-change-[opacity,transform] ${className}`}
+      className={`block ${shouldAnimate ? 'banner-line-animate' : 'banner-line-hidden'} ${className}`}
       style={{
-        opacity: loaded ? 1 : 0,
-        transform: loaded ? 'translateY(0)' : 'translateY(12px)',
-        transition: 'opacity 750ms cubic-bezier(0.16, 1, 0.3, 1), transform 750ms cubic-bezier(0.16, 1, 0.3, 1)',
-        transitionDelay: `${delayMs}ms`,
+        animationDelay: `${delayMs}ms`,
       }}
     >
       {text}
@@ -44,13 +41,33 @@ function FadeLine({ text, loaded, delayMs, className = '' }: FadeLineProps) {
 }
 
 export function HeroTopBanner() {
-  const [loaded, setLoaded] = useState(() => isWebsiteLoaded())
+  const [shouldAnimate, setShouldAnimate] = useState(false)
 
   useEffect(() => {
-    const unsub = subscribeWebsiteLoaded((isLoaded) => {
-      if (isLoaded) setLoaded(true)
+    let timer: ReturnType<typeof setTimeout>
+
+    // If website is already loaded (dev HMR, client-side nav, or refreshed after loader):
+    if (isWebsiteLoaded()) {
+      timer = setTimeout(() => {
+        setShouldAnimate(true)
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+
+    // Initial site load: wait for loader-bus event, then wait 480ms for WebsiteLoader
+    // overlay fadeout before triggering per-line animation.
+    const unsub = subscribeWebsiteLoaded((loaded) => {
+      if (loaded) {
+        timer = setTimeout(() => {
+          setShouldAnimate(true)
+        }, 480)
+      }
     })
-    return unsub
+
+    return () => {
+      unsub()
+      clearTimeout(timer)
+    }
   }, [])
 
   return (
@@ -70,8 +87,8 @@ export function HeroTopBanner() {
               <FadeLine
                 key={idx}
                 text={line}
-                loaded={loaded}
-                delayMs={150 + idx * 150}
+                shouldAnimate={shouldAnimate}
+                delayMs={40 + idx * 180}
               />
             ))}
           </h2>
@@ -87,8 +104,8 @@ export function HeroTopBanner() {
               <FadeLine
                 key={idx}
                 text={line}
-                loaded={loaded}
-                delayMs={250 + idx * 100}
+                shouldAnimate={shouldAnimate}
+                delayMs={160 + idx * 100}
               />
             ))}
           </p>
@@ -104,8 +121,8 @@ export function HeroTopBanner() {
               <FadeLine
                 key={idx}
                 text={line}
-                loaded={loaded}
-                delayMs={200 + idx * 95}
+                shouldAnimate={shouldAnimate}
+                delayMs={120 + idx * 120}
               />
             ))}
           </p>
