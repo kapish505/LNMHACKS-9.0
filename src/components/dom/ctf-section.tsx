@@ -7,6 +7,7 @@ import { AbacusWire } from '@/components/ui/abacus-wire'
 /**
  * CTF Section Separator & The Format Component
  * Positioned right after About section, matching website theme and fonts.
+ * Designed as a full-page editorial section utilizing the 3-row grid layout.
  */
 export function CTFSection() {
   const { theme } = useTheme()
@@ -43,10 +44,10 @@ export function CTFSection() {
   return (
     <section
       id="ctf"
-      className="relative z-10 w-full min-h-screen flex flex-col justify-between pt-4 sm:pt-6 md:pt-8 pb-8 sm:pb-12 overflow-hidden select-none"
+      className="relative z-10 w-full min-h-screen lg:h-screen lg:min-h-[800px] flex flex-col justify-between pt-3 sm:pt-4 md:pt-5 pb-6 sm:pb-8 md:pb-12 overflow-hidden select-none"
     >
-      {/* ── Abacus Wire 4-Row Sleek Colorful Separator (Elevated, Scaled Up Text) ── */}
-      <div className="relative w-full h-[76px] sm:h-[84px] md:h-[90px] overflow-hidden pointer-events-none mb-1 sm:mb-2">
+      {/* ── Abacus Wire 4-Row Sleek Colorful Separator (Top Band) ── */}
+      <div className="relative w-full h-[68px] sm:h-[76px] md:h-[82px] overflow-hidden pointer-events-none mb-1">
         <AbacusWire
           rows={4}
           text="Capture The Flag 4.O"
@@ -68,14 +69,14 @@ export function CTFSection() {
         />
       </div>
 
-      {/* ── The Format Editorial Component (Full Screen, Balanced, Minimized Gap) ── */}
-      <div className="w-full max-w-[1440px] 2xl:max-w-[1640px] mx-auto px-4 sm:px-6 md:px-10 lg:px-14 flex flex-col justify-start flex-1 pt-1 sm:pt-2 gap-4 sm:gap-6 lg:gap-7">
-        {/* Headline + Blurb Row: Exactly Aligned to 3-Column Grid */}
+      {/* ── The Format Editorial Component (Full Screen, Balanced 3-Row Distribution) ── */}
+      <div className="w-full max-w-[1440px] 2xl:max-w-[1640px] mx-auto px-4 sm:px-6 md:px-10 lg:px-14 flex flex-col justify-between flex-1 py-2 sm:py-4 lg:py-6 gap-6 sm:gap-8 lg:gap-10">
+        {/* Headline + Blurb Row: Aligned to 3-Column Grid (Row 1 Content) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 xl:gap-16 items-end">
           {/* Col 1 & 2: Large Impactful Headline Spanning Across 2 Columns */}
           <div className="md:col-span-2">
             <h2
-              className="text-4xl sm:text-6xl md:text-6xl lg:text-[5.2rem] xl:text-[6.2rem] font-black tracking-tight text-neutral-900 dark:text-white leading-[1.0]"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-[4.8rem] xl:text-[5.8rem] font-black tracking-tight text-neutral-900 dark:text-white leading-[0.98]"
               style={{ fontFamily: '"tiktok", sans-serif' }}
             >
               Hunt the exploit. <br />
@@ -85,10 +86,10 @@ export function CTFSection() {
             </h2>
           </div>
 
-          {/* Col 3: Large Editorial Paragraph Utilizing Full Width of Col 3 */}
+          {/* Col 3: Editorial Paragraph Aligned with Bottom of Headline */}
           <div className="md:col-span-1 flex items-end">
             <p
-              className="text-base sm:text-lg md:text-xl lg:text-[1.3rem] xl:text-[1.45rem] text-neutral-600 dark:text-neutral-300 leading-relaxed font-medium"
+              className="text-base sm:text-lg md:text-xl lg:text-[1.22rem] xl:text-[1.35rem] text-neutral-600 dark:text-neutral-300 leading-relaxed font-medium"
               style={{ fontFamily: '"tiktok", sans-serif' }}
             >
               A high-stakes cybersecurity sprint. Reverse binaries, crack crypto, exploit web targets, and conquer jeopardy challenges.
@@ -96,51 +97,53 @@ export function CTFSection() {
           </div>
         </div>
 
-        {/* 3-Column Metric Section (Strictly Baseline Aligned, Large Typography, Full Width) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 xl:gap-16 items-start">
+        {/* 3-Column Metric & Info Section (Filling Mid & Lower Band with Generous Spacing) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 xl:gap-16 items-stretch flex-1 pt-4 sm:pt-6 lg:pt-8">
           {/* ── Col 1: THE DATES ── */}
-          <div className="flex flex-col justify-start">
-            <span
-              className="text-xs sm:text-sm font-mono tracking-[0.26em] uppercase text-neutral-500 dark:text-neutral-400 block mb-2 sm:mb-3"
-              style={{ fontFamily: '"tronica-mono", monospace' }}
-            >
-              THE DATES
-            </span>
-
-            {/* Baseline Aligned Container for Numbers */}
-            <div className="h-[95px] sm:h-[115px] md:h-[135px] lg:h-[150px] xl:h-[170px] flex items-end pb-2 mb-3 sm:mb-4">
-              <div
-                className="text-6xl sm:text-7xl md:text-8xl lg:text-[7.6rem] xl:text-[8.8rem] font-black text-[#1e60ff] dark:text-[#63c4fd] leading-none select-none flex items-center whitespace-nowrap"
-                style={{
-                  fontFamily: '"Rogient Block", "rogient-block", "tiktok", serif',
-                  textShadow: isDark
-                    ? '3px 3px 0px #090d16, 5px 5px 0px rgba(99, 196, 253, 0.38)'
-                    : '3px 3px 0px #F0EDE8, 5px 5px 0px rgba(30, 96, 255, 0.32)',
-                }}
+          <div className="flex flex-col justify-between h-full gap-4 sm:gap-6 lg:gap-8">
+            <div>
+              <span
+                className="text-xs sm:text-sm font-mono tracking-[0.26em] uppercase text-neutral-500 dark:text-neutral-400 block mb-2 sm:mb-3"
+                style={{ fontFamily: '"tronica-mono", monospace' }}
               >
-                <span className="tracking-tight">22-24</span>
-                <span
-                  className="text-sm sm:text-base md:text-lg lg:text-xl font-mono tracking-[0.25em] text-[#1e60ff] dark:text-[#63c4fd] uppercase ml-2.5 sm:ml-3.5 rotate-[-90deg] inline-block font-bold origin-center"
+                THE DATES
+              </span>
+
+              {/* Baseline Aligned Container for Numbers */}
+              <div className="flex items-end pb-1 mb-2 sm:mb-4">
+                <div
+                  className="text-6xl sm:text-7xl md:text-8xl lg:text-[7.4rem] xl:text-[8.5rem] font-black text-[#1e60ff] dark:text-[#63c4fd] leading-none select-none flex items-center whitespace-nowrap"
                   style={{
-                    fontFamily: '"tronica-mono", monospace',
-                    textShadow: 'none',
+                    fontFamily: '"Rogient Block", "rogient-block", "tiktok", serif',
+                    textShadow: isDark
+                      ? '3px 3px 0px #090d16, 5px 5px 0px rgba(99, 196, 253, 0.38)'
+                      : '3px 3px 0px #F0EDE8, 5px 5px 0px rgba(30, 96, 255, 0.32)',
                   }}
                 >
-                  JAN
-                </span>
+                  <span className="tracking-tight">22-24</span>
+                  <span
+                    className="text-sm sm:text-base md:text-lg lg:text-xl font-mono tracking-[0.25em] text-[#1e60ff] dark:text-[#63c4fd] uppercase ml-2.5 sm:ml-3.5 rotate-[-90deg] inline-block font-bold origin-center"
+                    style={{
+                      fontFamily: '"tronica-mono", monospace',
+                      textShadow: 'none',
+                    }}
+                  >
+                    JAN
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Sized Text Block */}
-            <div>
+            {/* Sized Text Block: Title + Adjusted Paragraph Gap */}
+            <div className="pt-2 sm:pt-4">
               <h3
-                className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.6rem] xl:text-[3rem] font-bold text-neutral-900 dark:text-white mb-2 leading-tight"
+                className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.4rem] xl:text-[2.8rem] font-bold text-neutral-900 dark:text-white mb-3 sm:mb-4 leading-tight"
                 style={{ fontFamily: '"tiktok", sans-serif' }}
               >
                 Jaipur, 2027.
               </h3>
               <p
-                className="text-sm sm:text-base md:text-lg lg:text-[1.2rem] text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans font-normal"
+                className="text-sm sm:text-base md:text-lg lg:text-[1.12rem] xl:text-[1.2rem] text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans font-normal"
                 style={{ fontFamily: '"tiktok", sans-serif' }}
               >
                 72 hours of non-stop hacking and binary battles at LNMIIT Jaipur. Save the dates and prepare your exploits.
@@ -149,39 +152,41 @@ export function CTFSection() {
           </div>
 
           {/* ── Col 2: THE OPERATOR ── */}
-          <div className="flex flex-col justify-start">
-            <span
-              className="text-xs sm:text-sm font-mono tracking-[0.26em] uppercase text-neutral-500 dark:text-neutral-400 block mb-2 sm:mb-3"
-              style={{ fontFamily: '"tronica-mono", monospace' }}
-            >
-              THE OPERATOR
-            </span>
-
-            {/* Baseline Aligned Container for Numbers */}
-            <div className="h-[95px] sm:h-[115px] md:h-[135px] lg:h-[150px] xl:h-[170px] flex items-end pb-2 mb-3 sm:mb-4">
-              <div
-                className="text-6xl sm:text-7xl md:text-8xl lg:text-[7.6rem] xl:text-[8.8rem] font-black text-[#1e60ff] dark:text-[#63c4fd] leading-none select-none whitespace-nowrap"
-                style={{
-                  fontFamily: '"Rogient Block", "rogient-block", "tiktok", serif',
-                  textShadow: isDark
-                    ? '3px 3px 0px #090d16, 5px 5px 0px rgba(99, 196, 253, 0.38)'
-                    : '3px 3px 0px #F0EDE8, 5px 5px 0px rgba(30, 96, 255, 0.32)',
-                }}
+          <div className="flex flex-col justify-between h-full gap-4 sm:gap-6 lg:gap-8">
+            <div>
+              <span
+                className="text-xs sm:text-sm font-mono tracking-[0.26em] uppercase text-neutral-500 dark:text-neutral-400 block mb-2 sm:mb-3"
+                style={{ fontFamily: '"tronica-mono", monospace' }}
               >
-                01.
+                THE OPERATOR
+              </span>
+
+              {/* Baseline Aligned Container for Numbers */}
+              <div className="flex items-end pb-1 mb-2 sm:mb-4">
+                <div
+                  className="text-6xl sm:text-7xl md:text-8xl lg:text-[7.4rem] xl:text-[8.5rem] font-black text-[#1e60ff] dark:text-[#63c4fd] leading-none select-none whitespace-nowrap"
+                  style={{
+                    fontFamily: '"Rogient Block", "rogient-block", "tiktok", serif',
+                    textShadow: isDark
+                      ? '3px 3px 0px #090d16, 5px 5px 0px rgba(99, 196, 253, 0.38)'
+                      : '3px 3px 0px #F0EDE8, 5px 5px 0px rgba(30, 96, 255, 0.32)',
+                  }}
+                >
+                  01.
+                </div>
               </div>
             </div>
 
-            {/* Sized Text Block */}
-            <div>
+            {/* Sized Text Block: Title + Adjusted Paragraph Gap */}
+            <div className="pt-2 sm:pt-4">
               <h3
-                className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.6rem] xl:text-[3rem] font-bold text-neutral-900 dark:text-white mb-2 leading-tight"
+                className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.4rem] xl:text-[2.8rem] font-bold text-neutral-900 dark:text-white mb-3 sm:mb-4 leading-tight"
                 style={{ fontFamily: '"tiktok", sans-serif' }}
               >
                 Solo or Squad.
               </h3>
               <p
-                className="text-sm sm:text-base md:text-lg lg:text-[1.2rem] text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans font-normal"
+                className="text-sm sm:text-base md:text-lg lg:text-[1.12rem] xl:text-[1.2rem] text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans font-normal"
                 style={{ fontFamily: '"tiktok", sans-serif' }}
               >
                 Compete solo or squad up with up to 4 hackers. Jeopardy-style challenges spanning web exploitation, reverse engineering, and cryptography.
@@ -190,39 +195,41 @@ export function CTFSection() {
           </div>
 
           {/* ── Col 3: LAST EDITION ── */}
-          <div className="flex flex-col justify-start">
-            <span
-              className="text-xs sm:text-sm font-mono tracking-[0.26em] uppercase text-neutral-500 dark:text-neutral-400 block mb-2 sm:mb-3"
-              style={{ fontFamily: '"tronica-mono", monospace' }}
-            >
-              LAST EDITION
-            </span>
-
-            {/* Baseline Aligned Container for Numbers */}
-            <div className="h-[95px] sm:h-[115px] md:h-[135px] lg:h-[150px] xl:h-[170px] flex items-end pb-2 mb-3 sm:mb-4">
-              <div
-                className="text-6xl sm:text-7xl md:text-8xl lg:text-[7.6rem] xl:text-[8.8rem] font-black text-[#1e60ff] dark:text-[#63c4fd] leading-none select-none whitespace-nowrap"
-                style={{
-                  fontFamily: '"Rogient Block", "rogient-block", "tiktok", serif',
-                  textShadow: isDark
-                    ? '3px 3px 0px #090d16, 5px 5px 0px rgba(99, 196, 253, 0.38)'
-                    : '3px 3px 0px #F0EDE8, 5px 5px 0px rgba(30, 96, 255, 0.32)',
-                }}
+          <div className="flex flex-col justify-between h-full gap-4 sm:gap-6 lg:gap-8">
+            <div>
+              <span
+                className="text-xs sm:text-sm font-mono tracking-[0.26em] uppercase text-neutral-500 dark:text-neutral-400 block mb-2 sm:mb-3"
+                style={{ fontFamily: '"tronica-mono", monospace' }}
               >
-                700+
+                LAST EDITION
+              </span>
+
+              {/* Baseline Aligned Container for Numbers */}
+              <div className="flex items-end pb-1 mb-2 sm:mb-4">
+                <div
+                  className="text-6xl sm:text-7xl md:text-8xl lg:text-[7.4rem] xl:text-[8.5rem] font-black text-[#1e60ff] dark:text-[#63c4fd] leading-none select-none whitespace-nowrap"
+                  style={{
+                    fontFamily: '"Rogient Block", "rogient-block", "tiktok", serif',
+                    textShadow: isDark
+                      ? '3px 3px 0px #090d16, 5px 5px 0px rgba(99, 196, 253, 0.38)'
+                      : '3px 3px 0px #F0EDE8, 5px 5px 0px rgba(30, 96, 255, 0.32)',
+                  }}
+                >
+                  700+
+                </div>
               </div>
             </div>
 
-            {/* Sized Text Block */}
-            <div>
+            {/* Sized Text Block: Title + Adjusted Paragraph Gap */}
+            <div className="pt-2 sm:pt-4">
               <h3
-                className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.6rem] xl:text-[3rem] font-bold text-neutral-900 dark:text-white mb-2 leading-tight"
+                className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.4rem] xl:text-[2.8rem] font-bold text-neutral-900 dark:text-white mb-3 sm:mb-4 leading-tight"
                 style={{ fontFamily: '"tiktok", sans-serif' }}
               >
                 Massive Scale.
               </h3>
               <p
-                className="text-sm sm:text-base md:text-lg lg:text-[1.2rem] text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans font-normal"
+                className="text-sm sm:text-base md:text-lg lg:text-[1.12rem] xl:text-[1.2rem] text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans font-normal"
                 style={{ fontFamily: '"tiktok", sans-serif' }}
               >
                 Over 700 elite hackers and security researchers competed in our last edition across India. Bigger, sharper, and higher stakes this year.
